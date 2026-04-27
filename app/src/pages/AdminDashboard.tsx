@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     getProducts, getOrders, createProduct, updateProduct, deleteProduct,
     getCategories, createCategory, deleteCategory,
-    getBulkOrders, updateBulkOrderStatus, deleteBulkOrder, deleteBulkOrdersBulk,
-    markOrderPaid, markOrderDelivered, deleteOrder, deleteOrdersBulk,
+    getBulkOrders, updateBulkOrderStatus, deleteBulkOrdersBulk,
+    markOrderPaid, markOrderDelivered, deleteOrdersBulk,
     getUsers, deleteUser, updateUser,
     getBlogs, createBlog, updateBlog, deleteBlog,
 } from '@/lib/api';
@@ -378,16 +378,7 @@ export default function AdminDashboard() {
     };
 
     
-    const handleDeleteOrder = async (id: string) => {
-        if (!window.confirm('Delete order?')) return;
-        try { await deleteOrder(id); showToast('Order deleted'); fetchPage('orders', pagination.orders.page); } 
-        catch { showToast('Failed', 'error'); }
-    };
-    const handleDeleteBulkOrder = async (id: string) => {
-        if (!window.confirm('Delete bulk order?')) return;
-        try { await deleteBulkOrder(id); showToast('Bulk order deleted'); fetchPage('bulkOrders', pagination.bulkOrders.page); } 
-        catch { showToast('Failed', 'error'); }
-    };
+
     const handleDeleteUser = async (id: string) => {
         if (!window.confirm('Delete user?')) return;
         try { await deleteUser(id); showToast('User deleted'); fetchPage('users', pagination.users.page); } 
