@@ -7,6 +7,6 @@
   },
   "scripts": {
     "start": "node backend/server.js",
-    "build": "npm install --prefix backend && npm install --prefix app && npm run build --prefix app"
+    "build": "npm install --prefix backend && npm install --include=dev --prefix app && npm run build --prefix app"
   }
 }
