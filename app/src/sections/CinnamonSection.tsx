@@ -117,10 +117,10 @@ export default function CinnamonSection() {
           Ceylon Cinnamon
         </h2>
         <p className="text-body text-ivory-muted mb-8 leading-relaxed">
-          True Ceylon cinnamon—delicate, sweet, and naturally low in coumarin. 
-          Hand-rolled quills, sun-dried and sealed for maximum aroma. Unlike 
-          cassia, our cinnamon carries notes of citrus and clove with a warmth 
-          that lingers.
+          Amongst all spices, none are more famous than Ceylon Cinnamon 
+          (Cinnamomum verum)—the world's "True Cinnamon." Hand-rolled into 
+          delicate multi-layered quills and shade-dried to preserve its sweet 
+          taste, golden colour, and low coumarin content.
         </p>
         <div className="flex items-center gap-6 mb-8">
           <span className="font-display text-3xl text-gold">€14.00</span>

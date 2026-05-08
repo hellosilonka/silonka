@@ -8,27 +8,33 @@ gsap.registerPlugin(ScrollTrigger);
 
 const timelineEvents = [
   {
-    year: '~300 BC',
+    year: 'Ancient',
     title: 'Ancient Trade Routes',
-    description: 'Sri Lankan cinnamon and pepper were traded across Arabia and Egypt long before European exploration. Ancient manuscripts mention "Kinnamon" from Taprobane (Sri Lanka) as a prized commodity in the courts of pharaohs and Roman emperors.',
+    description: 'Long before European ships reached the island, Sri Lanka was already a thriving center of the Indian Ocean spice trade. Arab, Persian, Indian, and Chinese merchants regularly sailed to the island\'s ports to obtain highly prized spices—especially cinnamon—which were then carried to markets across the Middle East and the Mediterranean.',
     image: '/300.png',
   },
   {
-    year: '1518',
-    title: 'Portuguese Arrival',
-    description: 'Portuguese explorer Lourenço de Almeida landed in Ceylon and discovered vast cinnamon gardens. They established the first European monopoly over Ceylon cinnamon — the most coveted spice in the world — and held it for over a century.',
+    year: '1500s',
+    title: 'Portuguese Era',
+    description: 'Soon after their arrival in the early 1500s, the Portuguese established control over the cinnamon trade, creating a monopoly that forced local communities to supply cinnamon bark to colonial authorities. This only served to boost Ceylon Cinnamon\'s reputation as the most coveted spice in the world.',
     image: '/1518.png',
   },
   {
     year: '1658',
     title: 'Dutch Spice Empire',
-    description: 'The Dutch East India Company (VOC) wrested control of the cinnamon trade from the Portuguese. They created the first organised cultivation system, requiring local Sinhalese families to peel set quotas of cinnamon bark every year.',
+    description: 'After the Dutch East India Company (VOC) wrested control of the island\'s coastal regions, they were able to strengthen the monopoly. The Dutch introduced systematic cultivation methods to cinnamon plantations and developed transport networks to aid in moving the spices from growing regions to ports like Colombo and Negombo.',
+    image: '/1658.png',
+  },
+  {
+    year: '1800s',
+    title: 'British Colonial Era',
+    description: 'Under British rule in the 19th century, Sri Lanka\'s spice trade became more systematically organized and integrated into the global colonial economy. Cinnamon plantations were expanded and infrastructure improved. Although tea eventually became the island\'s dominant export, Sri Lankan cinnamon and other spices remained highly valued commodities.',
     image: '/1658.png',
   },
   {
     year: 'Today',
     title: "Sri Lanka's Spice Legacy",
-    description: 'Sri Lanka produces over 80% of the world\'s true Ceylon cinnamon. Small family farms in the Western and Central Provinces continue centuries-old traditions — hand-peeling bark, sun-drying pepper vines, and picking clove buds by hand at dawn.',
+    description: 'Sri Lanka is responsible for producing over 80% of the world\'s "True Cinnamon." Despite technological advancements and industrial changes, Sri Lanka\'s spice cultivators remain rooted in centuries-old traditions—hand-picking bark, sun-drying pepper vines, and hand-picking clove buds at dawn. This ensures the utmost care and delicacy of skill preserves the true essence of the spice.',
     image: '/Today.png',
   },
 ];
@@ -36,57 +42,57 @@ const timelineEvents = [
 const spices = [
   {
     name: 'Ceylon Cinnamon',
-    subtitle: 'Cinnamomum verum — The Real Cinnamon',
+    subtitle: 'Cinnamomum verum — The World\'s "True Cinnamon"',
     region: 'Western Province (Galle, Matara, Kalutara)',
     image: '/cinnamon_signature.jpg',
     facts: [
-      'Sri Lanka supplies over 80% of the world\'s true cinnamon',
-      'Bark is hand-peeled by skilled artisans called "chaliya" — a tradition passed down for generations',
-      'Multiple thin layers of inner bark are rolled together to form delicate, papery quills',
-      'Naturally lower in coumarin than cassia, making it safer for daily use',
-      'Fragrance is delicate and sweet — nothing like the harsh bite of common cassia',
+      'Dubbed the world\'s "True Cinnamon" for its fine quality',
+      'Stark differences from the more common cassia cinnamon of Indonesia and China',
+      'Hand-rolled into delicate multi-layered quills — a unique feature of genuine Ceylonese Cinnamon',
+      'Dried in the shade, never directly in the sun, to preserve sweet taste and golden colour',
+      'Low coumarin content makes it safer for frequent consumption',
     ],
-    description: `What most of the world calls "cinnamon" is actually cassia — a cheaper, harsher bark from China and Indonesia. True cinnamon, Cinnamomum verum, grows almost exclusively in Sri Lanka's Western Province, in a warm coastal belt stretching from Kalutara to Matara.
+    description: `Amongst all spices of the culinary world, none are more famous than Ceylon Cinnamon (Cinnamomum verum). It has been dubbed the world's "True Cinnamon" for its fine quality, and stark differences from the more common cassia cinnamon of Indonesia and China.
 
-The harvest is entirely by hand. Skilled artisans, known as chaliya, use a curved blade to score the outer bark, then carefully peel away the inner skin in long strips. These strips are placed inside one another and rolled into the delicate, multi-layered quills that distinguish genuine Ceylon cinnamon. The quills are then dried in the shade — never in direct sun — to preserve their essential oils.
+Ceylon Cinnamon is brought to its finest quality by an intricate process that requires intense practice, experience, and skill. The spice is produced by carefully peeling the inner bark of the cinnamon tree and hand-rolling it into delicate multi-layered quills—a unique feature that distinguishes genuine Ceylonese Cinnamon from cassia.
 
-The result is a spice that smells of warm sweetness with floral and citrus undertones, and contains far less coumarin than cassia, making it the preferred cinnamon of health-conscious cooks worldwide.`,
+The quills are then dried in the shade, never directly in the sun, in order to preserve the sweet taste and the characteristic golden colour. Ceylonese Cinnamon is preferred not just for its taste and fragrance, but also because its low coumarin content contributes to making it safer for frequent consumption.`,
   },
   {
     name: 'Black Pepper',
-    subtitle: 'Piper nigrum — The King of Spices',
+    subtitle: 'Piper nigrum — The Black Gold',
     region: 'Kandy, Matale & Kurunegala Districts',
     image: '/pepper_palette.jpg',
     facts: [
-      'Sri Lanka has been exporting pepper since at least the 1st century AD',
-      'Vines are trained to climb native shade trees and can be productive for 30+ years',
-      'Berries are harvested green and mature — before they turn red — for maximum piperine content',
+      'Known as "Black Gold" among the traders and merchants of old',
+      'Widely traded across the Indian Ocean as both a seasoning agent and a preservative',
+      'Prized for its high piperine content, responsible for its characteristic aroma and pungent flavour',
       'Sun-dried on woven mats for 3–5 days until the outer skin wrinkles to a dark black',
       'Sri Lankan pepper is bold, aromatic, and complex — with floral and earthy undertones',
     ],
-    description: `Pepper was the spice that drove European exploration. When Vasco da Gama rounded the Cape of Good Hope in 1498, his goal was to reach the pepper markets of the East — and Sri Lanka was already one of its great suppliers, known to Arab and Chinese traders for more than a thousand years.
+    description: `Known as "Black Gold" among the traders and merchants of old, Ceylon black pepper was widely traded across the Indian Ocean as both a seasoning agent and a preservative in ancient cuisines.
 
-Sri Lankan black pepper grows in the humid foothills of the central highlands, where pepper vines (Piper nigrum) climb the trunks of jak, breadfruit, and silver-oak trees. The harvest season follows the northeast monsoon — farmers and their families pick each berry by hand, checking for that precise moment of ripeness when the berry is plump, green, and bursting with essential oils.
+Black pepper is prized for its high piperine content, which is responsible for its characteristic aroma and pungent flavour. Sri Lankan black pepper grows in the humid foothills of the central highlands, where pepper vines (Piper nigrum) climb the trunks of jak, breadfruit, and silver-oak trees.
 
-After harvest, the berries are spread across woven mats and sun-dried for three to five days. The skin wrinkles and darkens to a deep, matte black. What remains is a dense, aromatic peppercorn with a heat that builds slowly and a finish that lingers with floral and woody notes — a world away from the one-dimensional burn of commodity pepper.`,
+The harvest season follows the northeast monsoon — farmers and their families pick each berry by hand, checking for that precise moment of ripeness when the berry is plump, green, and bursting with essential oils. After harvest, the berries are spread across woven mats and sun-dried for three to five days. The skin wrinkles and darkens to a deep, matte black.`,
   },
   {
     name: 'Cloves',
-    subtitle: 'Syzygium aromaticum — The Nail Spice',
-    region: 'Matale & Kandy Districts',
+    subtitle: 'Syzygium aromaticum — The Aromatic Bud',
+    region: 'Central Region & Wet Zone',
     image: '/whole_spices.jpg',
     facts: [
-      'The name "clove" comes from the Latin clavus, meaning nail — describing the bud\'s distinctive shape',
-      'Sri Lankan cloves are harvested by hand, picking each bud just before it opens',
-      'High eugenol content gives Sri Lankan cloves an exceptionally powerful, warm aroma',
-      'Trees can produce for over 50 years once established',
-      'Used in Ayurvedic medicine for over 2,000 years to treat digestion and inflammation',
+      'Originally native to the Maluku Islands of Indonesia, introduced to Sri Lanka during British colonial period',
+      'Quickly adapted to the island\'s climatic temperament, mainly cultivated in the central region and wet zone',
+      'Known for their intense aroma and high essential oil content, particularly eugenol',
+      'Eugenol is responsible for the spice\'s warm, yet sweetening fragrance',
+      'Highly valued for medicinal properties, a common ingredient in Sinhalese Ayurveda',
     ],
-    description: `The clove tree (Syzygium aromaticum) is one of the most beautiful in the world — an evergreen with glossy leaves and clusters of vivid pink buds. Those buds are the spice. They must be picked at precisely the right moment: after they have plumped up but before the petals open. Once the flower opens, the essential oil dissipates and the clove loses most of its value.
+    description: `Cloves, originally native to the Maluku Islands of Indonesia, were introduced to Sri Lanka during the British colonial period. The spice quickly adapted to the island's climatic temperament and is mainly cultivated in the country's central region and wet zone.
 
-In Sri Lanka, clove cultivation is concentrated in the Matale and Kandy districts of the Central Province, where the altitude, rainfall, and red laterite soil create ideal conditions. Harvest is a family affair — men, women, and children spread across the trees at dawn, filling baskets by hand before the heat of the day arrives.
+Over time, cloves became an important contributor to the island's diversified curry blends. Sri Lankan cloves are known for their intense aroma and high essential oil content, particularly eugenol, which is responsible for the spice's warm, yet sweetening fragrance.
 
-Sri Lankan cloves are prized for their extraordinarily high eugenol content — the compound responsible for that intense, warm, almost medicinal aroma. They are the foundation of Sri Lankan curry blends, an essential element in festive rice dishes, and a cornerstone of traditional Ayurvedic remedies that have been passed down for more than two thousand years.`,
+Moreover, cloves are highly valued for their medicinal properties, making them a common ingredient in herbal preparations in Sri Lanka's traditional medicinal formulations, Sinhalese Ayurveda.`,
   },
 ];
 
@@ -196,9 +202,7 @@ export default function OriginsPage() {
               From Sri Lanka to Your Kitchen
             </h1>
             <p className="text-sm sm:text-body text-ivory-muted leading-relaxed px-4">
-              For centuries, the island of Sri Lanka — once known to the world as Ceylon — has been
-              the source of the globe's most prized spices. Silonka works directly with the families
-              who still cultivate them using methods passed down through generations.
+              The magical harvest born from the mist-veiled highlands of Ceylon.
             </p>
           </div>
         </div>
@@ -224,10 +228,17 @@ export default function OriginsPage() {
                 An Island Built on Spice
               </h2>
               <p className="text-sm sm:text-body text-ivory-muted mb-4 leading-relaxed">
-                Sri Lanka's spice story is one of the oldest in the world. Ancient Arab merchants
-                called the island "Serendib" and anchored in its harbours to load cinnamon and pepper
-                before sailing north to Persia, Egypt, and Rome. Long before the word "Ceylon" existed,
-                this island's fragrance had already circled the globe.
+                Sri Lanka, historically known as Ceylon, has been one of the world's most celebrated
+                sources of Cinnamon for many centuries. Located along the major maritime routes of the
+                Indian Ocean, the island had become a crucial hub very early on in the ancient global
+                spice trade, attracting merchants from Arabia, Persia, and China on their way to the
+                markets of the Mediterranean.
+              </p>
+              <p className="text-sm sm:text-body text-ivory-muted mb-4 leading-relaxed">
+                Ceylon Cinnamon had therefore achieved status as one of the most prized commodities
+                of global trade long before the arrival of Europeans. In fact, the intense competition
+                for Ceylon Cinnamon was such that historians often took to recording cinnamon being
+                the primal reason European powers fought over Ceylon.
               </p>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -346,6 +357,15 @@ export default function OriginsPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Closing Quote */}
+          <div className="text-center mt-16 sm:mt-24 max-w-2xl mx-auto">
+            <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mb-8" />
+            <blockquote className="font-display text-[clamp(18px,3vw,28px)] text-ivory/90 italic leading-relaxed">
+              "For as long as the world exists, the finest cinnamon will only be found in Sri Lanka."
+            </blockquote>
+            <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mt-8" />
           </div>
         </div>
       </section>

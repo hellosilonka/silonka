@@ -95,12 +95,13 @@ export default function CraftSection() {
         className="absolute left-[7vw] top-1/2 -translate-y-1/2 w-[38vw] will-change-transform"
       >
         <h2 className="font-display text-h2 text-ivory mb-6">
-          Spice Craft
+          Our Story Starts in the Soil
         </h2>
         <p className="text-body text-ivory-muted mb-8 leading-relaxed">
-          We work with smallholder farms in the hill country. Harvest is timed 
-          to the monsoon, dried in open air, and processed in small batches. 
-          Every step preserves the essential oils that make Ceylon spices extraordinary.
+          Every leaf and bark is handpicked from smallholder farms, nurtured by 
+          generations of growers. Sun-dried, hand-processed, and rigorously inspected — 
+          from the grove to the rack, from the bark to the quill, nothing is rushed 
+          because true quality cannot be hurried.
         </p>
 
         {/* Step Chips */}

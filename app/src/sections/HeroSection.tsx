@@ -133,8 +133,7 @@ export default function HeroSection() {
             ref={sublineRef}
             className="text-body text-ivory-muted max-w-xl mb-10"
           >
-            Single-origin Ceylon spices, harvested at peak aroma from Sri Lanka's 
-            hill country and delivered to your kitchen at the height of freshness.
+            The magical harvest born from the mist-veiled highlands of Ceylon.
           </p>
           <button
             ref={ctaRef}

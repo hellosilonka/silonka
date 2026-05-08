@@ -190,8 +190,7 @@ export default function HomePage() {
             ref={subtitleRef}
             className="text-base sm:text-lg md:text-xl text-ivory/70 max-w-xl mb-8 sm:mb-10 leading-relaxed px-4"
           >
-            Single-origin spices harvested at peak aroma from Sri Lanka's
-            misty hill country. Delivered to your kitchen at the height of freshness.
+            The magical harvest born from the mist-veiled highlands of Ceylon.
           </p>
 
           {/* CTA Buttons */}
@@ -276,29 +275,32 @@ export default function HomePage() {
             {/* Content */}
             <div className="order-1 lg:order-2">
               <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-3 sm:mb-4 block">
-                Who We Are
+                Our Story Starts in the Soil
               </span>
               <h2 className="font-display text-[clamp(24px,4vw,40px)] text-ivory mb-4 sm:mb-6">
                 Trusted Quality.
                 <span className="text-gradient-gold"> Globally Delivered.</span>
               </h2>
               <p className="text-sm sm:text-body text-ivory-muted mb-4 sm:mb-6 leading-relaxed">
-                From the fertile highlands of Sri Lanka, we deliver premium Ceylon spices
-                to kitchens and businesses around the world.
+                From the rugged, rolling plains of the Southern and South-Western regions of Sri Lanka,
+                we bring the world cinnamon of quality that is unlike any other. Every leaf and bark
+                is handpicked from smallholder farms, nurtured by generations of growers who know
+                the land intimately, and processed in small, careful batches to preserve their
+                natural oils, fragrance, and full-bodied flavor.
               </p>
               <p className="text-sm sm:text-body text-ivory-muted mb-4 sm:mb-6 leading-relaxed">
-                We work directly with carefully selected growers to ensure consistent quality,
-                traceability, and ethical sourcing. Every batch is hand-processed, naturally
-                sun-dried, and rigorously inspected before export — preserving freshness,
-                aroma, and purity.
+                Sun-dried, hand-processed, and rigorously inspected, so the cinnamon that reaches
+                your kitchen or your business is the purest essence of the island: vibrant, aromatic,
+                and ready to elevate every dish.
               </p>
               <p className="text-sm sm:text-body text-ivory-muted mb-4 sm:mb-6 leading-relaxed">
-                Our spices meet international standards for hygiene, packaging, and quality
-                control, making them ideal for global distributors, retailers, and food manufacturers.
+                We work directly with farmers, ensuring every batch is fully traceable, ethically
+                sourced, and handled with care. From the grove to the rack, from the bark to the
+                quill, nothing is rushed because true quality cannot be hurried.
               </p>
               <p className="text-sm sm:text-body text-ivory-muted mb-6 sm:mb-8 leading-relaxed">
-                From origin to shipment, we prioritize transparency, reliability, and
-                uncompromising quality — so you can trade with confidence.
+                The same level of care and inspection is to be expected of the other spices
+                that we have to offer, as well.
               </p>
               <a
                 href="/origins"

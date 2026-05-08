@@ -99,12 +99,13 @@ export default function PepperSection() {
         className="absolute left-[7vw] top-1/2 -translate-y-1/2 w-[38vw] will-change-transform"
       >
         <h2 className="font-display text-h2 text-ivory mb-6">
-          The Pepper Palette
+          The Black Gold
         </h2>
         <p className="text-body text-ivory-muted mb-8 leading-relaxed">
-          From mild aromatics to fiery heat—our grading system helps you choose 
-          the exact pepper for every dish. Our Tellicherry-grade peppercorns are 
-          left to ripen longer on the vine, developing complex citrus and floral notes.
+          Known as "Black Gold" among the traders and merchants of old, Ceylon 
+          black pepper was widely traded across the Indian Ocean as both a 
+          seasoning agent and a preservative. Prized for its high piperine 
+          content, responsible for its characteristic aroma and pungent flavour.
         </p>
 
         {/* Intensity Meter */}
