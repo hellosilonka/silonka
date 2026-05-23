@@ -1,5 +1,5 @@
 import Blog from '../models/Blog.js';
-import path from 'path';
+import { uploadToCloudinary } from '../middleware/upload.js';
 
 // GET /api/blogs  — public, returns published only (or all for admin)
 export const getBlogs = async (req, res) => {
@@ -52,7 +52,7 @@ export const createBlog = async (req, res) => {
         const existing = await Blog.findOne({ slug });
         if (existing) slug = `${slug}-${Date.now()}`;
 
-        const image = req.file ? `/uploads/${req.file.filename}` : (req.body.image || '');
+        const image = req.file ? await uploadToCloudinary(req.file) : (req.body.image || '');
 
         const blog = await Blog.create({
             title,
@@ -90,7 +90,7 @@ export const updateBlog = async (req, res) => {
         blog.tags = tags ? JSON.parse(tags) : blog.tags;
 
         if (req.file) {
-            blog.image = `/uploads/${req.file.filename}`;
+            blog.image = await uploadToCloudinary(req.file);
         }
 
         const updated = await blog.save();

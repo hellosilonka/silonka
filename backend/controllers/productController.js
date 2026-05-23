@@ -1,4 +1,5 @@
 import Product from '../models/Product.js';
+import { uploadToCloudinary } from '../middleware/upload.js';
 
 export const getProducts = async (req, res) => {
     try {
@@ -26,10 +27,10 @@ export const getProductById = async (req, res) => {
 export const createProduct = async (req, res) => {
     try {
         const { name, price, description, category, weight, intensity, inStock } = req.body;
-        // Image can come from file upload (multer) or URL string
+        // Image can come from file upload (Cloudinary) or URL string
         let image = '/images/sample.jpg';
         if (req.file) {
-            image = `/uploads/${req.file.filename}`;
+            image = await uploadToCloudinary(req.file);
         } else if (req.body.image) {
             image = req.body.image;
         }
@@ -69,7 +70,7 @@ export const updateProduct = async (req, res) => {
         if (inStock !== undefined) product.inStock = inStock === 'true' || inStock === true;
 
         if (req.file) {
-            product.image = `/uploads/${req.file.filename}`;
+            product.image = await uploadToCloudinary(req.file);
         } else if (req.body.image) {
             product.image = req.body.image;
         }
