@@ -13,6 +13,7 @@ const BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
 gsap.registerPlugin(ScrollTrigger);
 
 interface Product {
+  _id: string;
   id: string;
   name: string;
   description: string;
@@ -318,7 +319,7 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
       className="group relative rounded-card overflow-hidden bg-charcoal-card border border-white/5 hover:border-gold/30 transition-all duration-500"
     >
       {/* Image */}
-      <div className="aspect-square overflow-hidden relative">
+      <Link to={`/product/${product._id}`} className="aspect-square overflow-hidden relative block">
         <img
           src={product.image?.startsWith('/uploads') ? `${BASE_URL}${product.image}` : product.image}
           alt={product.name}
@@ -327,20 +328,20 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
         {/* Quick Add Overlay */}
         <div className="absolute inset-0 bg-charcoal/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <button
-            onClick={handleAddToCart}
+            onClick={(e) => { e.preventDefault(); handleAddToCart(); }}
             className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gold text-charcoal font-mono text-label uppercase tracking-wider hover:bg-gold-light transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 text-xs sm:text-sm"
           >
             Add to Cart
           </button>
         </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between mb-1 sm:mb-2">
-          <h3 className="font-display text-base sm:text-lg text-ivory group-hover:text-gold transition-colors line-clamp-1">
+          <Link to={`/product/${product._id}`} className="font-display text-base sm:text-lg text-ivory group-hover:text-gold transition-colors line-clamp-1">
             {product.name}
-          </h3>
+          </Link>
           <span className="font-mono text-[10px] sm:text-xs text-ivory-muted flex-shrink-0 ml-2">{product.weight}</span>
         </div>
         <p className="text-ivory-muted text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{product.description}</p>

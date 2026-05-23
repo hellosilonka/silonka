@@ -7,11 +7,13 @@ import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 
 import LoadingScreen from '@/components/LoadingScreen';
 import Navigation from '@/components/Navigation';
 import CartDrawer from '@/components/CartDrawer';
 import Footer from '@/components/Footer';
+import CookieConsentProvider from '@/components/CookieConsent';
 
 // Pages
 import HomePage from '@/pages/HomePage';
@@ -31,6 +33,7 @@ import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
 import TermsAndConditionsPage from '@/pages/TermsAndConditionsPage';
 import BlogPage from '@/pages/BlogPage';
 import BlogPostPage from '@/pages/BlogPostPage';
+import ProductPage from '@/pages/ProductPage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -132,6 +135,7 @@ function AppContent() {
         <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
       </Route>
 
       {/* Admin Pages with isolated navigation */}
@@ -146,18 +150,22 @@ function AppContent() {
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '12345678-placeholder.apps.googleusercontent.com'}>
+      <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'USD' }}>
       <AuthProvider>
       <CurrencyProvider>
       <CartProvider>
         <Router>
+          <CookieConsentProvider>
           <SmoothScrollProvider>
             <ScrollToTop />
             <AppContent />
           </SmoothScrollProvider>
+          </CookieConsentProvider>
         </Router>
       </CartProvider>
       </CurrencyProvider>
       </AuthProvider>
+      </PayPalScriptProvider>
     </GoogleOAuthProvider>
   );
 }

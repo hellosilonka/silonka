@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
@@ -59,12 +60,45 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message || 'Internal Server Error' });
 });
 
-// Serve frontend in production
+// ─── Serve frontend in production ────────────────
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'heroku') {
-    app.use(express.static(path.join(__dirname, '../app/dist')));
+    const distPath = path.resolve(__dirname, '../app/dist');
+    const publicPath = path.resolve(__dirname, '../app/public');
 
+    // Log which paths are being used (visible in Heroku logs)
+    console.log('[Static] __dirname:', __dirname);
+    console.log('[Static] distPath:', distPath, '| exists:', fs.existsSync(distPath));
+    console.log('[Static] publicPath:', publicPath, '| exists:', fs.existsSync(publicPath));
+
+    if (fs.existsSync(distPath)) {
+        // List files for debugging
+        const files = fs.readdirSync(distPath).filter(f => /\.(jpg|png|mp4|ico|svg)$/i.test(f));
+        console.log('[Static] Image files in dist:', files);
+    }
+
+    // Primary: serve from Vite build output (app/dist)
+    if (fs.existsSync(distPath)) {
+        app.use(express.static(distPath, { maxAge: '1y', immutable: true }));
+    }
+
+    // Fallback: also serve from app/public (in case dist is missing or incomplete)
+    if (fs.existsSync(publicPath)) {
+        app.use(express.static(publicPath, { maxAge: '1d' }));
+    }
+
+    // SPA fallback — serve index.html for client-side routes only
     app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../app/dist', 'index.html'));
+        // Don't serve index.html for API or upload routes
+        if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
+            return res.status(404).json({ message: 'Not found' });
+        }
+
+        const indexPath = path.resolve(distPath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+            res.sendFile(indexPath);
+        } else {
+            res.status(500).send('Frontend build not found. Run "npm run build" first.');
+        }
     });
 } else {
     app.get('/', (req, res) => {

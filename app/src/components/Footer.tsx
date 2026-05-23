@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Mail, MapPin, Phone, ArrowUpRight } from 'lucide-react';
+import { Instagram, Mail, MapPin, Phone, ArrowUpRight, Cookie } from 'lucide-react';
+import { useCookieConsent } from '@/components/CookieConsent';
 
 const footerLinks = {
   shop: [
@@ -28,6 +29,7 @@ const footerLinks = {
 };
 
 export default function Footer() {
+  const { openSettings } = useCookieConsent();
   return (
     <footer className="relative bg-charcoal-light border-t border-white/5" role="contentinfo" aria-label="Site footer">
       {/* Vignette */}
@@ -187,6 +189,13 @@ export default function Footer() {
             >
               Refund Policy
             </Link>
+            <button
+              onClick={openSettings}
+              className="text-ivory-muted hover:text-gold transition-colors text-sm inline-flex items-center gap-1.5"
+            >
+              <Cookie className="w-3.5 h-3.5" />
+              Cookie Settings
+            </button>
           </div>
         </div>
       </div>

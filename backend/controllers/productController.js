@@ -91,3 +91,64 @@ export const deleteProduct = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Add a review to a product
+// @route   POST /api/products/:id/reviews
+// @access  Private
+export const addReview = async (req, res) => {
+    try {
+        const { rating, comment } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+
+        // Check if user already reviewed
+        const alreadyReviewed = product.reviews.find(
+            (r) => r.user?.toString() === req.user._id.toString()
+        );
+        if (alreadyReviewed) {
+            return res.status(400).json({ message: 'You have already reviewed this product' });
+        }
+
+        const review = {
+            user: req.user._id,
+            userName: req.user.name,
+            rating: Number(rating),
+            comment,
+        };
+
+        product.reviews.push(review);
+        product.calcAverageRating();
+        await product.save();
+
+        res.status(201).json({ message: 'Review added', averageRating: product.averageRating, numReviews: product.numReviews });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get related products (same category, excluding current)
+// @route   GET /api/products/:id/related
+// @access  Public
+export const getRelatedProducts = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+
+        const related = await Product.find({
+            category: product.category,
+            _id: { $ne: product._id },
+        }).limit(4);
+
+        // If not enough same-category products, fill with random others
+        if (related.length < 4) {
+            const excludeIds = [product._id, ...related.map(p => p._id)];
+            const more = await Product.find({ _id: { $nin: excludeIds } })
+                .limit(4 - related.length);
+            related.push(...more);
+        }
+
+        res.json(related);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

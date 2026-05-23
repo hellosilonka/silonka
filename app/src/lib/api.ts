@@ -72,6 +72,16 @@ export const deleteProduct = async (id: string) => {
     return data;
 };
 
+export const addProductReview = async (id: string, review: { rating: number; comment: string }) => {
+    const { data } = await api.post(`/products/${id}/reviews`, review);
+    return data;
+};
+
+export const getRelatedProducts = async (id: string) => {
+    const { data } = await api.get(`/products/${id}/related`);
+    return data;
+};
+
 // ─── Orders ─────────────────────────────
 export const getOrders = async (params?: { page?: number; limit?: number }) => {
     const { data } = await api.get('/orders', { params });
@@ -150,9 +160,19 @@ export const deleteBulkOrdersBulk = async (ids: string[]) => {
     return data;
 };
 
-// ─── Payment ─────────────────────────────
-export const processPayment = async (paymentData: any) => {
-    const { data } = await api.post('/payment', paymentData);
+// ─── Payment (PayPal) ────────────────────
+export const createPayPalOrder = async (orderId: string) => {
+    const { data } = await api.post('/payment/create-order', { orderId });
+    return data;
+};
+
+export const capturePayPalOrder = async (paypalOrderId: string, orderId: string) => {
+    const { data } = await api.post('/payment/capture-order', { paypalOrderId, orderId });
+    return data;
+};
+
+export const getPayPalConfig = async () => {
+    const { data } = await api.get('/payment/config');
     return data;
 };
 
