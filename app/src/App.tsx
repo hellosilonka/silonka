@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -15,27 +15,35 @@ import CartDrawer from '@/components/CartDrawer';
 import Footer from '@/components/Footer';
 import CookieConsentProvider from '@/components/CookieConsent';
 
-// Pages
-import HomePage from '@/pages/HomePage';
-import ShopPage from '@/pages/ShopPage';
-import OriginsPage from '@/pages/OriginsPage';
-import CraftPage from '@/pages/CraftPage';
-import ContactPage from '@/pages/ContactPage';
-import CheckoutPage from '@/pages/CheckoutPage';
-import LoginPage from '@/pages/LoginPage';
-import SignupPage from '@/pages/SignupPage';
-
-import AdminDashboard from '@/pages/AdminDashboard';
-import AdminLogin from '@/pages/AdminLogin';
-import BulkOrderPage from '@/pages/BulkOrderPage';
-import RefundPolicyPage from '@/pages/RefundPolicyPage';
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
-import TermsAndConditionsPage from '@/pages/TermsAndConditionsPage';
-import BlogPage from '@/pages/BlogPage';
-import BlogPostPage from '@/pages/BlogPostPage';
-import ProductPage from '@/pages/ProductPage';
+// Lazy-loaded pages — each becomes its own chunk
+const HomePage = lazy(() => import('@/pages/HomePage'));
+const ShopPage = lazy(() => import('@/pages/ShopPage'));
+const OriginsPage = lazy(() => import('@/pages/OriginsPage'));
+const CraftPage = lazy(() => import('@/pages/CraftPage'));
+const ContactPage = lazy(() => import('@/pages/ContactPage'));
+const CheckoutPage = lazy(() => import('@/pages/CheckoutPage'));
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const SignupPage = lazy(() => import('@/pages/SignupPage'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
+const BulkOrderPage = lazy(() => import('@/pages/BulkOrderPage'));
+const RefundPolicyPage = lazy(() => import('@/pages/RefundPolicyPage'));
+const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
+const TermsAndConditionsPage = lazy(() => import('@/pages/TermsAndConditionsPage'));
+const BlogPage = lazy(() => import('@/pages/BlogPage'));
+const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
+const ProductPage = lazy(() => import('@/pages/ProductPage'));
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Minimal loading fallback for route transitions
+function RouteLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+    </div>
+  );
+}
 
 // Smooth scroll wrapper component
 function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
@@ -83,7 +91,9 @@ function MainLayout() {
       <Navigation />
       <CartDrawer />
       <main className="relative">
-        <Outlet />
+        <Suspense fallback={<RouteLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </div>
@@ -94,7 +104,9 @@ function AdminLayout() {
   return (
     <div className="relative bg-charcoal min-h-screen">
       {/* Admin specific wrapper without the main nav/footer */}
-      <Outlet />
+      <Suspense fallback={<RouteLoader />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }
@@ -113,37 +125,41 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, [location.pathname, isLoading]);
 
-  if (isLoading && location.pathname === '/') {
-    return <LoadingScreen onComplete={() => setIsLoading(false)} />;
-  }
-
   return (
-    <Routes>
-      {/* Public Pages with main navigation */}
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/shop" element={<ShopPage />} />
-        <Route path="/origins" element={<OriginsPage />} />
-        <Route path="/craft" element={<CraftPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/bulk-order" element={<BulkOrderPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/refund-policy" element={<RefundPolicyPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
-        <Route path="/blog" element={<BlogPage />} />
-        <Route path="/blog/:slug" element={<BlogPostPage />} />
-        <Route path="/product/:id" element={<ProductPage />} />
-      </Route>
+    <>
+      {/* Loading screen renders as OVERLAY on top of real content.
+          This lets Lighthouse detect the hero h1/image as LCP behind it. */}
+      {isLoading && location.pathname === '/' && (
+        <LoadingScreen onComplete={() => setIsLoading(false)} />
+      )}
 
-      {/* Admin Pages with isolated navigation */}
-      <Route element={<AdminLayout />}>
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-      </Route>
-    </Routes>
+      <Routes>
+        {/* Public Pages with main navigation */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/shop" element={<ShopPage />} />
+          <Route path="/origins" element={<OriginsPage />} />
+          <Route path="/craft" element={<CraftPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/bulk-order" element={<BulkOrderPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/product/:id" element={<ProductPage />} />
+        </Route>
+
+        {/* Admin Pages with isolated navigation */}
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Route>
+      </Routes>
+    </>
   );
 }
 
@@ -171,3 +187,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
@@ -21,6 +22,9 @@ import bulkOrderRoutes from './routes/bulkOrderRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 
 const app = express();
+
+// Enable gzip/brotli compression for all responses
+app.use(compression());
 
 // CORS — must handle preflight before other middleware
 app.use(cors({
@@ -76,14 +80,30 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'heroku') 
         console.log('[Static] Image files in dist:', files);
     }
 
-    // Primary: serve from Vite build output (app/dist)
-    if (fs.existsSync(distPath)) {
-        app.use(express.static(distPath, { maxAge: '1y', immutable: true }));
+    // Primary: serve hashed assets (JS/CSS) from dist/assets with long cache
+    if (fs.existsSync(path.join(distPath, 'assets'))) {
+        app.use('/assets', express.static(path.join(distPath, 'assets'), {
+            maxAge: '1y',
+            immutable: true,
+        }));
     }
 
-    // Fallback: also serve from app/public (in case dist is missing or incomplete)
+    // Serve other dist files (images, mp4, etc.) with moderate cache — NOT index.html
+    if (fs.existsSync(distPath)) {
+        app.use(express.static(distPath, {
+            maxAge: '7d',
+            setHeaders: (res, filePath) => {
+                // Never cache index.html — must always get the latest
+                if (filePath.endsWith('.html')) {
+                    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                }
+            },
+        }));
+    }
+
+    // Fallback: also serve from app/public
     if (fs.existsSync(publicPath)) {
-        app.use(express.static(publicPath, { maxAge: '1d' }));
+        app.use(express.static(publicPath, { maxAge: '7d' }));
     }
 
     // SPA fallback — serve index.html for client-side routes only

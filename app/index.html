@@ -22,7 +22,7 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://silonka.com/" />
-  <meta property="og:title" content="Silonka | Premium Ceylon Spices from Sri Lanka" />
+  <meta property="og:title" content="Silonka | Ceylon Spices from Sri Lanka" />
   <meta property="og:description"
     content="Premium single-origin Ceylon spices — Black Pepper, Cinnamon, Cloves. Harvested at peak aroma from Sri Lanka's hill country." />
   <meta property="og:image" content="https://silonka.com/hero_spice_field.jpg" />
@@ -32,7 +32,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://silonka.com/" />
-  <meta name="twitter:title" content="Silonka | Premium Ceylon Spices from Sri Lanka" />
+  <meta name="twitter:title" content="Silonka | Ceylon Spices from Sri Lanka" />
   <meta name="twitter:description"
     content="Premium single-origin Ceylon spices — Black Pepper, Cinnamon, Cloves. Harvested at peak aroma from Sri Lanka's hill country." />
   <meta name="twitter:image" content="https://silonka.com/hero_spice_field.jpg" />
@@ -40,9 +40,15 @@
   <!-- Preconnect to Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Non-blocking font loading: swap display ensures text is visible immediately -->
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
+    rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet">
+  </noscript>
 
   <!-- Preload hero image for LCP -->
   <link rel="preload" as="image" href="/hero_spice_field.jpg" />
