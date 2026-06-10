@@ -45,6 +45,9 @@ function RouteLoader() {
   );
 }
 
+// Module-level Lenis ref so ScrollToTop can access it
+let lenisInstance: Lenis | null = null;
+
 // Smooth scroll wrapper component
 function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -57,6 +60,8 @@ function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
       touchMultiplier: 2,
     });
 
+    lenisInstance = lenis;
+
     lenis.on('scroll', ScrollTrigger.update);
 
     gsap.ticker.add((time) => {
@@ -66,6 +71,7 @@ function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      lenisInstance = null;
       lenis.destroy();
     };
   }, []);
@@ -77,8 +83,24 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    ScrollTrigger.refresh();
+    // Stop Lenis to prevent it from fighting the scroll reset
+    if (lenisInstance) {
+      lenisInstance.stop();
+    }
+
+    // Force-reset all scroll positions
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Restart Lenis and refresh ScrollTrigger after the DOM has settled
+    requestAnimationFrame(() => {
+      if (lenisInstance) {
+        lenisInstance.start();
+        lenisInstance.scrollTo(0, { immediate: true });
+      }
+      ScrollTrigger.refresh();
+    });
   }, [pathname]);
 
   return null;

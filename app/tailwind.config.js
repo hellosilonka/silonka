@@ -56,8 +56,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        display: ['Cormorant Garamond', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        display: ['Cormorant Garamond', 'Cormorant Garamond Fallback', 'Georgia', 'serif'],
+        body: ['Inter', 'Inter Fallback', 'Arial', 'sans-serif'],
         mono: ['IBM Plex Mono', 'monospace'],
       },
       fontSize: {

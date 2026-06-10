@@ -158,6 +158,8 @@ export default function HomePage() {
           <img
             src="/hero_spice_field.jpg"
             alt="Lush Ceylon spice fields in Sri Lanka's hill country — where Silonka sources premium cinnamon and pepper"
+            width={1344}
+            height={768}
             className="w-full h-full object-cover"
             fetchPriority="high"
           />
@@ -265,6 +267,8 @@ export default function HomePage() {
                 <img
                   src="/craft_mortar.jpg"
                   alt="Traditional mortar and pestle used for grinding fresh Ceylon spices by hand"
+                  width={864}
+                  height={1184}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
@@ -472,6 +476,9 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         <img
           src={imageSrc}
           alt={product.name}
+          width={600}
+          height={600}
+          loading="lazy"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           onError={(e) => { (e.target as HTMLImageElement).src = '/collection_set.jpg'; }}
         />

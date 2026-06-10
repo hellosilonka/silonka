@@ -152,6 +152,9 @@ export default function CraftPage() {
                       <img
                         src={step.image}
                         alt={step.title}
+                        width={864}
+                        height={1184}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -221,6 +224,9 @@ export default function CraftPage() {
                 <img
                   src="/craft_mortar.jpg"
                   alt="Quality control"
+                  width={864}
+                  height={1184}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
               </div>

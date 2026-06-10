@@ -11,31 +11,31 @@ const timelineEvents = [
     year: 'Ancient',
     title: 'Ancient Trade Routes',
     description: 'Long before European ships reached the island, Sri Lanka was already a thriving center of the Indian Ocean spice trade. Arab, Persian, Indian, and Chinese merchants regularly sailed to the island\'s ports to obtain highly prized spices—especially cinnamon—which were then carried to markets across the Middle East and the Mediterranean.',
-    image: '/300.png',
+    image: '/300_opt.jpg',
   },
   {
     year: '1500s',
     title: 'Portuguese Era',
     description: 'Soon after their arrival in the early 1500s, the Portuguese established control over the cinnamon trade, creating a monopoly that forced local communities to supply cinnamon bark to colonial authorities. This only served to boost Ceylon Cinnamon\'s reputation as the most coveted spice in the world.',
-    image: '/1518.png',
+    image: '/1518_opt.jpg',
   },
   {
     year: '1658',
     title: 'Dutch Spice Empire',
     description: 'After the Dutch East India Company (VOC) wrested control of the island\'s coastal regions, they were able to strengthen the monopoly. The Dutch introduced systematic cultivation methods to cinnamon plantations and developed transport networks to aid in moving the spices from growing regions to ports like Colombo and Negombo.',
-    image: '/1658.png',
+    image: '/1658_opt.jpg',
   },
   {
     year: '1800s',
     title: 'British Colonial Era',
     description: 'Under British rule in the 19th century, Sri Lanka\'s spice trade became more systematically organized and integrated into the global colonial economy. Cinnamon plantations were expanded and infrastructure improved. Although tea eventually became the island\'s dominant export, Sri Lankan cinnamon and other spices remained highly valued commodities.',
-    image: '/1658.png',
+    image: '/1658_opt.jpg',
   },
   {
     year: 'Today',
     title: "Sri Lanka's Spice Legacy",
     description: 'Sri Lanka is responsible for producing over 80% of the world\'s "True Cinnamon." Despite technological advancements and industrial changes, Sri Lanka\'s spice cultivators remain rooted in centuries-old traditions—hand-picking bark, sun-drying pepper vines, and hand-picking clove buds at dawn. This ensures the utmost care and delicacy of skill preserves the true essence of the spice.',
-    image: '/Today.png',
+    image: '/Today_opt.jpg',
   },
 ];
 
@@ -183,7 +183,7 @@ export default function OriginsPage() {
         description="Discover Silonka's story: from ancient spice trade routes through Sri Lanka's hill country to your kitchen. Learn about Ceylon cinnamon, black pepper, and cloves — and the families who cultivate them."
         keywords="Ceylon spice history, Sri Lanka cinnamon origin, spice trade routes, organic spice farms, Silonka story, Ceylon pepper, cloves Sri Lanka"
         canonicalPath="/origins"
-        ogImage="/cgarden.png"
+        ogImage="/cgarden_opt.jpg"
         jsonLd={breadcrumbSchema([
           { name: 'Home', url: '/' },
           { name: 'Our Origins', url: '/origins' },
@@ -216,8 +216,11 @@ export default function OriginsPage() {
             <div className="story-image relative order-2 lg:order-1">
               <div className="aspect-[4/3] rounded-card overflow-hidden">
                 <img
-                  src="/cgarden.png"
+                  src="/cgarden_opt.jpg"
                   alt="Silonka spice farm"
+                  width={1200}
+                  height={800}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -281,6 +284,9 @@ export default function OriginsPage() {
                     <img
                       src={spice.image}
                       alt={spice.name}
+                      width={1200}
+                      height={800}
+                      loading="lazy"
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                     />
                   </div>
@@ -346,6 +352,9 @@ export default function OriginsPage() {
                     <img
                       src={event.image}
                       alt={event.title}
+                      width={1200}
+                      height={800}
+                      loading="lazy"
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                     />
                   </div>

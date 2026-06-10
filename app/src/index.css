@@ -36,12 +36,31 @@
 }
 
 @layer base {
+  /* Font fallback metrics to minimize CLS during font swap */
+  @font-face {
+    font-family: 'Cormorant Garamond Fallback';
+    src: local('Georgia');
+    size-adjust: 105%;
+    ascent-override: 95%;
+    descent-override: 22%;
+    line-gap-override: 0%;
+  }
+
+  @font-face {
+    font-family: 'Inter Fallback';
+    src: local('Arial');
+    size-adjust: 107%;
+    ascent-override: 90%;
+    descent-override: 22%;
+    line-gap-override: 0%;
+  }
+
   * {
     @apply border-border;
   }
   
   html {
-    scroll-behavior: smooth;
+    /* Removed scroll-behavior: smooth — Lenis handles smooth scroll */
   }
   
   body {
