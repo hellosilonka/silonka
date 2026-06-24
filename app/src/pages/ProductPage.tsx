@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 import { getProductById, getRelatedProducts, addProductReview } from '@/lib/api';
-import SEOHead, { breadcrumbSchema } from '@/components/SEOHead';
+import SEOHead, { breadcrumbSchema, productSchema } from '@/components/SEOHead';
 
 const BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
 
@@ -197,16 +197,30 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
-        title={`${product.name} — Silonka`}
-        description={product.description}
-        keywords={`${product.name}, ${product.category}, Ceylon spices, buy online`}
+        title={`${product.name} — Buy Premium ${product.category} Online | Silonka`}
+        description={`${product.description} Single-origin ${product.category} from Sri Lanka. ${format(activePrice)}. Shop at Silonka.`}
+        keywords={`${product.name}, ${product.category}, Ceylon ${product.category}, buy Ceylon spices online, Sri Lanka spices, premium ${product.category}, Silonka`}
         canonicalPath={`/product/${product._id}`}
         ogImage={product.image}
-        jsonLd={breadcrumbSchema([
-          { name: 'Home', url: '/' },
-          { name: 'Shop', url: '/shop' },
-          { name: product.name, url: `/product/${product._id}` },
-        ])}
+        jsonLd={[
+          breadcrumbSchema([
+            { name: 'Home', url: '/' },
+            { name: 'Shop', url: '/shop' },
+            { name: product.name, url: `/product/${product._id}` },
+          ]),
+          productSchema({
+            name: product.name,
+            description: product.description,
+            image: product.image,
+            price: activePrice,
+            inStock: isInStock,
+            category: product.category,
+            weight: product.weight,
+            averageRating: product.averageRating,
+            numReviews: product.numReviews,
+            id: product._id,
+          }),
+        ]}
       />
 
       {/* Breadcrumb */}

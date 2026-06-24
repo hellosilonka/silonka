@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME = 'Silonka';
-const SITE_URL = 'https://silonka.com';
+const SITE_URL = 'https://www.silonka.co';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/hero_spice_field.jpg`;
 
 interface SEOHeadProps {
@@ -85,7 +85,7 @@ export const ORGANIZATION_SCHEMA = {
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: '+94-76-695-1393',
-    email: 'hello@silonka.com',
+    email: 'hello@silonka.co',
     contactType: 'customer service',
     availableLanguage: ['English'],
   },
@@ -207,3 +207,56 @@ export function productListSchema(products: {
     })),
   };
 }
+
+export function productSchema(product: {
+  name: string;
+  description: string;
+  image: string;
+  price: number;
+  currency?: string;
+  inStock: boolean;
+  category?: string;
+  weight?: string;
+  averageRating?: number;
+  numReviews?: number;
+  id: string;
+}) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.image.startsWith('http') ? product.image : `${SITE_URL}${product.image}`,
+    url: `${SITE_URL}/product/${product.id}`,
+    brand: {
+      '@type': 'Brand',
+      name: 'Silonka',
+    },
+    category: product.category || 'Spices',
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: product.currency || 'USD',
+      availability: product.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'Silonka',
+      },
+    },
+  };
+
+  if (product.averageRating && product.numReviews && product.numReviews > 0) {
+    schema.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: product.averageRating,
+      reviewCount: product.numReviews,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  return schema;
+}
+

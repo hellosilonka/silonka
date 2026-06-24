@@ -20,6 +20,8 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import bulkOrderRoutes from './routes/bulkOrderRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
+import sitemapRoutes from './routes/sitemapRoutes.js';
+import { seoPrerender } from './middleware/seoPrerender.js';
 
 const app = express();
 
@@ -57,6 +59,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/bulk-orders', bulkOrderRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api', sitemapRoutes);
 
 // Global error handler — prevents ERR_CONNECTION_RESET from unhandled promise rejections
 app.use((err, req, res, next) => {
@@ -105,6 +108,9 @@ if (process.env.NODE_ENV === 'production') {
     if (fs.existsSync(publicPath)) {
         app.use(express.static(publicPath, { maxAge: '7d' }));
     }
+
+    // SEO: Pre-render meta tags for search engine bots before SPA fallback
+    app.use(seoPrerender(distPath));
 
     // SPA fallback — serve index.html for client-side routes only
     app.get('*', (req, res) => {

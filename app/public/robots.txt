@@ -1,5 +1,5 @@
-# Silonka — Ceylon Spices
-# https://silonka.com
+# Silonka — Premium Ceylon Cinnamon & Spices
+# https://www.silonka.co
 
 User-agent: *
 Allow: /
@@ -9,4 +9,8 @@ Disallow: /checkout
 Disallow: /login
 Disallow: /signup
 
-Sitemap: https://silonka.com/sitemap.xml
+# Static sitemap (pages)
+Sitemap: https://www.silonka.co/sitemap.xml
+
+# Dynamic sitemap (blog posts + products from database)
+Sitemap: https://www.silonka.co/api/sitemap.xml

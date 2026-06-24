@@ -62,9 +62,9 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
-        title="Blog — Ceylon Spice Insights, Recipes & Health Benefits — Silonka"
-        description="Explore Silonka's blog for expert insights on Ceylon spices, authentic Sri Lankan recipes, health benefits of cinnamon and pepper, and the art of spice cultivation."
-        keywords="Ceylon spice blog, Sri Lanka recipes, cinnamon health benefits, black pepper uses, spice cooking tips, Silonka journal"
+        title="Ceylon Cinnamon Blog — Health Benefits, Recipes & Spice Guides | Silonka"
+        description="Discover everything about Ceylon Cinnamon — health benefits, recipes, antioxidant properties, diabetes management, and how it compares to Cassia. Expert insights on premium Sri Lankan spices from Silonka."
+        keywords="Ceylon Cinnamon, Ceylon Cinnamon health benefits, true cinnamon, Cinnamomum verum, cinnamon vs cassia, Ceylon spice blog, Sri Lanka cinnamon, buy Ceylon cinnamon, organic cinnamon, Silonka blog"
         canonicalPath="/blog"
         ogType="blog"
         jsonLd={breadcrumbSchema([

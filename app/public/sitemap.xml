@@ -2,68 +2,132 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
   <url>
-    <loc>https://silonka.com/</loc>
+    <loc>https://www.silonka.co/</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Shop -->
   <url>
-    <loc>https://silonka.com/shop</loc>
+    <loc>https://www.silonka.co/shop</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog -->
+  <!-- Blog Index -->
   <url>
-    <loc>https://silonka.com/blog</loc>
+    <loc>https://www.silonka.co/blog</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
+  <!-- Blog Articles -->
+  <url>
+    <loc>https://www.silonka.co/blog/what-is-ceylon-cinnamon</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/ceylon-cinnamon-health-benefits</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/antioxidant-properties-ceylon-cinnamon</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/ceylon-cinnamon-vs-cassia</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/ceylon-cinnamon-heart-health</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/boost-healthy-diet-ceylon-cinnamon</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/ceylon-cinnamon-diabetes</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/ceylon-black-pepper-black-gold</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.silonka.co/blog/ceylon-cardamom-queen-of-spices</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- Origins (Our Story) -->
   <url>
-    <loc>https://silonka.com/origins</loc>
+    <loc>https://www.silonka.co/origins</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Craft (Our Process) -->
   <url>
-    <loc>https://silonka.com/craft</loc>
+    <loc>https://www.silonka.co/craft</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Contact -->
   <url>
-    <loc>https://silonka.com/contact</loc>
+    <loc>https://www.silonka.co/contact</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <!-- Bulk Orders -->
   <url>
-    <loc>https://silonka.com/bulk-order</loc>
+    <loc>https://www.silonka.co/bulk-order</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <!-- Legal Pages -->
   <url>
-    <loc>https://silonka.com/refund-policy</loc>
+    <loc>https://www.silonka.co/refund-policy</loc>
+    <lastmod>2026-05-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-
   <url>
-    <loc>https://silonka.com/privacy-policy</loc>
+    <loc>https://www.silonka.co/privacy-policy</loc>
+    <lastmod>2026-05-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-
   <url>
-    <loc>https://silonka.com/terms-and-conditions</loc>
+    <loc>https://www.silonka.co/terms-and-conditions</loc>
+    <lastmod>2026-05-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
