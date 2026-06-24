@@ -22,3 +22,6 @@ backend/uploads/blog_*.png
 .idea/
 .DS_Store
 Thumbs.db
+
+# Old deployment logs
+deploy*.log

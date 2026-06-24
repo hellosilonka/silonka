@@ -1,7 +1,7 @@
 {
   "name": "silonka-fullstack",
   "version": "1.0.0",
-  "description": "Heroku deployment root for Silonka",
+  "description": "Render deployment root for Silonka",
   "engines": {
     "node": "20.x"
   },

@@ -65,11 +65,11 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Serve frontend in production ────────────────
-if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'heroku') {
+if (process.env.NODE_ENV === 'production') {
     const distPath = path.resolve(__dirname, '../app/dist');
     const publicPath = path.resolve(__dirname, '../app/public');
 
-    // Log which paths are being used (visible in Heroku logs)
+    // Log which paths are being used (visible in deployment logs)
     console.log('[Static] __dirname:', __dirname);
     console.log('[Static] distPath:', distPath, '| exists:', fs.existsSync(distPath));
     console.log('[Static] publicPath:', publicPath, '| exists:', fs.existsSync(publicPath));
