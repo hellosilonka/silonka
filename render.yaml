@@ -2,7 +2,7 @@ services:
   - type: web
     name: silonka
     runtime: node
-    plan: starter
+    plan: free
     buildCommand: npm install --prefix backend && npm install --include=dev --prefix app && npm run build --prefix app
     startCommand: node backend/server.js
     envVars:
