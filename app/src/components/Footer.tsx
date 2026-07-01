@@ -40,8 +40,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 lg:gap-8 mb-10 lg:mb-16">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link to="/" className="inline-block mb-4 lg:mb-6">
-              <span className="font-display text-2xl lg:text-3xl text-ivory hover:text-gold transition-colors">
+            <Link to="/" className="inline-flex items-center gap-2.5 mb-4 lg:mb-6 group">
+              <img
+                src="/logo.png"
+                alt="Silonka logo"
+                className="w-9 h-9 object-contain drop-shadow-[0_0_6px_rgba(196,164,105,0.3)] group-hover:drop-shadow-[0_0_10px_rgba(196,164,105,0.5)] transition-all duration-300"
+              />
+              <span className="font-display text-2xl lg:text-3xl text-ivory group-hover:text-gold transition-colors">
                 Silonka
               </span>
             </Link>

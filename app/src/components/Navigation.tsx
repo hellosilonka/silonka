@@ -97,9 +97,14 @@ export default function Navigation() {
             {/* Logo */}
             <Link
               to="/"
-              className="font-display text-2xl lg:text-3xl font-semibold text-ivory tracking-tight hover:text-gold transition-colors"
+              className="flex items-center gap-2.5 font-display text-2xl lg:text-3xl font-semibold text-ivory tracking-tight hover:text-gold transition-colors group"
             >
-              Silonka
+              <img
+                src="/logo.png"
+                alt="Silonka logo"
+                className="w-10 h-10 object-contain drop-shadow-[0_0_6px_rgba(196,164,105,0.3)] group-hover:drop-shadow-[0_0_10px_rgba(196,164,105,0.5)] transition-all duration-300"
+              />
+              <span className="hidden sm:inline">Silonka</span>
             </Link>
 
             {/* Desktop Navigation */}
