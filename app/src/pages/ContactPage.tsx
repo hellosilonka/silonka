@@ -150,6 +150,20 @@ export default function ContactPage() {
                   @silonka
                 </a>
               </div>
+
+              {/* Bulk Orders CTA */}
+              <div className="pt-2">
+                <p className="font-mono text-[10px] sm:text-label text-ivory-muted uppercase mb-3 sm:mb-4">Bulk Purchasing</p>
+                <a
+                  href="/bulk-order"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-gold text-charcoal rounded-xl font-mono text-xs uppercase tracking-widest hover:bg-gold/90 transition-all duration-300 font-semibold shadow-lg shadow-gold/10 hover:shadow-gold/20 hover:-translate-y-0.5"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                    <path d="M16 16h6"/><path d="M19 13v6"/><path d="M12 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v4"/>
+                  </svg>
+                  Place Bulk Order
+                </a>
+              </div>
             </div>
 
             {/* Contact Form */}

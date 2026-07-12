@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { login, googleLogin } from '@/lib/api';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/context/AuthContext';
+import SEOHead from '@/components/SEOHead';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -52,8 +53,14 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-charcoal pt-32 pb-16 flex items-center justify-center px-4">
+            <SEOHead
+                title="Sign In — Silonka"
+                description="Sign in to your Silonka account to track orders, manage your profile, and access exclusive member benefits."
+                canonicalPath="/login"
+                noIndex
+            />
             <div className="max-w-md w-full bg-charcoal-card border border-white/5 rounded-card p-8 shadow-xl">
-                <h2 className="font-display text-3xl text-ivory text-center mb-8">Sign In</h2>
+                <h1 className="font-display text-3xl text-ivory text-center mb-8">Sign In</h1>
                 {error && <div className="bg-red-500/10 text-red-500 p-3 rounded mb-4 text-center font-mono text-sm">{error}</div>}
                 
                 <form onSubmit={handleLogin} className="space-y-4">

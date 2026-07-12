@@ -82,12 +82,8 @@ export default function BlogPage() {
               The Silonka Journal
             </span>
             <h1 className="font-display text-[clamp(36px,5vw,64px)] text-ivory mb-4 leading-tight">
-              Spice Stories &amp; Sri Lanka Insights
+              There is only one true cinnamon. It comes from Sri Lanka.
             </h1>
-            <p className="text-ivory-muted leading-relaxed text-base sm:text-lg">
-              From ancient spice trade routes to modern kitchens — explore recipes, health benefits,
-              and the craft behind every Ceylon spice we source.
-            </p>
           </div>
         </div>
       </section>

@@ -61,6 +61,14 @@ export function seoPrerender(distPath) {
                 );
             }
 
+            // Inject noindex for private pages (login, signup, checkout)
+            if (meta.noIndex) {
+                html = html.replace(
+                    /<meta name="robots"[^>]*\/>/,
+                    `<meta name="robots" content="noindex, nofollow" />`
+                );
+            }
+
             // Replace OG tags
             if (meta.title) {
                 html = html.replace(
@@ -128,6 +136,16 @@ export function seoPrerender(distPath) {
                 );
             }
 
+            // Inject visible semantic content into the body for bots
+            // This gives crawlers an H1, description, and word count
+            if (meta.h1 || meta.bodyText) {
+                const seoBlock = buildSeoBlock(meta);
+                html = html.replace(
+                    '<div id="root"></div>',
+                    `<div id="root">${seoBlock}</div>`
+                );
+            }
+
             res.set('Content-Type', 'text/html');
             res.send(html);
         } catch (err) {
@@ -135,6 +153,19 @@ export function seoPrerender(distPath) {
             next(); // Fall through to default SPA handler
         }
     };
+}
+
+/**
+ * Build a hidden-but-crawlable semantic HTML block for bots.
+ * React will hydrate over this on client-side, but bots get real content.
+ */
+function buildSeoBlock(meta) {
+    let block = '<main>';
+    if (meta.h1) block += `<h1>${escapeHtml(meta.h1)}</h1>`;
+    if (meta.bodyText) block += `<p>${escapeHtml(meta.bodyText)}</p>`;
+    if (meta.extraHtml) block += meta.extraHtml;
+    block += '</main>';
+    return block;
 }
 
 /**
@@ -152,6 +183,9 @@ async function getMetaForPath(urlPath) {
                 description: blog.excerpt,
                 image: blog.image || `${SITE_URL}/hero_spice_field.jpg`,
                 ogType: 'article',
+                h1: blog.title,
+                bodyText: blog.excerpt,
+                extraHtml: blog.content ? `<article>${escapeHtml(blog.content.substring(0, 1500))}</article>` : '',
                 jsonLd: {
                     '@context': 'https://schema.org',
                     '@type': 'Article',
@@ -210,29 +244,104 @@ async function getMetaForPath(urlPath) {
                 title: `${product.name} — Buy Premium ${product.category} Online | Silonka`,
                 description: `${product.description} Single-origin ${product.category} from Sri Lanka. Shop at Silonka.`,
                 image: product.image?.startsWith('http') ? product.image : `${SITE_URL}${product.image}`,
+                h1: product.name,
+                bodyText: `${product.description} Single-origin ${product.category} from Sri Lanka, hand-harvested and processed in small batches. Shop premium Ceylon spices at Silonka.`,
                 jsonLd: schema,
             };
         }
     }
 
-    // Blog index
-    if (urlPath === '/blog') {
-        return {
-            title: 'Blog — Ceylon Spice Insights, Recipes & Health Benefits — Silonka',
-            description: "Explore Silonka's blog for expert insights on Ceylon spices, authentic Sri Lankan recipes, health benefits of cinnamon and pepper, and the art of spice cultivation.",
-            ogType: 'blog',
-        };
-    }
-
-    // Shop
-    if (urlPath === '/shop') {
-        return {
+    // ─── Static page meta map ────────────────────────
+    const staticPages = {
+        '/': {
+            title: 'Silonka — Premium Ceylon Cinnamon & Spices from Sri Lanka',
+            description: 'Buy authentic Ceylon Cinnamon (Cinnamomum verum), Black Pepper, and Cloves — single-origin, hand-harvested from Sri Lanka\'s misty hill country. True cinnamon with low coumarin, delivered fresh worldwide.',
+            h1: 'Silonka Spices',
+            bodyText: 'Premium single-origin Ceylon spices — Black Pepper, Cinnamon, Cloves. Harvested at peak aroma from Sri Lanka\'s hill country. The magical harvest born from the mist-veiled highlands of Ceylon. Each spice is hand-selected from smallholder farms and processed in small batches to preserve its essential oils. From the rugged, rolling plains of the Southern and South-Western regions of Sri Lanka, we bring the world cinnamon of quality that is unlike any other.',
+        },
+        '/shop': {
             title: 'Shop Premium Ceylon Spices Online — Silonka',
-            description: 'Browse and buy authentic Ceylon cinnamon, black pepper, cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka.',
-        };
+            description: 'Browse and buy authentic Ceylon cinnamon, black pepper, cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Free shipping on select orders.',
+            h1: 'Shop Silonka Spices',
+            bodyText: 'From our partner farms in Sri Lanka to your kitchen. Each spice is harvested at peak potency and sealed for maximum freshness. Browse our collection of premium Ceylon cinnamon, black pepper, cloves, and curated spice gift sets.',
+        },
+        '/blog': {
+            title: 'Ceylon Cinnamon Blog — Health Benefits, Recipes & Spice Guides | Silonka',
+            description: "Discover everything about Ceylon Cinnamon — health benefits, recipes, antioxidant properties, diabetes management, and how it compares to Cassia. Expert insights on premium Sri Lankan spices from Silonka.",
+            ogType: 'blog',
+            h1: 'There is only one true cinnamon. It comes from Sri Lanka.',
+            bodyText: "Explore Silonka's blog for expert insights on Ceylon spices, authentic Sri Lankan recipes, health benefits of cinnamon and pepper, and the art of spice cultivation.",
+        },
+        '/origins': {
+            title: 'Our Story — The Origins of Ceylon Spices — Silonka',
+            description: "Discover Silonka's story: from ancient spice trade routes through Sri Lanka's hill country to your kitchen. Learn about Ceylon cinnamon, black pepper, and cloves — and the families who cultivate them.",
+            h1: 'From Sri Lanka to Your Kitchen',
+            bodyText: "For two thousand years, one island kept the world's most treasured secret. Silonka was born from it. Sri Lanka, historically known as Ceylon, has been one of the world's most celebrated sources of Cinnamon for many centuries. Located along the major maritime routes of the Indian Ocean, the island had become a crucial hub very early on in the ancient global spice trade, attracting merchants from Arabia, Persia, and China. Ceylon Cinnamon had achieved status as one of the most prized commodities of global trade long before the arrival of Europeans.",
+        },
+        '/craft': {
+            title: 'Our Craft — How We Harvest & Process Ceylon Spices — Silonka',
+            description: "From hand-harvesting at peak ripeness to nitrogen-flushed packaging — learn the 4-step process that makes Silonka's Ceylon spices the freshest in the world.",
+            h1: 'The Art of Spice Craft',
+            bodyText: "From harvest to your kitchen, every step is designed to preserve the essential oils that make Silonka spices extraordinary. We time harvest to the monsoon season when essential oils are at their peak. Each spice is hand-picked at perfect ripeness, sun-dried naturally, hand-sorted for quality, and packaged in nitrogen-flushed, triple-layer pouches.",
+        },
+        '/contact': {
+            title: 'Contact Silonka — Ceylon Spice Experts',
+            description: "Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Colombo, Sri Lanka — we respond within 24 hours.",
+            h1: 'Contact Us',
+            bodyText: "Have questions about our spices, shipping, or wholesale orders? We'd love to hear from you. Our team is based in Colombo, Sri Lanka. We typically respond within 24 hours. Email: hello@silonka.com. Phone: +94 76 695 1393.",
+        },
+        '/bulk-order': {
+            title: 'Wholesale & Bulk Spice Orders — Silonka',
+            description: "Order premium Ceylon spices in bulk. Custom wholesale pricing for businesses, hotels, cafés, and retailers. Minimum quantities apply. Get a quote within 2 business days.",
+            h1: 'Bulk Order Inquiry',
+            bodyText: "Wholesale and bulk pricing for businesses, cafés, hotels, and retailers. Fill in the form and our team will contact you with custom pricing. We offer premium Ceylon cinnamon, black pepper, cloves, and curated spice collections in wholesale quantities.",
+        },
+        '/refund-policy': {
+            title: 'Refund Policy — Silonka',
+            description: "Silonka's refund and return policy for Ceylon spice purchases. Learn about returns, exchanges, damaged items, and refund processing times.",
+            h1: 'Refund Policy',
+            bodyText: "Thank you for shopping at Silonka. We value your satisfaction and strive to provide you with the finest Ceylon spices. We accept returns within 14 days from the date of purchase. Once we receive your return and inspect the item, we will notify you of the status of your refund within 3 business days. If your return is approved, we will initiate a refund to your original method of payment within 7 business days.",
+        },
+        '/privacy-policy': {
+            title: 'Privacy Policy — Silonka',
+            description: "Learn how Silonka collects, uses, and protects your personal information. Our privacy policy covers data security, cookies, and your rights.",
+            h1: 'Privacy Policy',
+            bodyText: "At Silonka, we are committed to protecting the privacy and security of our customers' personal information. This Privacy Policy outlines how we collect, use, and safeguard your data when you visit or make a purchase on our website. We implement industry-standard security measures including SSL/TLS encryption, secure servers, and access controls.",
+        },
+        '/terms-and-conditions': {
+            title: 'Terms & Conditions — Silonka',
+            description: "Read Silonka's terms and conditions governing website usage, product purchases, shipping, returns, and intellectual property for our Ceylon spice store.",
+            h1: 'Terms & Conditions',
+            bodyText: "Welcome to Silonka. These Terms and Conditions govern your use of our website and the purchase and sale of our products. By accessing and using our website, you agree to comply with these terms. You must be at least 18 years old to use our website or make purchases.",
+        },
+        '/login': {
+            title: 'Sign In — Silonka',
+            description: "Sign in to your Silonka account to track orders, manage your profile, and access exclusive member benefits.",
+            noIndex: true,
+            h1: 'Sign In',
+            bodyText: 'Sign in to your Silonka account to track orders and manage your profile.',
+        },
+        '/signup': {
+            title: 'Create Account — Silonka',
+            description: "Create your free Silonka account to shop premium Ceylon spices, track your orders, and enjoy a personalized experience.",
+            noIndex: true,
+            h1: 'Create Account',
+            bodyText: 'Create your free Silonka account to shop premium Ceylon spices and track your orders.',
+        },
+        '/checkout': {
+            title: 'Checkout — Silonka',
+            description: "Complete your order for premium Ceylon spices from Silonka.",
+            noIndex: true,
+            h1: 'Checkout',
+            bodyText: 'Complete your order for premium Ceylon spices from Silonka.',
+        },
+    };
+
+    if (staticPages[urlPath]) {
+        return staticPages[urlPath];
     }
 
-    return null; // Not a special page — use default index.html
+    return null;
 }
 
 function escapeHtml(str) {

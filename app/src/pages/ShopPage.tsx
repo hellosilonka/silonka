@@ -128,29 +128,8 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Bulk Order Banner */}
-      <section className="relative py-8 px-4 sm:px-6 lg:px-[7vw]">
-        <div className="rounded-2xl bg-gradient-to-r from-charcoal-card via-[#1e1d18] to-charcoal-card border border-gold/20 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gold/15 border border-gold/25 flex items-center justify-center flex-shrink-0">
-              <Package className="w-6 h-6 text-gold" />
-            </div>
-            <div>
-              <h3 className="font-display text-lg text-ivory mb-1">Bulk & Wholesale Orders</h3>
-              <p className="text-ivory-muted text-sm">Custom pricing for businesses, hotels, cafés & retailers. Minimum quantities apply.</p>
-            </div>
-          </div>
-          <Link
-            to="/bulk-order"
-            className="flex-shrink-0 px-6 py-3 bg-gold text-charcoal rounded-xl font-mono text-xs uppercase tracking-widest hover:bg-gold/90 transition-colors flex items-center gap-2"
-          >
-            <Package className="w-4 h-4" />
-            Place Bulk Order
-          </Link>
-        </div>
-      </section>
 
-      {/* Filters & Products */}
+      {/* Filters &amp; Products */}
       <section className="relative py-8 sm:py-12 border-t border-white/5">
         <div className="relative px-4 sm:px-6 lg:px-[7vw]">
           {/* Filter Bar */}
@@ -267,6 +246,28 @@ export default function ShopPage() {
               <p className="text-ivory-muted/60 text-sm">Try adjusting your filters</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Bulk Orders Banner */}
+      <section className="relative py-8 px-4 sm:px-6 lg:px-[7vw] pb-16">
+        <div className="rounded-2xl bg-gradient-to-r from-charcoal-card via-[#1e1d18] to-charcoal-card border border-gold/20 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gold/15 border border-gold/25 flex items-center justify-center flex-shrink-0">
+              <Package className="w-6 h-6 text-gold" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg text-ivory mb-1">Bulk Orders</h3>
+              <p className="text-ivory-muted text-sm">Custom pricing for businesses, hotels, cafés &amp; retailers. Minimum quantities apply.</p>
+            </div>
+          </div>
+          <Link
+            to="/bulk-order"
+            className="flex-shrink-0 px-6 py-3 bg-gold text-charcoal rounded-xl font-mono text-xs uppercase tracking-widest hover:bg-gold/90 transition-colors flex items-center gap-2"
+          >
+            <Package className="w-4 h-4" />
+            Place Bulk Order
+          </Link>
         </div>
       </section>
     </div>

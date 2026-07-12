@@ -202,7 +202,7 @@ export default function OriginsPage() {
               From Sri Lanka to Your Kitchen
             </h1>
             <p className="text-sm sm:text-body text-ivory-muted leading-relaxed px-4">
-              The magical harvest born from the mist-veiled highlands of Ceylon.
+              For two thousand years, one island kept the world's most treasured secret. Silonka was born from it.
             </p>
           </div>
         </div>

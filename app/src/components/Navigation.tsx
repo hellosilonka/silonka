@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCurrency, CURRENCIES } from '@/context/CurrencyContext';
@@ -50,9 +50,9 @@ export default function Navigation() {
 
   const navLinks = [
     { label: 'Shop', href: '/shop' },
-    { label: 'Blog', href: '/blog' },
     { label: 'Origins', href: '/origins' },
     { label: 'Craft', href: '/craft' },
+    { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
   ];
 
@@ -93,11 +93,11 @@ export default function Navigation() {
         }`}
       >
         <div className="w-full px-6 lg:px-12">
-          <div className="flex items-center justify-between h-20">
+          <div className="relative flex items-center justify-between h-20">
             {/* Logo */}
             <Link
               to="/"
-              className="flex items-center gap-2.5 font-display text-2xl lg:text-3xl font-semibold text-ivory tracking-tight hover:text-gold transition-colors group"
+              className="flex items-center gap-2.5 font-display text-2xl lg:text-3xl font-semibold text-ivory tracking-tight hover:text-gold transition-colors group z-10"
             >
               <img
                 src="/logo.png"
@@ -107,8 +107,8 @@ export default function Navigation() {
               <span className="hidden sm:inline">Silonka</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-12">
+            {/* Desktop Navigation — absolutely centered */}
+            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-10">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
@@ -186,13 +186,28 @@ export default function Navigation() {
                   )}
                 </div>
               ) : (
-                /* Logged-out: Login button */
+                /* Logged-out: Login icon button — premium style */
                 <Link
                   to="/login"
                   id="nav-login-btn"
-                  className="hidden sm:inline-flex items-center gap-2 px-5 py-2 border border-gold/40 hover:border-gold text-gold font-mono text-xs uppercase tracking-widest rounded-full transition-all duration-300 hover:bg-gold/5"
+                  aria-label="Login"
+                  className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300 group relative"
+                  style={{ background: 'radial-gradient(circle at 50% 50%, rgba(196,164,105,0.12), transparent 70%)' }}
                 >
-                  Login
+                  {/* Outer glow ring */}
+                  <span className="absolute inset-0 rounded-full border border-gold/40 group-hover:border-gold/80 transition-all duration-300 group-hover:shadow-[0_0_12px_rgba(196,164,105,0.35)]" />
+                  {/* Inner shimmer ring */}
+                  <span className="absolute inset-[3px] rounded-full border border-gold/10 group-hover:border-gold/25 transition-all duration-300" />
+                  {/* Person silhouette SVG */}
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-[18px] h-[18px] text-gold drop-shadow-[0_0_4px_rgba(196,164,105,0.5)] group-hover:drop-shadow-[0_0_8px_rgba(196,164,105,0.8)] transition-all duration-300"
+                  >
+                    <circle cx="10" cy="6.5" r="3" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M3.5 17c0-3.314 2.91-6 6.5-6s6.5 2.686 6.5 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
                 </Link>
               )}
 
@@ -200,13 +215,21 @@ export default function Navigation() {
               <div className="relative" ref={currencyRef}>
                 <button
                   onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 hover:border-gold/40 text-ivory-muted hover:text-ivory font-mono text-xs uppercase tracking-wider transition-all duration-300"
+                  className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300 group relative"
                   aria-label="Select currency"
                   id="currency-selector-btn"
+                  style={{ background: 'radial-gradient(circle at 50% 50%, rgba(196,164,105,0.12), transparent 70%)' }}
                 >
-                  <span className="text-gold">{currency.symbol}</span>
-                  <span>{currency.code}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isCurrencyOpen ? 'rotate-180' : ''}`} />
+                  {/* Outer glow ring */}
+                  <span className="absolute inset-0 rounded-full border border-gold/40 group-hover:border-gold/80 transition-all duration-300 group-hover:shadow-[0_0_12px_rgba(196,164,105,0.35)]" />
+                  {/* Inner shimmer ring */}
+                  <span className="absolute inset-[3px] rounded-full border border-gold/10 group-hover:border-gold/25 transition-all duration-300" />
+                  {/* Currency symbol */}
+                  <span className="text-gold font-semibold text-sm drop-shadow-[0_0_4px_rgba(196,164,105,0.5)] group-hover:drop-shadow-[0_0_8px_rgba(196,164,105,0.8)] transition-all duration-300 leading-none">
+                    {currency.symbol}
+                  </span>
+                  {/* Tiny chevron indicator */}
+                  <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 text-gold/50 group-hover:text-gold/80 transition-all duration-300 ${isCurrencyOpen ? 'rotate-180' : ''}`} style={{ fontSize: '8px', lineHeight: 1 }}>▾</span>
                 </button>
 
                 {isCurrencyOpen && (
@@ -235,15 +258,44 @@ export default function Navigation() {
                 )}
               </div>
 
-              {/* Cart button */}
+              {/* Cart button — premium style */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-ivory hover:text-gold transition-colors"
+                className="relative group flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300"
                 aria-label="Open cart"
+                style={{ background: 'radial-gradient(circle at 50% 40%, rgba(196,164,105,0.1), transparent 70%)' }}
               >
-                <ShoppingBag className="w-5 h-5" />
+                {/* Glow ring */}
+                <span className="absolute inset-0 rounded-full border border-gold/30 group-hover:border-gold/70 transition-all duration-300 group-hover:shadow-[0_0_16px_rgba(196,164,105,0.3)]" />
+                {/* Custom handcrafted bag SVG */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-[20px] h-[20px] text-gold drop-shadow-[0_0_5px_rgba(196,164,105,0.4)] group-hover:drop-shadow-[0_0_10px_rgba(196,164,105,0.7)] transition-all duration-300 group-hover:scale-110"
+                >
+                  {/* Handle */}
+                  <path
+                    d="M8.5 8.5C8.5 6.567 10.067 5 12 5s3.5 1.567 3.5 3.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  {/* Bag body */}
+                  <path
+                    d="M4.5 9.5h15l-1.2 9.6a1.5 1.5 0 0 1-1.49 1.3H7.19a1.5 1.5 0 0 1-1.49-1.3L4.5 9.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                    fill="rgba(196,164,105,0.07)"
+                  />
+                  {/* Subtle inner line */}
+                  <line x1="9" y1="13" x2="9" y2="17" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+                  <line x1="15" y1="13" x2="15" y2="17" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+                </svg>
+                {/* Item count badge */}
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-charcoal text-xs font-mono font-medium rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-gradient-to-br from-gold to-amber-500 text-charcoal text-[10px] font-mono font-bold rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(196,164,105,0.6)] animate-pulse">
                     {totalItems}
                   </span>
                 )}

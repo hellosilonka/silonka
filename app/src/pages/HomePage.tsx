@@ -61,10 +61,10 @@ export default function HomePage() {
       // Hero entrance animation timeline
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-      // Background zoom and fade
+      // Background fade (removed scale animation so Tailwind classes persist)
       tl.fromTo(bg,
-        { scale: 1.2, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 2 }
+        { opacity: 0 },
+        { opacity: 1, duration: 2 }
       )
         // Title words with 3D effect
         .fromTo(title.querySelectorAll('.word'),
@@ -94,7 +94,7 @@ export default function HomePage() {
 
       // Parallax scroll effect for background
       gsap.to(bg, {
-        yPercent: 30,
+        yPercent: 15,
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
@@ -145,24 +145,25 @@ export default function HomePage() {
         ogImage="/hero_spice_field.jpg"
         jsonLd={[ORGANIZATION_SCHEMA, WEBSITE_SCHEMA]}
       />
-      {/* Hero Section */}
       <section
         ref={heroRef}
-        className="relative h-screen w-full overflow-hidden"
+        className="relative h-[100dvh] min-h-screen w-full overflow-hidden"
       >
-        {/* Background Image with Parallax */}
+        {/* Background Video with Parallax */}
         <div
           ref={bgRef}
-          className="absolute inset-0 scale-110"
+          className="absolute inset-0 scale-150 sm:scale-110"
         >
-          <img
-            src="/hero_spice_field.jpg"
-            alt="Lush Ceylon spice fields in Sri Lanka's hill country — where Silonka sources premium cinnamon and pepper"
-            width={1344}
-            height={768}
-            className="w-full h-full object-cover"
-            fetchPriority="high"
-          />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="/hero_spice_field.jpg"
+            className="w-full h-full object-cover object-center"
+          >
+            <source src="/herovideo 1.mp4" type="video/mp4" />
+          </video>
         </div>
 
         {/* Gradient Overlays */}
@@ -278,12 +279,8 @@ export default function HomePage() {
 
             {/* Content */}
             <div className="order-1 lg:order-2">
-              <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-3 sm:mb-4 block">
-                Our Story Starts in the Soil
-              </span>
               <h2 className="font-display text-[clamp(24px,4vw,40px)] text-ivory mb-4 sm:mb-6">
-                Trusted Quality.
-                <span className="text-gradient-gold"> Globally Delivered.</span>
+                <span className="text-gradient-gold"> Our Story Starts in the Soil</span>
               </h2>
               <p className="text-sm sm:text-body text-ivory-muted mb-4 sm:mb-6 leading-relaxed">
                 From the rugged, rolling plains of the Southern and South-Western regions of Sri Lanka,

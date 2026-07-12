@@ -9,11 +9,10 @@ export interface Currency {
 
 // Rates relative to EUR (prices in the DB are in EUR)
 export const CURRENCIES: Currency[] = [
-  { code: 'USD', symbol: '$',   name: 'US Dollar',       rate: 1.08  },
+  { code: 'USD', symbol: '$',   name: 'US Dollar',        rate: 1.08  },
   { code: 'EUR', symbol: '€',   name: 'Euro',             rate: 1.00  },
-  { code: 'GBP', symbol: '£',   name: 'British Pound',   rate: 0.86  },
-  { code: 'LKR', symbol: '₨',   name: 'Sri Lankan Rupee',rate: 341.0 },
-  { code: 'AUD', symbol: 'A$',  name: 'Australian Dollar',rate: 1.65  },
+  { code: 'GBP', symbol: '£',   name: 'British Pound',    rate: 0.86  },
+  { code: 'AUD', symbol: 'A$',  name: 'Australian Dollar', rate: 1.65  },
 ];
 
 interface CurrencyContextType {
