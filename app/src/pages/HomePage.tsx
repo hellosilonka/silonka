@@ -162,7 +162,7 @@ export default function HomePage() {
             poster="/hero_spice_field.jpg"
             className="w-full h-full object-cover object-center"
           >
-            <source src="/herovideo 1.mp4" type="video/mp4" />
+            <source src="/heronew.mp4" type="video/mp4" />
           </video>
         </div>
 
