@@ -184,8 +184,6 @@ export default function HomePage() {
             className="font-display text-[clamp(36px,10vw,100px)] text-ivory leading-[0.9] mb-4 sm:mb-6 perspective-1000"
           >
             <span className="word inline-block">Silonka</span>
-            <br />
-            <span className="word inline-block text-gradient-gold">Spices</span>
           </h1>
 
           {/* Subtitle */}

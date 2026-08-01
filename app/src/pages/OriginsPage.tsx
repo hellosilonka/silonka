@@ -11,7 +11,7 @@ const timelineEvents = [
     year: 'Ancient',
     title: 'Ancient Trade Routes',
     description: 'Long before European ships reached the island, Sri Lanka was already a thriving center of the Indian Ocean spice trade. Arab, Persian, Indian, and Chinese merchants regularly sailed to the island\'s ports to obtain highly prized spices—especially cinnamon—which were then carried to markets across the Middle East and the Mediterranean.',
-    image: '/300_opt.jpg',
+    image: '/ancient_trade.jpg',
   },
   {
     year: '1500s',
@@ -23,13 +23,13 @@ const timelineEvents = [
     year: '1658',
     title: 'Dutch Spice Empire',
     description: 'After the Dutch East India Company (VOC) wrested control of the island\'s coastal regions, they were able to strengthen the monopoly. The Dutch introduced systematic cultivation methods to cinnamon plantations and developed transport networks to aid in moving the spices from growing regions to ports like Colombo and Negombo.',
-    image: '/1658_opt.jpg',
+    image: '/dutch_empire.jpg',
   },
   {
     year: '1800s',
     title: 'British Colonial Era',
     description: 'Under British rule in the 19th century, Sri Lanka\'s spice trade became more systematically organized and integrated into the global colonial economy. Cinnamon plantations were expanded and infrastructure improved. Although tea eventually became the island\'s dominant export, Sri Lankan cinnamon and other spices remained highly valued commodities.',
-    image: '/1658_opt.jpg',
+    image: '/british_colonial.jpg',
   },
   {
     year: 'Today',
@@ -191,18 +191,18 @@ export default function OriginsPage() {
       />
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative py-16 sm:py-24 lg:py-32">
+      <section ref={heroRef} className="relative py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0 vignette pointer-events-none" />
         <div className="relative px-4 sm:px-6 lg:px-[7vw]">
           <div className="hero-content text-center max-w-3xl mx-auto">
-            <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.2em] mb-4 block">
+            <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.2em] mb-2 block">
               Our Story
             </span>
-            <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-6 leading-tight">
-              From Sri Lanka to Your Kitchen
-            </h1>
-            <p className="text-sm sm:text-body text-ivory-muted leading-relaxed px-4">
+            <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-3 leading-tight">
               For two thousand years, one island kept the world's most treasured secret. Silonka was born from it.
+            </h1>
+            <p className="text-sm sm:text-body text-ivory-muted leading-snug px-4">
+              From Sri Lanka to Your Kitchen
             </p>
           </div>
         </div>
@@ -306,9 +306,6 @@ export default function OriginsPage() {
 
                 {/* Text side */}
                 <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
-                  <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.2em] mb-3 block">
-                    {spice.region}
-                  </span>
                   <h3 className="font-display text-[clamp(24px,3.5vw,40px)] text-ivory mb-1">
                     {spice.name}
                   </h3>

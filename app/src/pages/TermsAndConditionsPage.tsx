@@ -86,7 +86,7 @@ const sections = [
     title: '9. Contact Us',
     items: [
       'If you have any questions or concerns about these Terms and Conditions, please contact us at hello@silonka.com or call +94 76 695 1393.',
-      'Silonka operates from Colombo, Sri Lanka. These Terms shall be governed by the laws of Sri Lanka.',
+      'Silonka operates from 193/4 Main Street, Mattegoda, Sri Lanka. These Terms shall be governed by the laws of Sri Lanka.',
     ],
   },
 ];

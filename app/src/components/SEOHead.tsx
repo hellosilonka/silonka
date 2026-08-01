@@ -79,7 +79,8 @@ export const ORGANIZATION_SCHEMA = {
   description: 'Premium single-origin Ceylon spices sourced directly from Sri Lanka\'s hill country.',
   address: {
     '@type': 'PostalAddress',
-    addressLocality: 'Colombo',
+    streetAddress: '193/4 Main Street',
+    addressLocality: 'Mattegoda',
     addressCountry: 'LK',
   },
   contactPoint: {
@@ -90,7 +91,9 @@ export const ORGANIZATION_SCHEMA = {
     availableLanguage: ['English'],
   },
   sameAs: [
-    'https://www.instagram.com/silonka',
+    'https://www.instagram.com/_silonka_/',
+    'https://www.facebook.com/share/188EST6DJL/?mibextid=wwXIfr',
+    'https://www.linkedin.com/company/silonka/',
   ],
 };
 

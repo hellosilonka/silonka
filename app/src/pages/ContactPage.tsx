@@ -67,7 +67,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
         title="Contact Silonka — Ceylon Spice Experts"
-        description="Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Colombo, Sri Lanka — we respond within 24 hours."
+        description="Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Mattegoda, Sri Lanka — we respond within 24 hours."
         keywords="contact Silonka, Ceylon spice questions, wholesale spice inquiry, spice shipping info, Sri Lanka spice supplier"
         canonicalPath="/contact"
         jsonLd={[
@@ -84,18 +84,18 @@ export default function ContactPage() {
         ]}
       />
       {/* Hero Section */}
-      <section ref={heroRef} className="relative py-16 sm:py-24 lg:py-32">
+      <section ref={heroRef} className="relative py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0 vignette pointer-events-none" />
 
         <div className="relative px-4 sm:px-6 lg:px-[7vw]">
           <div className="hero-content text-center max-w-3xl mx-auto">
-            <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-3 sm:mb-4 block">
+            <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-2 block">
               Get in Touch
             </span>
-            <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-4 sm:mb-6 leading-tight">
+            <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-3 leading-tight">
               Contact Us
             </h1>
-            <p className="text-sm sm:text-body text-ivory-muted leading-relaxed px-4">
+            <p className="text-sm sm:text-body text-ivory-muted leading-snug px-4">
               Have questions about our spices, shipping, or wholesale orders?
               We'd love to hear from you.
             </p>
@@ -116,7 +116,7 @@ export default function ContactPage() {
                   Let's Talk
                 </h2>
                 <p className="text-ivory-muted text-sm sm:text-base leading-relaxed mb-6 sm:mb-8">
-                  Our team is based in Colombo, Sri Lanka. We typically
+                  Our team is based in Mattegoda, Sri Lanka. We typically
                   respond within 24 hours.
                 </p>
               </div>
@@ -125,7 +125,7 @@ export default function ContactPage() {
                 {[
                   { icon: Mail, label: 'Email', value: 'hello@silonka.com' },
                   { icon: Phone, label: 'Phone', value: '+94 76 695 1393' },
-                  { icon: MapPin, label: 'Office', value: 'Colombo, Sri Lanka' },
+                  { icon: MapPin, label: 'Office', value: '193/4 Main Street, Mattegoda, Sri Lanka' },
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-3 sm:gap-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">

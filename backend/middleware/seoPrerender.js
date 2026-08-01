@@ -286,9 +286,9 @@ async function getMetaForPath(urlPath) {
         },
         '/contact': {
             title: 'Contact Silonka — Ceylon Spice Experts',
-            description: "Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Colombo, Sri Lanka — we respond within 24 hours.",
+            description: "Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Mattegoda, Sri Lanka — we respond within 24 hours.",
             h1: 'Contact Us',
-            bodyText: "Have questions about our spices, shipping, or wholesale orders? We'd love to hear from you. Our team is based in Colombo, Sri Lanka. We typically respond within 24 hours. Email: hello@silonka.com. Phone: +94 76 695 1393.",
+            bodyText: "Have questions about our spices, shipping, or wholesale orders? We'd love to hear from you. Our team is based in Mattegoda, Sri Lanka. We typically respond within 24 hours. Email: hello@silonka.com. Phone: +94 76 695 1393.",
         },
         '/bulk-order': {
             title: 'Wholesale & Bulk Spice Orders — Silonka',

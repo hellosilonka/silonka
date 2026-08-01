@@ -189,20 +189,20 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '12345678-placeholder.apps.googleusercontent.com'}>
       <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'USD' }}>
-      <AuthProvider>
-      <CurrencyProvider>
-      <CartProvider>
-        <Router>
-          <CookieConsentProvider>
-          <SmoothScrollProvider>
-            <ScrollToTop />
-            <AppContent />
-          </SmoothScrollProvider>
-          </CookieConsentProvider>
-        </Router>
-      </CartProvider>
-      </CurrencyProvider>
-      </AuthProvider>
+        <AuthProvider>
+          <CurrencyProvider>
+            <CartProvider>
+              <Router>
+                <CookieConsentProvider>
+                  <SmoothScrollProvider>
+                    <ScrollToTop />
+                    <AppContent />
+                  </SmoothScrollProvider>
+                </CookieConsentProvider>
+              </Router>
+            </CartProvider>
+          </CurrencyProvider>
+        </AuthProvider>
       </PayPalScriptProvider>
     </GoogleOAuthProvider>
   );

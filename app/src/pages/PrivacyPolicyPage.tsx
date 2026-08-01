@@ -70,7 +70,7 @@ const sections = [
   {
     icon: Mail,
     title: 'Contact Us',
-    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or the handling of your personal information, please contact us at hello@silonka.com or write to us at: Silonka, Colombo, Sri Lanka.`,
+    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or the handling of your personal information, please contact us at hello@silonka.com or write to us at: Silonka, 193/4 Main Street, Mattegoda, Sri Lanka.`,
   },
 ];
 

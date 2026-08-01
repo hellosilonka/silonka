@@ -109,9 +109,8 @@ export default function CheckoutPage() {
                     ].map(({ label, icon: Icon, key }, i) => (
                         <div key={key} className="flex items-center gap-3">
                             {i > 0 && <div className={`w-12 h-px ${step === 'payment' ? 'bg-gold' : 'bg-white/10'}`} />}
-                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${
-                                step === key ? 'bg-gold text-charcoal' : step === 'payment' && key === 'shipping' ? 'bg-gold/20 text-gold' : 'bg-charcoal-card text-ivory-muted border border-white/10'
-                            }`}>
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${step === key ? 'bg-gold text-charcoal' : step === 'payment' && key === 'shipping' ? 'bg-gold/20 text-gold' : 'bg-charcoal-card text-ivory-muted border border-white/10'
+                                }`}>
                                 <Icon className="w-4 h-4" />
                                 {label}
                             </div>

@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, ArrowUpRight, Cookie } from 'lucide-react';
+import { Mail, MapPin, ArrowUpRight } from 'lucide-react';
 import { useCookieConsent } from '@/components/CookieConsent';
 
 const footerLinks = {
   shop: [
     { label: 'All Products', href: '/shop' },
-    { label: 'Gift Sets', href: '/shop?category=sets' },
-    { label: 'Black Pepper', href: '/shop?category=pepper' },
-    { label: 'Ceylon Cinnamon', href: '/shop?category=cinnamon' },
+    { label: 'Gift Set', href: '/shop?category=Gift+Set' },
+    { label: 'Black Pepper', href: '/shop?category=Ceylon+Black+Pepper' },
+    { label: 'Ceylon Cinnamon', href: '/shop?category=Ceylon+Cinnamon' },
   ],
   company: [
     { label: 'Our Story', href: '/origins' },
@@ -26,7 +26,7 @@ const footerLinks = {
 const socialLinks = [
   {
     label: 'Instagram',
-    href: '#',
+    href: 'https://www.instagram.com/_silonka_/',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
@@ -37,7 +37,7 @@ const socialLinks = [
   },
   {
     label: 'Facebook',
-    href: '#',
+    href: 'https://www.facebook.com/share/188EST6DJL/?mibextid=wwXIfr',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
@@ -46,22 +46,12 @@ const socialLinks = [
   },
   {
     label: 'LinkedIn',
-    href: '#',
+    href: 'https://www.linkedin.com/company/silonka/',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
         <rect x="2" y="9" width="4" height="12"/>
         <circle cx="4" cy="4" r="2"/>
-      </svg>
-    ),
-  },
-  {
-    label: 'Twitter',
-    href: '#',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M4 4l16 16M4 20L20 4"/>
-        <path d="M4 4h4l12 16h-4z"/>
       </svg>
     ),
   },
@@ -85,7 +75,7 @@ export default function Footer() {
               <img
                 src="/logo.png"
                 alt="Silonka logo"
-                className="w-10 h-10 object-contain drop-shadow-[0_0_6px_rgba(196,164,105,0.3)] group-hover:drop-shadow-[0_0_10px_rgba(196,164,105,0.5)] transition-all duration-300"
+                className="w-10 h-10 object-contain"
               />
               <span className="font-display text-2xl text-ivory group-hover:text-gold transition-colors">
                 Silonka
@@ -107,7 +97,7 @@ export default function Footer() {
                 <MapPin className="w-4 h-4 text-gold shrink-0 mt-0.5" />
                 <div>
                   <p className="font-mono text-[10px] text-gold uppercase tracking-widest mb-0.5">Corporate Office</p>
-                  <span className="text-ivory-muted text-sm">Colombo, Sri Lanka</span>
+                  <span className="text-ivory-muted text-sm">193/4 Main Street, Mattegoda, Sri Lanka</span>
                 </div>
               </div>
               <div className="flex items-start gap-3 bg-white/[0.04] border border-white/[0.07] rounded-xl px-4 py-3 text-left">
@@ -197,8 +187,7 @@ export default function Footer() {
               <Link to="/privacy-policy" className="text-ivory-muted/60 hover:text-gold transition-colors text-xs">Privacy</Link>
               <Link to="/terms-and-conditions" className="text-ivory-muted/60 hover:text-gold transition-colors text-xs">Terms</Link>
               <Link to="/refund-policy" className="text-ivory-muted/60 hover:text-gold transition-colors text-xs">Refunds</Link>
-              <button onClick={openSettings} className="text-ivory-muted/60 hover:text-gold transition-colors text-xs inline-flex items-center gap-1">
-                <Cookie className="w-3 h-3" />
+              <button onClick={openSettings} className="text-ivory-muted/60 hover:text-gold transition-colors text-xs">
                 Cookies
               </button>
             </div>
@@ -214,7 +203,7 @@ export default function Footer() {
                 <img
                   src="/logo.png"
                   alt="Silonka logo"
-                  className="w-9 h-9 object-contain drop-shadow-[0_0_6px_rgba(196,164,105,0.3)] group-hover:drop-shadow-[0_0_10px_rgba(196,164,105,0.5)] transition-all duration-300"
+                  className="w-9 h-9 object-contain"
                 />
                 <span className="font-display text-3xl text-ivory group-hover:text-gold transition-colors">
                   Silonka
@@ -237,7 +226,7 @@ export default function Footer() {
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-mono text-[10px] text-gold uppercase tracking-widest mb-0.5">Corporate Office</p>
-                    <span className="text-sm">Colombo, Sri Lanka</span>
+                    <span className="text-sm">193/4 Main Street, Mattegoda, Sri Lanka</span>
                   </div>
                 </div>
 
@@ -302,7 +291,7 @@ export default function Footer() {
               {/* Beyond Silonka — Social Column */}
               <div>
                 <h3 className="font-mono text-label text-gold uppercase tracking-widest mb-6">Beyond Silonka</h3>
-                <ul className="space-y-4">
+                <ul className="space-y-3">
                   {socialLinks.map((social) => (
                     <li key={social.label}>
                       <a
@@ -334,8 +323,7 @@ export default function Footer() {
                 <Link to="/privacy-policy" className="text-ivory-muted hover:text-gold transition-colors text-sm">Privacy</Link>
                 <Link to="/terms-and-conditions" className="text-ivory-muted hover:text-gold transition-colors text-sm">Terms</Link>
                 <Link to="/refund-policy" className="text-ivory-muted hover:text-gold transition-colors text-sm">Refunds</Link>
-                <button onClick={openSettings} className="text-ivory-muted hover:text-gold transition-colors text-sm inline-flex items-center gap-1.5">
-                  <Cookie className="w-3.5 h-3.5" />
+                <button onClick={openSettings} className="text-ivory-muted hover:text-gold transition-colors text-sm">
                   Cookies
                 </button>
               </div>

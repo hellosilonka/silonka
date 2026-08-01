@@ -28,10 +28,10 @@ interface Product {
 
 const categories = [
   { id: 'all', name: 'All' },
-  { id: 'sets', name: 'Gift Sets' },
-  { id: 'pepper', name: 'Pepper' },
-  { id: 'cinnamon', name: 'Cinnamon' },
-  { id: 'spices', name: 'Spices' },
+  { id: 'Ceylon Cinnamon', name: 'Ceylon Cinnamon' },
+  { id: 'Ceylon Black Pepper', name: 'Ceylon Black Pepper' },
+  { id: 'Cloves and Cardamom', name: 'Cloves and Cardamom' },
+  { id: 'Gift Set', name: 'Gift Set' },
 ];
 
 const sortOptions = [

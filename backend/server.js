@@ -61,6 +61,11 @@ app.use('/api/bulk-orders', bulkOrderRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api', sitemapRoutes);
 
+// Health-check endpoint — used by keep-alive ping and external monitors
+app.get('/api/ping', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Global error handler — prevents ERR_CONNECTION_RESET from unhandled promise rejections
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err.message);
@@ -139,6 +144,25 @@ mongoose.connect(process.env.MONGO_URI)
         console.log('Connected to MongoDB');
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
+
+            // ── Keep-alive: prevent Render free plan spin-down ──────────────
+            // Render shuts down free services after 15 min of inactivity.
+            // We ping our own /api/ping endpoint every 14 minutes to stay alive.
+            if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+                const keepAliveUrl = `${process.env.RENDER_EXTERNAL_URL}/api/ping`;
+                const INTERVAL_MS = 14 * 60 * 1000; // 14 minutes
+
+                setInterval(async () => {
+                    try {
+                        const res = await fetch(keepAliveUrl);
+                        console.log(`[keep-alive] Pinged ${keepAliveUrl} — status ${res.status}`);
+                    } catch (err) {
+                        console.warn(`[keep-alive] Ping failed: ${err.message}`);
+                    }
+                }, INTERVAL_MS);
+
+                console.log(`[keep-alive] Self-ping active every 14 min → ${keepAliveUrl}`);
+            }
         });
     })
     .catch((error) => console.log(`Error connecting to MongoDB: ${error.message}`));

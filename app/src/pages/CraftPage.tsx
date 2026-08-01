@@ -115,20 +115,19 @@ export default function CraftPage() {
         ])}
       />
       {/* Hero Section */}
-      <section ref={heroRef} className="relative py-16 sm:py-24 lg:py-32">
+      <section ref={heroRef} className="relative py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0 vignette pointer-events-none" />
 
         <div className="relative px-4 sm:px-6 lg:px-[7vw]">
           <div className="hero-content text-center max-w-3xl mx-auto">
-            <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-3 sm:mb-4 block">
+            <span className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-2 block">
               Our Process
             </span>
-            <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-4 sm:mb-6 leading-tight">
-              The Art of Spice Craft
+            <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-3 leading-tight">
+              The art of Ceylon Cinnamon craft
             </h1>
-            <p className="text-sm sm:text-body text-ivory-muted leading-relaxed px-4">
-              From harvest to your kitchen, every step is designed to preserve
-              the essential oils that make Silonka spices extraordinary.
+            <p className="text-sm sm:text-body text-ivory-muted leading-snug px-4">
+              From harvest to your hands
             </p>
           </div>
         </div>

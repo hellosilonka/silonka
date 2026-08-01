@@ -1,4 +1,4 @@
-import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,7 @@ export default function CartDrawer() {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="w-5 h-5 text-gold" />
+            <ShoppingCart className="w-5 h-5 text-gold" />
             <h2 className="font-display text-xl text-ivory">Your Cart</h2>
           </div>
           <button
@@ -45,7 +45,7 @@ export default function CartDrawer() {
         <div className="flex-1 overflow-y-auto p-6">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <ShoppingBag className="w-16 h-16 text-ivory-muted/30 mb-4" />
+              <ShoppingCart className="w-16 h-16 text-ivory-muted/30 mb-4" />
               <p className="font-display text-xl text-ivory-muted mb-2">Your cart is empty</p>
               <p className="text-ivory-muted/60 text-sm">Add some spices to get started</p>
             </div>

@@ -77,7 +77,7 @@ export default function BlogPage() {
       <section className="relative py-16 sm:py-24 border-b border-white/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_40%_60%,rgba(212,175,55,0.07),transparent_60%)] pointer-events-none" />
         <div className="relative px-4 sm:px-6 lg:px-[7vw]">
-          <div className="max-w-2xl">
+          <div className="max-w-2xl mx-auto text-center">
             <span className="font-mono text-label text-gold uppercase tracking-[0.2em] mb-4 block">
               The Silonka Journal
             </span>
