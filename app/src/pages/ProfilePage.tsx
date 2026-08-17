@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, ShoppingBag, Package, CheckCircle, Clock, Truck, ExternalLink, Search } from 'lucide-react';
+import { ArrowLeft, Mail, ShoppingBag, Package, CheckCircle, Clock, Truck, ExternalLink, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyOrders } from '@/lib/api';
 import SEOHead from '@/components/SEOHead';

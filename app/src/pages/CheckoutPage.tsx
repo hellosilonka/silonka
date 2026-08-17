@@ -69,7 +69,7 @@ export default function CheckoutPage() {
     // DHL rate state
     const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string; deliveryTime: string | null } | null>(null);
     const [rateLoading, setRateLoading] = useState(false);
-    const [rateError, setRateError] = useState('');
+
     const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Estimate package weight from cart items (0.3 kg per item as fallback)
