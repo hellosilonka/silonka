@@ -69,6 +69,7 @@ export default function CheckoutPage() {
     // DHL rate state
     const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string; deliveryTime: string | null } | null>(null);
     const [rateLoading, setRateLoading] = useState(false);
+    const [rateError, setRateError] = useState('');
 
     const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -385,7 +386,12 @@ export default function CheckoutPage() {
                                         </span>
                                     ) : (
                                         <span className="font-mono text-ivory-muted/50">
-                                            {address.countryCode ? 'Unavailable' : 'Select country'}
+                                            {rateError
+                                                ? rateError
+                                                : address.countryCode
+                                                    ? 'Unavailable'
+                                                    : 'Select country'
+                                            }
                                         </span>
                                     )}
                                 </div>
