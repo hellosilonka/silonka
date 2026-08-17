@@ -88,13 +88,15 @@ function msgRef() {
 }
 
 function extractTag(xml, tag) {
-    const re = new RegExp(`<(?:[^:>]+:)?${tag}[^>]*>([\\s\\S]*?)<\\/(?:[^:>]+:)?${tag}>`, 'i');
+    // (?![\w-]) ensures 'Message' doesn't match 'MessageTime' etc.
+    const re = new RegExp(`<(?:[^:>]+:)?${tag}(?![\\w-])[^>]*>([\\s\\S]*?)<\\/(?:[^:>]+:)?${tag}>`, 'i');
     const m = xml.match(re);
     return m ? m[1].trim() : null;
 }
 
 function extractAllTags(xml, tag) {
-    const re = new RegExp(`<(?:[^:>]+:)?${tag}[^>]*>([\\s\\S]*?)<\\/(?:[^:>]+:)?${tag}>`, 'gi');
+    // (?![\w-]) ensures e.g. 'ConditionData' doesn't match 'Condition'
+    const re = new RegExp(`<(?:[^:>]+:)?${tag}(?![\\w-])[^>]*>([\\s\\S]*?)<\\/(?:[^:>]+:)?${tag}>`, 'gi');
     const results = [];
     let m;
     while ((m = re.exec(xml)) !== null) results.push(m[1].trim());
