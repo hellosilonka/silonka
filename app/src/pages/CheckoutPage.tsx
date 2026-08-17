@@ -1,12 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
-import { ShoppingBag, ArrowLeft, MapPin, CreditCard, CheckCircle, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, MapPin, CreditCard, CheckCircle, Loader2, Truck, Package } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { createOrder, createPayPalOrder, capturePayPalOrder } from '@/lib/api';
+import { createOrder, createPayPalOrder, capturePayPalOrder, getDHLRates } from '@/lib/api';
 import SEOHead from '@/components/SEOHead';
+
+// ISO country list (abbreviated for common destinations)
+const COUNTRIES = [
+  { code: 'AU', name: 'Australia' },
+  { code: 'AT', name: 'Austria' },
+  { code: 'BE', name: 'Belgium' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'CN', name: 'China' },
+  { code: 'DK', name: 'Denmark' },
+  { code: 'FI', name: 'Finland' },
+  { code: 'FR', name: 'France' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'GR', name: 'Greece' },
+  { code: 'HK', name: 'Hong Kong' },
+  { code: 'IN', name: 'India' },
+  { code: 'IE', name: 'Ireland' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'MY', name: 'Malaysia' },
+  { code: 'MV', name: 'Maldives' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'NZ', name: 'New Zealand' },
+  { code: 'NO', name: 'Norway' },
+  { code: 'PK', name: 'Pakistan' },
+  { code: 'PH', name: 'Philippines' },
+  { code: 'PT', name: 'Portugal' },
+  { code: 'QA', name: 'Qatar' },
+  { code: 'SA', name: 'Saudi Arabia' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'SE', name: 'Sweden' },
+  { code: 'CH', name: 'Switzerland' },
+  { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'US', name: 'United States' },
+].sort((a, b) => a.name.localeCompare(b.name));
 
 export default function CheckoutPage() {
     const { items, totalPrice, clearCart } = useCart();
@@ -14,11 +51,70 @@ export default function CheckoutPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    const [address, setAddress] = useState({ address: '', city: '', postalCode: '', country: '' });
+    const [address, setAddress] = useState({
+        address: '',
+        city: '',
+        postalCode: '',
+        country: '',
+        countryCode: '',
+        fullName: user?.name || '',
+        phone: '',
+        email: user?.email || '',
+    });
     const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
     const [dbOrderId, setDbOrderId] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
     const [creatingOrder, setCreatingOrder] = useState(false);
+
+    // DHL rate state
+    const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string; deliveryTime: string | null } | null>(null);
+    const [rateLoading, setRateLoading] = useState(false);
+    const [rateError, setRateError] = useState('');
+    const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Estimate package weight from cart items (0.3 kg per item as fallback)
+    const estimatedWeightKg = Math.max(0.3, items.reduce((sum, item) => sum + item.quantity * 0.3, 0));
+
+    // Fetch DHL rate when country + postalCode change (debounced 800ms)
+    useEffect(() => {
+        if (!address.countryCode) {
+            setShippingRate(null);
+            setRateError('');
+            return;
+        }
+
+        if (rateTimerRef.current) clearTimeout(rateTimerRef.current);
+
+        rateTimerRef.current = setTimeout(async () => {
+            setRateLoading(true);
+            setRateError('');
+            try {
+                const result = await getDHLRates({
+                    countryCode: address.countryCode,
+                    city: address.city,
+                    postalCode: address.postalCode,
+                    weightKg: estimatedWeightKg,
+                });
+                if (result.error) {
+                    setRateError('Could not calculate shipping. Please contact us.');
+                    setShippingRate(null);
+                } else {
+                    setShippingRate({ amount: result.amount, currency: result.currency, deliveryTime: result.deliveryTime });
+                }
+            } catch {
+                setRateError('Shipping rate unavailable.');
+                setShippingRate(null);
+            } finally {
+                setRateLoading(false);
+            }
+        }, 800);
+
+        return () => { if (rateTimerRef.current) clearTimeout(rateTimerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [address.countryCode, address.postalCode]);
+
+    const shippingCostUSD = shippingRate?.amount ?? 0;
+    const orderTotal = totalPrice + shippingCostUSD;
 
     // Create the order in our DB when user proceeds to payment
     const handleProceedToPayment = async (e: React.FormEvent) => {
@@ -38,8 +134,8 @@ export default function CheckoutPage() {
                 paymentMethod: 'PayPal',
                 itemsPrice: totalPrice,
                 taxPrice: 0,
-                shippingPrice: 0,
-                totalPrice: totalPrice,
+                shippingPrice: shippingCostUSD,
+                totalPrice: orderTotal,
             });
             setDbOrderId(order._id);
             setStep('payment');
@@ -76,13 +172,17 @@ export default function CheckoutPage() {
                         <CheckCircle className="w-10 h-10 text-green-400" />
                     </div>
                     <h1 className="font-display text-3xl sm:text-4xl text-ivory mb-3">Order Confirmed!</h1>
-                    <p className="text-ivory-muted mb-8">Thank you for your purchase. Your premium Ceylon spices are on their way.</p>
+                    <p className="text-ivory-muted mb-4">Thank you for your purchase. Your premium Ceylon spices are on their way.</p>
+                    <p className="text-ivory-muted/60 text-sm mb-8 flex items-center justify-center gap-2">
+                        <Truck className="w-4 h-4 text-gold" />
+                        Shipped via DHL Express from Sri Lanka
+                    </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link to="/shop" className="px-6 py-3 rounded-xl bg-gold text-charcoal font-mono text-xs uppercase tracking-widest hover:bg-gold-light transition-colors">
-                            Continue Shopping
+                        <Link to="/profile" className="px-6 py-3 rounded-xl bg-gold text-charcoal font-mono text-xs uppercase tracking-widest hover:bg-gold-light transition-colors">
+                            View My Orders
                         </Link>
-                        <Link to="/" className="px-6 py-3 rounded-xl border border-white/10 text-ivory-muted font-mono text-xs uppercase tracking-widest hover:border-gold/50 hover:text-ivory transition-colors">
-                            Back to Home
+                        <Link to="/shop" className="px-6 py-3 rounded-xl border border-white/10 text-ivory-muted font-mono text-xs uppercase tracking-widest hover:border-gold/50 hover:text-ivory transition-colors">
+                            Continue Shopping
                         </Link>
                     </div>
                 </div>
@@ -125,9 +225,24 @@ export default function CheckoutPage() {
                             <form onSubmit={handleProceedToPayment} className="bg-charcoal-card p-6 sm:p-8 rounded-2xl border border-white/5">
                                 <h2 className="font-display text-xl text-ivory mb-6 flex items-center gap-3">
                                     <MapPin className="w-5 h-5 text-gold" />
-                                    Shipping Address
+                                    Shipping Details
                                 </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <input
+                                        type="text" placeholder="Full Name" required
+                                        value={address.fullName} onChange={e => setAddress({ ...address, fullName: e.target.value })}
+                                        className="col-span-1 sm:col-span-2 px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
+                                    />
+                                    <input
+                                        type="email" placeholder="Email Address"
+                                        value={address.email} onChange={e => setAddress({ ...address, email: e.target.value })}
+                                        className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
+                                    />
+                                    <input
+                                        type="tel" placeholder="Phone Number"
+                                        value={address.phone} onChange={e => setAddress({ ...address, phone: e.target.value })}
+                                        className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
+                                    />
                                     <input
                                         type="text" placeholder="Street Address" required
                                         value={address.address} onChange={e => setAddress({ ...address, address: e.target.value })}
@@ -139,16 +254,30 @@ export default function CheckoutPage() {
                                         className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
                                     />
                                     <input
-                                        type="text" placeholder="Postal Code" required
+                                        type="text" placeholder="Postal Code"
                                         value={address.postalCode} onChange={e => setAddress({ ...address, postalCode: e.target.value })}
                                         className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
                                     />
-                                    <input
-                                        type="text" placeholder="Country" required
-                                        value={address.country} onChange={e => setAddress({ ...address, country: e.target.value })}
-                                        className="col-span-1 sm:col-span-2 px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
+                                    {/* Country selector */}
+                                    <div className="col-span-1 sm:col-span-2 relative">
+                                        <select
+                                            required
+                                            value={address.countryCode}
+                                            onChange={e => {
+                                                const selected = COUNTRIES.find(c => c.code === e.target.value);
+                                                setAddress({ ...address, countryCode: e.target.value, country: selected?.name || '' });
+                                            }}
+                                            className="w-full px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory focus:border-gold/50 focus:outline-none transition-colors text-sm appearance-none"
+                                        >
+                                            <option value="">Select Destination Country</option>
+                                            {COUNTRIES.map(c => (
+                                                <option key={c.code} value={c.code}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ivory-muted">▾</div>
+                                    </div>
                                 </div>
+
 
                                 {errorMsg && (
                                     <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between gap-3">
@@ -163,11 +292,11 @@ export default function CheckoutPage() {
 
                                 <button
                                     type="submit"
-                                    disabled={creatingOrder}
+                                    disabled={creatingOrder || rateLoading}
                                     className="mt-6 w-full flex items-center justify-center gap-3 py-4 bg-gold text-charcoal font-mono text-xs uppercase tracking-widest rounded-xl hover:bg-gold-light disabled:opacity-50 transition-all"
                                 >
                                     {creatingOrder ? (
-                                        <><Loader2 className="w-4 h-4 animate-spin" /> Creating Order...</>
+                                        <><Loader2 className="w-4 h-4 animate-spin" />Creating Order...</>
                                     ) : (
                                         <>Proceed to Payment <CreditCard className="w-4 h-4" /></>
                                     )}
@@ -212,7 +341,7 @@ export default function CheckoutPage() {
                     <div className="lg:col-span-2">
                         <div className="bg-charcoal-card p-6 rounded-2xl border border-white/5 sticky top-28">
                             <h2 className="font-display text-lg text-ivory mb-5 flex items-center gap-2">
-                                <ShoppingBag className="w-5 h-5 text-gold" />
+                                <Package className="w-5 h-5 text-gold" />
                                 Order Summary
                             </h2>
 
@@ -242,20 +371,45 @@ export default function CheckoutPage() {
                                     <span className="font-mono">{format(totalPrice)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-ivory-muted">
-                                    <span>Shipping</span>
-                                    <span className="font-mono text-green-400">Free</span>
+                                    <span className="flex items-center gap-1.5">
+                                        <Truck className="w-3.5 h-3.5" />
+                                        DHL Shipping
+                                    </span>
+                                    {rateLoading ? (
+                                        <span className="font-mono text-ivory-muted/40 flex items-center gap-1">
+                                            <Loader2 className="w-3 h-3 animate-spin" /> Calculating
+                                        </span>
+                                    ) : shippingRate ? (
+                                        <span className="font-mono text-gold">
+                                            {shippingRate.currency} {shippingRate.amount.toFixed(2)}
+                                        </span>
+                                    ) : (
+                                        <span className="font-mono text-ivory-muted/50">
+                                            {address.countryCode ? 'Unavailable' : 'Select country'}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="border-t border-white/5 mt-4 pt-4 flex justify-between items-baseline">
                                 <span className="font-display text-lg text-ivory">Total</span>
-                                <span className="font-display text-2xl text-gold">{format(totalPrice)}</span>
+                                <span className="font-display text-2xl text-gold">
+                                    {shippingRate
+                                        ? `USD ${orderTotal.toFixed(2)}`
+                                        : format(totalPrice)
+                                    }
+                                </span>
                             </div>
+                            {shippingRate && (
+                                <p className="text-ivory-muted/40 text-[10px] font-mono mt-1 text-right">
+                                    Includes DHL shipping cost
+                                </p>
+                            )}
 
                             {/* Trust */}
                             <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-2 text-ivory-muted/50 text-[10px] font-mono uppercase tracking-widest">
                                 <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                Secured by PayPal
+                                Secured by PayPal · Shipped by DHL
                             </div>
                         </div>
                     </div>

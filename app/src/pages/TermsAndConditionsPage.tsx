@@ -39,10 +39,11 @@ const sections = [
     icon: Truck,
     title: '4. Shipping and Delivery',
     items: [
-      'We will make reasonable efforts to ensure timely processing and dispatch of your orders.',
+      'All orders are processed and dispatched within 24 to 48 hours on business days.',
       'Estimated delivery times vary based on your location, shipping method selected, and factors beyond our control (e.g., customs, courier delays).',
       'Risk of loss and title for products pass to you upon delivery to the designated shipping address.',
-      'International orders may be subject to customs duties and import taxes, which are the responsibility of the customer.',
+      'Our shipping charges include direct delivery via DHL from Sri Lanka to your doorstep, and any applicable duties or taxes in the destination country are to be paid by the customer.',
+      'We shall not be liable for any delays or failures in delivery resulting from events beyond our reasonable control (Force Majeure), including but not limited to natural disasters, severe weather conditions, strikes, or global pandemics.',
     ],
   },
   {

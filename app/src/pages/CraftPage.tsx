@@ -104,9 +104,9 @@ export default function CraftPage() {
   return (
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
-        title="Our Craft — How We Harvest & Process Ceylon Spices — Silonka"
-        description="From hand-harvesting at peak ripeness to nitrogen-flushed packaging — learn the 4-step process that makes Silonka's Ceylon spices the freshest in the world."
-        keywords="spice processing, Ceylon cinnamon harvest, sun-dried spices, organic spice packaging, quality control spices, hand-sorted spices"
+        title="How Ceylon Cinnamon Is Made — Hand-Harvested & Sun-Dried | Silonka"
+        description="Learn the 4-step craft behind authentic Ceylon Cinnamon: hand-harvested at peak ripeness, sun-dried naturally, hand-sorted for quality, and nitrogen-sealed for freshness. From Sri Lanka to your kitchen."
+        keywords="how Ceylon cinnamon is made, cinnamon harvesting process, hand-peeled cinnamon, sun-dried true cinnamon, Ceylon cinnamon processing, organic spice craft, Silonka process"
         canonicalPath="/craft"
         ogImage="/craft_mortar.jpg"
         jsonLd={breadcrumbSchema([

@@ -16,7 +16,11 @@ const orderSchema = new mongoose.Schema({
         address: { type: String, required: true },
         city: { type: String, required: true },
         postalCode: { type: String, required: true },
-        country: { type: String, required: true }
+        country: { type: String, required: true },
+        countryCode: { type: String },
+        fullName: { type: String },
+        phone: { type: String },
+        email: { type: String },
     },
     paymentMethod: { type: String, required: true },
     paymentResult: {
@@ -25,11 +29,24 @@ const orderSchema = new mongoose.Schema({
         update_time: String,
         email_address: String,
     },
+    itemsPrice: { type: Number, required: true, default: 0 },
+    shippingPrice: { type: Number, required: true, default: 0 },
+    taxPrice: { type: Number, required: true, default: 0 },
     totalPrice: { type: Number, required: true },
     isPaid: { type: Boolean, required: true, default: false },
     paidAt: { type: Date },
     isDelivered: { type: Boolean, required: true, default: false },
     deliveredAt: { type: Date },
+    // DHL Express fields
+    dhl: {
+        awbNumber: { type: String },
+        trackingUrl: { type: String },
+        labelPdf: { type: String },       // base64 encoded PDF label
+        shipmentCreated: { type: Boolean, default: false },
+        pickupConfirmed: { type: Boolean, default: false },
+        pickupDate: { type: String },
+        pickupConfirmationNumber: { type: String },
+    },
 }, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema);

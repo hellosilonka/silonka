@@ -66,9 +66,9 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
-        title="Contact Silonka — Ceylon Spice Experts"
-        description="Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Mattegoda, Sri Lanka — we respond within 24 hours."
-        keywords="contact Silonka, Ceylon spice questions, wholesale spice inquiry, spice shipping info, Sri Lanka spice supplier"
+        title="Contact Silonka — Buy Ceylon Cinnamon Wholesale & Retail | USA, UK, Europe"
+        description="Have questions about Ceylon Cinnamon, shipping to USA/UK/Europe, or wholesale orders? Get in touch with Silonka — Sri Lanka's premium Ceylon Cinnamon supplier. We respond within 24 hours."
+        keywords="buy Ceylon cinnamon wholesale, cinnamon supplier USA, spice supplier UK Europe, contact Ceylon cinnamon, bulk cinnamon order, Silonka wholesale"
         canonicalPath="/contact"
         jsonLd={[
           breadcrumbSchema([

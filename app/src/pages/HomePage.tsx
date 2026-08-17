@@ -138,9 +138,9 @@ export default function HomePage() {
   return (
     <div className="relative">
       <SEOHead
-        title="Silonka — Premium Ceylon Cinnamon & Spices from Sri Lanka"
-        description="Buy authentic Ceylon Cinnamon (Cinnamomum verum), Black Pepper, and Cloves — single-origin, hand-harvested from Sri Lanka's misty hill country. True cinnamon with low coumarin, delivered fresh worldwide."
-        keywords="Ceylon Cinnamon, buy Ceylon Cinnamon, true cinnamon, Cinnamomum verum, Sri Lanka spices, Ceylon black pepper, organic cinnamon, premium spices, single origin spices, Silonka"
+        title="Silonka — Buy Ceylon Cinnamon | True Cinnamon (Cinnamomum verum) | Ships to USA, UK & Europe"
+        description="Buy authentic Ceylon Cinnamon (Cinnamomum verum) — the world's only true cinnamon. Single-origin, hand-harvested from Sri Lanka's hill country. Low coumarin. Ships to USA, UK & Europe."
+        keywords="buy Ceylon cinnamon, Ceylon cinnamon USA, true cinnamon UK, Ceylon cinnamon Europe, Cinnamomum verum, organic Ceylon cinnamon, Ceylon cinnamon sticks, Ceylon black pepper, low coumarin cinnamon, premium spices Sri Lanka, Silonka"
         canonicalPath="/"
         ogImage="/hero_spice_field.jpg"
         jsonLd={[ORGANIZATION_SCHEMA, WEBSITE_SCHEMA]}

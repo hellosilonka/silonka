@@ -26,7 +26,6 @@ const sections = [
     list: [
       'Opened or used spice products',
       'Gift cards or vouchers',
-      'Downloadable or digital products',
       'Personalized or custom-labelled orders',
       'Perishable goods past their best-before date',
       'Bulk order quantities (10 kg or more)',

@@ -28,9 +28,9 @@ export const addOrderItems = async (req, res) => {
             user: req.user._id,
             shippingAddress,
             paymentMethod,
-            itemsPrice,
-            taxPrice,
-            shippingPrice,
+            itemsPrice: itemsPrice || 0,
+            taxPrice: taxPrice || 0,
+            shippingPrice: shippingPrice || 0,
             totalPrice,
         });
 
@@ -92,11 +92,39 @@ export const updateOrderToDelivered = async (req, res) => {
     }
 };
 
+// @desc    Update order DHL info (admin manually sets AWB after creating DHL shipment)
+// @route   PUT /api/orders/:id/dhl
+// @access  Private/Admin
+export const updateOrderDHL = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        const { awbNumber, trackingUrl, labelPdf, shipmentCreated, pickupConfirmed, pickupDate, pickupConfirmationNumber } = req.body;
+
+        order.dhl = {
+            ...order.dhl,
+            ...(awbNumber !== undefined && { awbNumber }),
+            ...(trackingUrl !== undefined && { trackingUrl }),
+            ...(labelPdf !== undefined && { labelPdf }),
+            ...(shipmentCreated !== undefined && { shipmentCreated }),
+            ...(pickupConfirmed !== undefined && { pickupConfirmed }),
+            ...(pickupDate !== undefined && { pickupDate }),
+            ...(pickupConfirmationNumber !== undefined && { pickupConfirmationNumber }),
+        };
+
+        const updated = await order.save();
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get logged in user orders
 // @route   GET /api/orders/myorders
 // @access  Private
 export const getMyOrders = async (req, res) => {
-    const orders = await Order.find({ user: req.user._id });
+    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
     res.json(orders);
 };
 

@@ -50,6 +50,7 @@ const sections = [
       'Trusted service providers (e.g., shipping carriers, payment processors like PayHere, email marketing platforms) who are contractually obligated to handle your data securely.',
       'Legal compliance: We may disclose your information if required by law or in response to valid legal requests or court orders.',
       'Business transfers: In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction.',
+      'GDPR compliance: For users in the European Economic Area (EEA), we process and share your data in accordance with the General Data Protection Regulation. Any sharing beyond the essential services listed above requires your explicit consent, which you may withdraw at any time.',
     ],
   },
   {

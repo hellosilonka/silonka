@@ -211,4 +211,37 @@ export const deleteBlog = async (id: string) => {
     return data;
 };
 
+// ─── DHL Express ─────────────────────────────────────────────────────────────
+export const getDHLRates = async (destination: {
+    countryCode: string;
+    city?: string;
+    postalCode?: string;
+    weightKg?: number;
+}) => {
+    const { data } = await api.post('/dhl/rates', destination);
+    return data as { currency: string; amount: number; productCode: string; deliveryTime: string | null; error?: string };
+};
+
+export const trackDHLShipment = async (awb: string) => {
+    const { data } = await api.get(`/dhl/track/${awb}`);
+    return data;
+};
+
+export const createDHLShipment = async (orderId: string, weightKg: number) => {
+    const { data } = await api.post('/dhl/create-shipment', { orderId, weightKg });
+    return data;
+};
+
+export const scheduleDHLPickup = async (orderId: string, pickupDate: string) => {
+    const { data } = await api.post('/dhl/schedule-pickup', { orderId, pickupDate });
+    return data;
+};
+
+// ─── Geo Location ─────────────────────────────────────────────────────────────
+/** Reverse geocode lat/lng → { countryCode, countryName } via backend */
+export const getCountryFromCoords = async (lat: number, lng: number) => {
+    const { data } = await api.get('/geo/reverse', { params: { lat, lng } });
+    return data as { countryCode: string; countryName: string };
+};
+
 export default api;

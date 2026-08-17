@@ -241,11 +241,11 @@ async function getMetaForPath(urlPath) {
             }
 
             return {
-                title: `${product.name} — Buy Premium ${product.category} Online | Silonka`,
-                description: `${product.description} Single-origin ${product.category} from Sri Lanka. Shop at Silonka.`,
+                title: `${product.name} — Buy Premium ${product.category} | Ships to USA, UK & Europe | Silonka`,
+                description: `${product.description} Single-origin ${product.category} from Sri Lanka. Ships to USA, UK & Europe. Shop at Silonka.`,
                 image: product.image?.startsWith('http') ? product.image : `${SITE_URL}${product.image}`,
                 h1: product.name,
-                bodyText: `${product.description} Single-origin ${product.category} from Sri Lanka, hand-harvested and processed in small batches. Shop premium Ceylon spices at Silonka.`,
+                bodyText: `${product.description} Single-origin ${product.category} from Sri Lanka, hand-harvested and processed in small batches. Ships to USA, UK & Europe. Shop premium Ceylon spices at Silonka.`,
                 jsonLd: schema,
             };
         }
@@ -254,16 +254,16 @@ async function getMetaForPath(urlPath) {
     // ─── Static page meta map ────────────────────────
     const staticPages = {
         '/': {
-            title: 'Silonka — Premium Ceylon Cinnamon & Spices from Sri Lanka',
-            description: 'Buy authentic Ceylon Cinnamon (Cinnamomum verum), Black Pepper, and Cloves — single-origin, hand-harvested from Sri Lanka\'s misty hill country. True cinnamon with low coumarin, delivered fresh worldwide.',
-            h1: 'Silonka Spices',
-            bodyText: 'Premium single-origin Ceylon spices — Black Pepper, Cinnamon, Cloves. Harvested at peak aroma from Sri Lanka\'s hill country. The magical harvest born from the mist-veiled highlands of Ceylon. Each spice is hand-selected from smallholder farms and processed in small batches to preserve its essential oils. From the rugged, rolling plains of the Southern and South-Western regions of Sri Lanka, we bring the world cinnamon of quality that is unlike any other.',
+            title: 'Silonka — Buy Ceylon Cinnamon | True Cinnamon from Sri Lanka | Ships to USA, UK & Europe',
+            description: 'Buy authentic Ceylon Cinnamon (Cinnamomum verum) — the world\'s only true cinnamon. Single-origin, hand-harvested from Sri Lanka. Ships to USA, UK & Europe. Low coumarin, premium quality.',
+            h1: 'Silonka — Buy Ceylon Cinnamon',
+            bodyText: 'Buy authentic Ceylon Cinnamon (Cinnamomum verum) — the world\'s only true cinnamon. Single-origin, hand-harvested from Sri Lanka\'s hill country. Low coumarin, premium quality. Ships to USA, UK & Europe. Each spice is hand-selected from smallholder farms and processed in small batches to preserve its essential oils.',
         },
         '/shop': {
-            title: 'Shop Premium Ceylon Spices Online — Silonka',
-            description: 'Browse and buy authentic Ceylon cinnamon, black pepper, cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Free shipping on select orders.',
-            h1: 'Shop Silonka Spices',
-            bodyText: 'From our partner farms in Sri Lanka to your kitchen. Each spice is harvested at peak potency and sealed for maximum freshness. Browse our collection of premium Ceylon cinnamon, black pepper, cloves, and curated spice gift sets.',
+            title: 'Buy Ceylon Cinnamon & Spices — Ships to USA, UK & Europe | Silonka',
+            description: 'Shop authentic Ceylon Cinnamon sticks, Ceylon Black Pepper, Cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Ships to USA, UK & Europe.',
+            h1: 'Buy Ceylon Cinnamon & Spices',
+            bodyText: 'Shop authentic Ceylon Cinnamon sticks, Ceylon Black Pepper, Cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Ships to USA, UK & Europe. Each spice is harvested at peak potency and sealed for maximum freshness.',
         },
         '/blog': {
             title: 'Ceylon Cinnamon Blog — Health Benefits, Recipes & Spice Guides | Silonka',
@@ -273,22 +273,22 @@ async function getMetaForPath(urlPath) {
             bodyText: "Explore Silonka's blog for expert insights on Ceylon spices, authentic Sri Lankan recipes, health benefits of cinnamon and pepper, and the art of spice cultivation.",
         },
         '/origins': {
-            title: 'Our Story — The Origins of Ceylon Spices — Silonka',
-            description: "Discover Silonka's story: from ancient spice trade routes through Sri Lanka's hill country to your kitchen. Learn about Ceylon cinnamon, black pepper, and cloves — and the families who cultivate them.",
-            h1: 'From Sri Lanka to Your Kitchen',
-            bodyText: "For two thousand years, one island kept the world's most treasured secret. Silonka was born from it. Sri Lanka, historically known as Ceylon, has been one of the world's most celebrated sources of Cinnamon for many centuries. Located along the major maritime routes of the Indian Ocean, the island had become a crucial hub very early on in the ancient global spice trade, attracting merchants from Arabia, Persia, and China. Ceylon Cinnamon had achieved status as one of the most prized commodities of global trade long before the arrival of Europeans.",
+            title: 'The Story of Ceylon Cinnamon — From Sri Lanka\'s Ancient Spice Routes | Silonka',
+            description: 'Discover how Ceylon Cinnamon (Cinnamomum verum) has been hand-harvested in Sri Lanka for over 2,000 years. Learn the origin story of the world\'s only true cinnamon and the families who cultivate it.',
+            h1: 'The Story of Ceylon Cinnamon',
+            bodyText: 'For two thousand years, one island kept the world\'s most treasured secret. Silonka was born from it. Discover how Ceylon Cinnamon (Cinnamomum verum) has been hand-harvested in Sri Lanka for over 2,000 years. Sri Lanka, historically known as Ceylon, has been one of the world\'s most celebrated sources of Cinnamon for many centuries. Located along the major maritime routes of the Indian Ocean, the island had become a crucial hub very early on in the ancient global spice trade.',
         },
         '/craft': {
-            title: 'Our Craft — How We Harvest & Process Ceylon Spices — Silonka',
-            description: "From hand-harvesting at peak ripeness to nitrogen-flushed packaging — learn the 4-step process that makes Silonka's Ceylon spices the freshest in the world.",
-            h1: 'The Art of Spice Craft',
-            bodyText: "From harvest to your kitchen, every step is designed to preserve the essential oils that make Silonka spices extraordinary. We time harvest to the monsoon season when essential oils are at their peak. Each spice is hand-picked at perfect ripeness, sun-dried naturally, hand-sorted for quality, and packaged in nitrogen-flushed, triple-layer pouches.",
+            title: 'How Ceylon Cinnamon Is Made — Hand-Harvested & Sun-Dried | Silonka',
+            description: 'Learn the 4-step craft behind authentic Ceylon Cinnamon: hand-harvested at peak ripeness, sun-dried naturally, hand-sorted for quality, and nitrogen-sealed for freshness. From Sri Lanka to your kitchen.',
+            h1: 'How Ceylon Cinnamon Is Made',
+            bodyText: 'Learn the 4-step craft behind authentic Ceylon Cinnamon: hand-harvested at peak ripeness, sun-dried naturally, hand-sorted for quality, and nitrogen-sealed for freshness. From Sri Lanka to your kitchen. We time harvest to the monsoon season when essential oils are at their peak. Each spice is hand-picked at perfect ripeness.',
         },
         '/contact': {
-            title: 'Contact Silonka — Ceylon Spice Experts',
-            description: "Have questions about our Ceylon spices, shipping, or wholesale orders? Get in touch with Silonka. Based in Mattegoda, Sri Lanka — we respond within 24 hours.",
-            h1: 'Contact Us',
-            bodyText: "Have questions about our spices, shipping, or wholesale orders? We'd love to hear from you. Our team is based in Mattegoda, Sri Lanka. We typically respond within 24 hours. Email: hello@silonka.com. Phone: +94 76 695 1393.",
+            title: 'Contact Silonka — Buy Ceylon Cinnamon Wholesale & Retail | USA, UK, Europe',
+            description: 'Have questions about Ceylon Cinnamon, shipping to USA/UK/Europe, or wholesale orders? Get in touch with Silonka — Sri Lanka\'s premium Ceylon Cinnamon supplier. We respond within 24 hours.',
+            h1: 'Contact Silonka',
+            bodyText: 'Have questions about Ceylon Cinnamon, shipping to USA, UK or Europe, or wholesale orders? Get in touch with Silonka — Sri Lanka\'s premium Ceylon Cinnamon supplier. We respond within 24 hours. Email: hello@silonka.com. Phone: +94 76 695 1393. Office: 193/4 Main Street, Mattegoda, Sri Lanka.',
         },
         '/bulk-order': {
             title: 'Wholesale & Bulk Spice Orders — Silonka',

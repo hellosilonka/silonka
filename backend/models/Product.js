@@ -21,7 +21,11 @@ const productSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     image: { type: String, required: true },
     images: [{ type: String }],                     // additional gallery images
-    category: { type: String, required: true },
+    category: {
+        type: String,
+        required: true,
+        enum: ['Ceylon Cinnamon', 'Ceylon Black Pepper', 'Cloves and Cardamom', 'Gift Set'],
+    },
     weight: { type: String, required: true },
     intensity: { type: Number },
     inStock: { type: Boolean, default: true },

@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 const SITE_NAME = 'Silonka';
 const SITE_URL = 'https://www.silonka.co';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/hero_spice_field.jpg`;
+const HREFLANG_LOCALES = ['en-US', 'en-GB'] as const;
 
 interface SEOHeadProps {
   title: string;
@@ -48,6 +49,7 @@ export default function SEOHead({
       <meta property="og:image" content={ogImageUrl} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_US" />
+      <meta property="og:locale:alternate" content="en_GB" />
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -55,6 +57,12 @@ export default function SEOHead({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImageUrl} />
+
+      {/* Hreflang: International targeting */}
+      {HREFLANG_LOCALES.map((locale) => (
+        <link key={locale} rel="alternate" hrefLang={locale} href={canonicalUrl} />
+      ))}
+      <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
 
       {/* JSON-LD Structured Data */}
       {jsonLd && (
@@ -76,7 +84,7 @@ export const ORGANIZATION_SCHEMA = {
   name: 'Silonka',
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
-  description: 'Premium single-origin Ceylon spices sourced directly from Sri Lanka\'s hill country.',
+  description: 'Buy authentic Ceylon Cinnamon and premium spices from Sri Lanka. Ships to USA, UK and Europe.',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '193/4 Main Street',
@@ -90,6 +98,11 @@ export const ORGANIZATION_SCHEMA = {
     contactType: 'customer service',
     availableLanguage: ['English'],
   },
+  areaServed: [
+    { '@type': 'Country', name: 'United States' },
+    { '@type': 'Country', name: 'United Kingdom' },
+    { '@type': 'Continent', name: 'Europe' },
+  ],
   sameAs: [
     'https://www.instagram.com/_silonka_/',
     'https://www.facebook.com/share/188EST6DJL/?mibextid=wwXIfr',
@@ -102,7 +115,7 @@ export const WEBSITE_SCHEMA = {
   '@type': 'WebSite',
   name: 'Silonka',
   url: SITE_URL,
-  description: 'Premium single-origin Ceylon spices — Black Pepper, Cinnamon, Cloves — from Sri Lanka.',
+  description: 'Buy Ceylon Cinnamon and premium spices from Sri Lanka. Ships to USA, UK and Europe.',
   publisher: {
     '@type': 'Organization',
     name: 'Silonka',

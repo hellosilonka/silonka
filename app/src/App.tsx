@@ -6,6 +6,7 @@ import Lenis from 'lenis';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
+import { GeoProvider } from '@/context/GeoContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 
@@ -33,6 +34,8 @@ const TermsAndConditionsPage = lazy(() => import('@/pages/TermsAndConditionsPage
 const BlogPage = lazy(() => import('@/pages/BlogPage'));
 const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
 const ProductPage = lazy(() => import('@/pages/ProductPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const TrackOrderPage = lazy(() => import('@/pages/TrackOrderPage'));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -149,38 +152,37 @@ function AppContent() {
 
   return (
     <>
-      {/* Loading screen renders as OVERLAY on top of real content.
-          This lets Lighthouse detect the hero h1/image as LCP behind it. */}
       {isLoading && location.pathname === '/' && (
         <LoadingScreen onComplete={() => setIsLoading(false)} />
       )}
+    <Routes>
+      {/* Public Pages with main navigation */}
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/origins" element={<OriginsPage />} />
+        <Route path="/craft" element={<CraftPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/bulk-order" element={<BulkOrderPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/refund-policy" element={<RefundPolicyPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/track" element={<TrackOrderPage />} />
+      </Route>
 
-      <Routes>
-        {/* Public Pages with main navigation */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/origins" element={<OriginsPage />} />
-          <Route path="/craft" element={<CraftPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/bulk-order" element={<BulkOrderPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/refund-policy" element={<RefundPolicyPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
-          <Route path="/product/:id" element={<ProductPage />} />
-        </Route>
-
-        {/* Admin Pages with isolated navigation */}
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Route>
-      </Routes>
+      {/* Admin Pages with isolated navigation */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Route>
+    </Routes>
     </>
   );
 }
@@ -190,18 +192,20 @@ function App() {
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '12345678-placeholder.apps.googleusercontent.com'}>
       <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'USD' }}>
         <AuthProvider>
-          <CurrencyProvider>
-            <CartProvider>
-              <Router>
-                <CookieConsentProvider>
-                  <SmoothScrollProvider>
-                    <ScrollToTop />
-                    <AppContent />
-                  </SmoothScrollProvider>
-                </CookieConsentProvider>
-              </Router>
-            </CartProvider>
-          </CurrencyProvider>
+          <GeoProvider>
+            <CurrencyProvider>
+              <CartProvider>
+                <Router>
+                  <CookieConsentProvider>
+                    <SmoothScrollProvider>
+                      <ScrollToTop />
+                      <AppContent />
+                    </SmoothScrollProvider>
+                  </CookieConsentProvider>
+                </Router>
+              </CartProvider>
+            </CurrencyProvider>
+          </GeoProvider>
         </AuthProvider>
       </PayPalScriptProvider>
     </GoogleOAuthProvider>

@@ -98,9 +98,9 @@ export default function ShopPage() {
   return (
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
-        title="Shop Premium Ceylon Spices Online — Silonka"
-        description="Browse and buy authentic Ceylon cinnamon, black pepper, cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Free shipping on select orders."
-        keywords="buy Ceylon spices, Ceylon cinnamon online, Sri Lanka black pepper, organic spices shop, spice gift sets, wholesale spices"
+        title="Buy Ceylon Cinnamon & Spices — Ships to USA, UK & Europe | Silonka"
+        description="Shop authentic Ceylon Cinnamon sticks, Ceylon Black Pepper, Cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Ships to USA, UK & Europe."
+        keywords="buy Ceylon cinnamon, Ceylon cinnamon sticks USA, true cinnamon UK, Ceylon black pepper Europe, organic spices shop, Ceylon spice gift sets, buy Cinnamomum verum, Silonka shop"
         canonicalPath="/shop"
         ogImage="/collection_set.jpg"
         jsonLd={breadcrumbSchema([

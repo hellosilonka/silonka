@@ -17,9 +17,9 @@ const footerLinks = {
   ],
   support: [
     { label: 'Contact Us', href: '/contact' },
-    { label: 'Track Order', href: '/track-order' },
+    { label: 'Track My Order', href: '/track' },
+    { label: 'My Profile', href: '/profile' },
     { label: 'Returns', href: '/refund-policy' },
-    { label: 'FAQ', href: '/contact' },
   ],
 };
 

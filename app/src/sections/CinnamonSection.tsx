@@ -1,7 +1,7 @@
 import { useRef, useLayoutEffect } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useCart } from '@/context/CartContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -9,8 +9,7 @@ export default function CinnamonSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLButtonElement>(null);
-  const { addItem } = useCart();
+  const ctaRef = useRef<HTMLAnchorElement>(null);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -74,15 +73,7 @@ export default function CinnamonSection() {
     return () => ctx.revert();
   }, []);
 
-  const handleAddToCart = () => {
-    addItem({
-      id: 'ceylon-cinnamon',
-      name: 'Ceylon Cinnamon',
-      price: 14,
-      image: '/cinnamon_signature.jpg',
-      variant: '50g Quills',
-    });
-  };
+  // Removed hardcoded handleAddToCart since mock product is deleted
 
   return (
     <section
@@ -123,16 +114,15 @@ export default function CinnamonSection() {
           taste, golden colour, and low coumarin content.
         </p>
         <div className="flex items-center gap-6 mb-8">
-          <span className="font-display text-3xl text-gold">€14.00</span>
-          <span className="font-mono text-label text-ivory-muted uppercase">From 50g</span>
+          {/* Price removed since this is a feature section, not a product */}
         </div>
-        <button
+        <Link
+          to="/shop"
           ref={ctaRef}
-          onClick={handleAddToCart}
-          className="btn-gold will-change-transform"
+          className="btn-gold will-change-transform inline-block"
         >
-          Add to Cart
-        </button>
+          Explore Shop
+        </Link>
       </div>
     </section>
   );

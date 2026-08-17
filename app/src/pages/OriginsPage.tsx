@@ -179,9 +179,9 @@ export default function OriginsPage() {
   return (
     <div className="min-h-screen bg-charcoal pt-20">
       <SEOHead
-        title="Our Story — The Origins of Ceylon Spices — Silonka"
-        description="Discover Silonka's story: from ancient spice trade routes through Sri Lanka's hill country to your kitchen. Learn about Ceylon cinnamon, black pepper, and cloves — and the families who cultivate them."
-        keywords="Ceylon spice history, Sri Lanka cinnamon origin, spice trade routes, organic spice farms, Silonka story, Ceylon pepper, cloves Sri Lanka"
+        title="The Story of Ceylon Cinnamon — From Sri Lanka's Ancient Spice Routes | Silonka"
+        description="Discover how Ceylon Cinnamon (Cinnamomum verum) has been hand-harvested in Sri Lanka for over 2,000 years. Learn the origin story of the world's only true cinnamon and the families who cultivate it."
+        keywords="Ceylon cinnamon origin, true cinnamon history, Sri Lanka cinnamon, Cinnamomum verum story, Ceylon spice trade, ancient cinnamon routes, where does true cinnamon come from"
         canonicalPath="/origins"
         ogImage="/cgarden_opt.jpg"
         jsonLd={breadcrumbSchema([

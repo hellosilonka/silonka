@@ -141,6 +141,14 @@ export default function Navigation() {
                         <p className="text-ivory font-mono text-sm font-medium truncate">{user.name || 'User'}</p>
                         {user.email && <p className="text-ivory-muted font-mono text-xs truncate mt-0.5">{user.email}</p>}
                       </div>
+                      <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="w-full flex items-center gap-3 px-4 py-3 text-ivory-muted hover:text-ivory hover:bg-white/5 transition-colors font-mono text-xs uppercase tracking-widest">
+                        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                        <span>My Profile</span>
+                      </Link>
+                      <Link to="/track" onClick={() => setIsProfileOpen(false)} className="w-full flex items-center gap-3 px-4 py-3 text-ivory-muted hover:text-ivory hover:bg-white/5 transition-colors font-mono text-xs uppercase tracking-widest">
+                        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        <span>Track Order</span>
+                      </Link>
                       <button onClick={handleLogout} id="logout-btn" className="w-full flex items-center gap-3 px-4 py-3 text-ivory-muted hover:text-red-400 hover:bg-red-500/5 transition-colors font-mono text-xs uppercase tracking-widest">
                         <LogOut className="w-4 h-4" /><span>Logout</span>
                       </button>
@@ -301,17 +309,35 @@ export default function Navigation() {
 
           {/* Auth */}
           {user ? (
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-ivory font-mono text-xs font-medium truncate">{user.name || 'User'}</p>
-                {user.email && <p className="text-ivory-muted font-mono text-[10px] truncate">{user.email}</p>}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-ivory font-mono text-xs font-medium truncate">{user.name || 'User'}</p>
+                  {user.email && <p className="text-ivory-muted font-mono text-[10px] truncate">{user.email}</p>}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 text-red-400 font-mono text-xs uppercase tracking-widest shrink-0"
+                >
+                  <LogOut className="w-3.5 h-3.5" />Logout
+                </button>
               </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 text-red-400 font-mono text-xs uppercase tracking-widest shrink-0"
-              >
-                <LogOut className="w-3.5 h-3.5" />Logout
-              </button>
+              <div className="flex gap-2">
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-white/10 text-ivory-muted hover:text-ivory hover:border-white/25 transition-colors font-mono text-xs uppercase tracking-widest"
+                >
+                  Profile
+                </Link>
+                <Link
+                  to="/track"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-gold/20 text-gold hover:bg-gold/10 transition-colors font-mono text-xs uppercase tracking-widest"
+                >
+                  Track
+                </Link>
+              </div>
             </div>
           ) : (
             <Link

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
-import { ArrowLeft, Star, ShoppingBag, Truck, Shield, Leaf, ChevronRight, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingBag, Truck, Shield, Leaf, ChevronRight, Minus, Plus, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { getProductById, getRelatedProducts, addProductReview } from '@/lib/api';
+import { getProductById, getRelatedProducts, addProductReview, getDHLRates } from '@/lib/api';
+import { useGeo } from '@/context/GeoContext';
 import SEOHead, { breadcrumbSchema, productSchema } from '@/components/SEOHead';
 
 const BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
@@ -112,6 +113,32 @@ export default function ProductPage() {
   const [reviewSuccess, setReviewSuccess] = useState('');
 
   const heroRef = useRef<HTMLDivElement>(null);
+
+  // ── Geo location (global context) + DHL shipping rate ─────────────────────
+  const geo = useGeo();
+  const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string } | null>(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingError, setShippingError] = useState('');
+
+  useEffect(() => {
+    if (!geo.countryCode || !product) return;
+    setShippingLoading(true);
+    setShippingError('');
+    getDHLRates({
+      countryCode: geo.countryCode,
+      weightKg: 0.5,
+    })
+      .then((result) => {
+        if (result.error || result.amount === 0) {
+          setShippingError('Rate unavailable');
+        } else {
+          setShippingRate({ amount: result.amount, currency: result.currency });
+        }
+      })
+      .catch(() => setShippingError('Rate unavailable'))
+      .finally(() => setShippingLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.countryCode, product?._id]);
 
   useEffect(() => {
     if (!id) return;
@@ -363,9 +390,9 @@ export default function ProductPage() {
             </div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { icon: Truck, label: 'Free Shipping', sub: 'Orders over $50' },
+                { icon: Truck, label: 'DHL Express', sub: 'International shipping' },
                 { icon: Shield, label: '100% Authentic', sub: 'Certified origin' },
                 { icon: Leaf, label: 'Sustainably Sourced', sub: 'Eco-friendly' },
               ].map(({ icon: Icon, label, sub }) => (
@@ -375,6 +402,88 @@ export default function ProductPage() {
                   <span className="text-[9px] text-ivory-muted/50 mt-0.5 hidden sm:block">{sub}</span>
                 </div>
               ))}
+            </div>
+
+            {/* ── Shipping Cost Widget ────────────────────────────── */}
+            <div className="rounded-xl border border-white/8 bg-charcoal-card/40 overflow-hidden">
+              <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">
+                <Truck className="w-4 h-4 text-gold flex-shrink-0" />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-ivory-muted">Shipping Estimate</span>
+              </div>
+
+              <div className="px-4 py-3">
+                {/* Idle / asking permission */}
+                {(geo.status === 'idle' || geo.status === 'asking') && (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-4 h-4 text-gold animate-spin flex-shrink-0" />
+                    <p className="text-ivory-muted/70 text-xs">
+                      Detecting your location…
+                    </p>
+                  </div>
+                )}
+
+                {/* Permission denied */}
+                {geo.status === 'denied' && (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-amber-400/70 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-ivory-muted/70 text-xs leading-relaxed">
+                        Location access denied. Shipping cost will be calculated at checkout.
+                      </p>
+                      <button
+                        onClick={geo.requestLocation}
+                        className="mt-2 text-gold font-mono text-[10px] uppercase tracking-wider hover:text-gold-light transition-colors"
+                      >
+                        Allow Location →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Browser doesn't support geolocation */}
+                {geo.status === 'unsupported' && (
+                  <p className="text-ivory-muted/50 text-xs">
+                    Shipping cost will be shown at checkout.
+                  </p>
+                )}
+
+                {/* Resolved — show rate */}
+                {geo.status === 'resolved' && (
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-ivory-muted/70 text-xs flex items-center gap-1.5">
+                        <MapPin className="w-3 h-3" />
+                        {geo.countryName}
+                      </span>
+                      {shippingLoading && (
+                        <Loader2 className="w-3.5 h-3.5 text-gold/60 animate-spin" />
+                      )}
+                    </div>
+
+                    {!shippingLoading && shippingRate && (
+                      <div className="mt-2 flex items-baseline gap-2">
+                        <span className="font-display text-xl text-gold">
+                          {shippingRate.currency} {shippingRate.amount.toFixed(2)}
+                        </span>
+                        <span className="text-ivory-muted/50 text-[11px] font-mono">via DHL Express</span>
+                      </div>
+                    )}
+
+                    {!shippingLoading && shippingError && (
+                      <p className="mt-1.5 text-ivory-muted/50 text-[11px] font-mono">
+                        Shipping cost calculated at checkout
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Generic error */}
+                {geo.status === 'error' && (
+                  <p className="text-ivory-muted/50 text-xs">
+                    Shipping cost will be shown at checkout.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

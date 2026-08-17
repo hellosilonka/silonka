@@ -21,6 +21,8 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import bulkOrderRoutes from './routes/bulkOrderRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import sitemapRoutes from './routes/sitemapRoutes.js';
+import dhlRoutes from './routes/dhlRoutes.js';
+import geoRoutes from './routes/geoRoutes.js';
 import { seoPrerender } from './middleware/seoPrerender.js';
 
 const app = express();
@@ -59,6 +61,8 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/bulk-orders', bulkOrderRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/dhl', dhlRoutes);
+app.use('/api/geo', geoRoutes);
 app.use('/api', sitemapRoutes);
 
 // Health-check endpoint — used by keep-alive ping and external monitors
@@ -142,6 +146,23 @@ const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB');
+
+        // Seed the fixed categories if they don't exist yet
+        import('./models/Category.js').then(({ default: Category }) => {
+            const DEFAULT_CATEGORIES = [
+                { name: 'Ceylon Cinnamon',    slug: 'ceylon-cinnamon' },
+                { name: 'Ceylon Black Pepper', slug: 'ceylon-black-pepper' },
+                { name: 'Cloves and Cardamom', slug: 'cloves-and-cardamom' },
+                { name: 'Gift Set',            slug: 'gift-set' },
+            ];
+            Promise.all(
+                DEFAULT_CATEGORIES.map(cat =>
+                    Category.updateOne({ slug: cat.slug }, { $setOnInsert: cat }, { upsert: true })
+                )
+            ).then(() => console.log('[seed] Default categories ensured'))
+             .catch(err => console.warn('[seed] Category seed error:', err.message));
+        });
+
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
 

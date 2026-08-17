@@ -5,6 +5,7 @@ import {
     getOrderById,
     updateOrderToPaid,
     updateOrderToDelivered,
+    updateOrderDHL,
     getOrders,
     deleteOrder,
     deleteOrdersBulk,
@@ -23,5 +24,6 @@ router.route('/:id')
     .delete(protect, admin, deleteOrder);
 router.route('/:id/pay').put(protect, updateOrderToPaid);
 router.route('/:id/deliver').put(protect, admin, updateOrderToDelivered);
+router.route('/:id/dhl').put(protect, admin, updateOrderDHL);
 
 export default router;
