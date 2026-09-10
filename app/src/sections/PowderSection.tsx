@@ -96,11 +96,16 @@ export default function PowderSection() {
         ref={cardRef}
         className="absolute left-[7vw] top-[18vh] w-[40vw] h-[64vh] rounded-card overflow-hidden shadow-card will-change-transform"
       >
-        <img
-          src="/ground_powder.jpg"
-          alt="Ground Powders"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/ground_powder.webp" type="image/webp" />
+          <img
+            src="/ground_powder.jpg"
+            alt="Ground Powders"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
       </div>
 

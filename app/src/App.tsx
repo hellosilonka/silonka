@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -10,7 +10,6 @@ import { GeoProvider } from '@/context/GeoContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 
-import LoadingScreen from '@/components/LoadingScreen';
 import Navigation from '@/components/Navigation';
 import CartDrawer from '@/components/CartDrawer';
 import Footer from '@/components/Footer';
@@ -137,24 +136,17 @@ function AdminLayout() {
 }
 
 function AppContent() {
-  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === '/' && isLoading) {
-      return;
-    }
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
     }, 100);
     return () => clearTimeout(timer);
-  }, [location.pathname, isLoading]);
+  }, [location.pathname]);
 
   return (
     <>
-      {isLoading && location.pathname === '/' && (
-        <LoadingScreen onComplete={() => setIsLoading(false)} />
-      )}
     <Routes>
       {/* Public Pages with main navigation */}
       <Route element={<MainLayout />}>
@@ -189,8 +181,14 @@ function AppContent() {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '12345678-placeholder.apps.googleusercontent.com'}>
-      <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'USD' }}>
+    // PayPal: deferLoading=true means the SDK script only loads when
+    // a PayPalButtons component is rendered (i.e. on /checkout)
+    <PayPalScriptProvider
+      options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'USD' }}
+      deferLoading={true}
+    >
+      {/* Google OAuth: only loads the script when GoogleLogin component mounts */}
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '12345678-placeholder.apps.googleusercontent.com'}>
         <AuthProvider>
           <GeoProvider>
             <CurrencyProvider>
@@ -207,8 +205,8 @@ function App() {
             </CurrencyProvider>
           </GeoProvider>
         </AuthProvider>
-      </PayPalScriptProvider>
-    </GoogleOAuthProvider>
+      </GoogleOAuthProvider>
+    </PayPalScriptProvider>
   );
 }
 

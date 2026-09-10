@@ -145,7 +145,7 @@ export default function CraftPage() {
                 className="process-step grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center"
               >
                 {/* Image */}
-                <div className={`step-image ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+                <div className={`step-image order-2 ${index % 2 === 1 ? 'lg:order-2' : 'lg:order-1'}`}>
                   <div className="relative">
                     <div className="aspect-[4/3] rounded-card overflow-hidden">
                       <img
@@ -162,10 +162,12 @@ export default function CraftPage() {
                       <span className="font-display text-lg sm:text-2xl text-charcoal">{step.number}</span>
                     </div>
                   </div>
+                  {/* Decorative Line (Mobile) */}
+                  <div className="lg:hidden w-16 h-px bg-gradient-to-r from-gold to-transparent mt-8" />
                 </div>
 
                 {/* Content */}
-                <div className={`step-content ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                <div className={`step-content order-1 ${index % 2 === 1 ? 'lg:order-1' : 'lg:order-2'}`}>
                   <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                     <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
                     <span className="font-mono text-[10px] sm:text-label text-ivory-muted uppercase tracking-widest">
@@ -177,8 +179,8 @@ export default function CraftPage() {
                     {step.description}
                   </p>
 
-                  {/* Decorative Line */}
-                  <div className="w-16 sm:w-24 h-px bg-gradient-to-r from-gold to-transparent" />
+                  {/* Decorative Line (Desktop) */}
+                  <div className="hidden lg:block w-16 sm:w-24 h-px bg-gradient-to-r from-gold to-transparent" />
                 </div>
               </div>
             ))}
@@ -219,15 +221,19 @@ export default function CraftPage() {
 
             {/* Image */}
             <div>
-              <div className="aspect-square rounded-card overflow-hidden">
-                <img
-                  src="/craft_mortar.jpg"
-                  alt="Quality control"
-                  width={864}
-                  height={1184}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-square rounded-card overflow-hidden p-10 lg:p-16">
+                <picture>
+                  <source srcSet="/craft_cinnamon.webp" type="image/webp" />
+                  <img
+                    src="/craft_cinnamon.png"
+                    alt="Ceylon cinnamon bundle with golden accents"
+                    width={864}
+                    height={864}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-contain scale-90 hover:scale-100 transition-transform duration-700"
+                  />
+                </picture>
               </div>
             </div>
           </div>

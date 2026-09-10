@@ -7,8 +7,9 @@
   <meta name="google-site-verification" content="6IzAcFIpwkwiGR2wT4ByftiuH6mITecPDUT8st5Gb58" />
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
   <!-- Primary Meta Tags (defaults - overridden per-page by react-helmet-async) -->
   <title>Silonka - Buy Ceylon Cinnamon | True Cinnamon from Sri Lanka | Ships to USA, UK &amp; Europe</title>
@@ -60,8 +61,11 @@
       rel="stylesheet">
   </noscript>
 
-  <!-- Preload hero image for LCP -->
-  <link rel="preload" as="image" href="/hero_spice_field.jpg" type="image/jpeg" fetchpriority="high" />
+  <!-- Preload hero WebP image for LCP (WebP has priority, JPG is fallback) -->
+  <link rel="preload" as="image" href="/hero_spice_field.webp" type="image/webp" fetchpriority="high" />
+
+  <!-- Preload hero JPG fallback for non-WebP browsers -->
+  <link rel="preload" as="image" href="/hero_spice_field.jpg" type="image/jpeg" fetchpriority="high" media="not all and (min-width: 0px)" />
 
   <!-- Structured Data: Organization -->
   <script type="application/ld+json">
@@ -112,6 +116,20 @@
     }
   }
   </script>
+  <!-- Critical CSS: prevent CLS from fixed overlays, set body bg before JS loads -->
+  <style>
+    body { background-color: #0B0B0C; color: #F4F1EA; margin: 0; }
+    #root { min-height: 100vh; }
+    .noise-overlay {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 9999;
+      opacity: 0.04; mix-blend-mode: overlay;
+      will-change: auto;
+    }
+  </style>
+
+  <!-- AI Agent discovery: llms.txt -->
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt" />
 </head>
 
 <body>

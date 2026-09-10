@@ -324,6 +324,10 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
         <img
           src={product.image?.startsWith('/uploads') ? `${BASE_URL}${product.image}` : product.image}
           alt={product.name}
+          width={600}
+          height={600}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
         {/* Quick Add Overlay */}

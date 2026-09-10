@@ -88,11 +88,16 @@ export default function CinnamonSection() {
         ref={cardRef}
         className="absolute left-[7vw] top-[18vh] w-[40vw] h-[64vh] rounded-card overflow-hidden shadow-card will-change-transform"
       >
-        <img
-          src="/cinnamon_signature.jpg"
-          alt="Ceylon Cinnamon"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/cinnamon_signature.webp" type="image/webp" />
+          <img
+            src="/cinnamon_signature.jpg"
+            alt="Ceylon Cinnamon"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
       </div>
 

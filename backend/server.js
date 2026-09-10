@@ -97,25 +97,53 @@ if (process.env.NODE_ENV === 'production') {
         app.use('/assets', express.static(path.join(distPath, 'assets'), {
             maxAge: '1y',
             immutable: true,
+            setHeaders: (res, filePath) => {
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            },
         }));
     }
 
-    // Serve other dist files (images, mp4, etc.) with moderate cache — NOT index.html
+    // Serve other dist files with content-type-aware caching
     if (fs.existsSync(distPath)) {
         app.use(express.static(distPath, {
-            maxAge: '7d',
             setHeaders: (res, filePath) => {
-                // Never cache index.html — must always get the latest
                 if (filePath.endsWith('.html')) {
+                    // Never cache HTML — SPA must always get latest
                     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                } else if (/\.(jpg|jpeg|png|webp|avif|gif|svg|ico)$/i.test(filePath)) {
+                    // Images: 30-day cache, Vary for WebP negotiation
+                    res.setHeader('Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400');
+                    res.setHeader('Vary', 'Accept');
+                } else if (/\.(mp4|webm|mov)$/i.test(filePath)) {
+                    // Videos: 30-day cache
+                    res.setHeader('Cache-Control', 'public, max-age=2592000');
+                } else if (/\.(woff2?|ttf|eot)$/i.test(filePath)) {
+                    // Fonts: 1-year cache
+                    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                } else if (/\.(txt|xml)$/i.test(filePath)) {
+                    // llms.txt, robots.txt, sitemap.xml: 1-day cache
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
                 }
             },
         }));
     }
 
-    // Fallback: also serve from app/public
+    // Fallback: also serve from app/public with same caching rules
     if (fs.existsSync(publicPath)) {
-        app.use(express.static(publicPath, { maxAge: '7d' }));
+        app.use(express.static(publicPath, {
+            setHeaders: (res, filePath) => {
+                if (/\.(jpg|jpeg|png|webp|avif|gif|svg|ico)$/i.test(filePath)) {
+                    res.setHeader('Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400');
+                    res.setHeader('Vary', 'Accept');
+                } else if (/\.(mp4|webm|mov)$/i.test(filePath)) {
+                    res.setHeader('Cache-Control', 'public, max-age=2592000');
+                } else if (/\.(txt|xml)$/i.test(filePath)) {
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+                } else {
+                    res.setHeader('Cache-Control', 'public, max-age=604800');
+                }
+            },
+        }));
     }
 
     // SEO: Pre-render meta tags for search engine bots before SPA fallback

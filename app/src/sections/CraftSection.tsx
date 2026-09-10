@@ -38,19 +38,19 @@ export default function CraftSection() {
 
       // ENTRANCE (0-30%)
       scrollTl
-        .fromTo(card, 
-          { x: '60vw', rotate: 6, opacity: 0 }, 
-          { x: 0, rotate: 0, opacity: 1, ease: 'power2.out' }, 
+        .fromTo(card,
+          { x: '60vw', rotate: 6, opacity: 0 },
+          { x: 0, rotate: 0, opacity: 1, ease: 'power2.out' },
           0
         )
-        .fromTo(text, 
-          { x: '-45vw', opacity: 0 }, 
-          { x: 0, opacity: 1, ease: 'power2.out' }, 
+        .fromTo(text,
+          { x: '-45vw', opacity: 0 },
+          { x: 0, opacity: 1, ease: 'power2.out' },
           0.05
         )
-        .fromTo(chips.children, 
-          { y: '6vh', opacity: 0 }, 
-          { y: 0, opacity: 1, stagger: 0.06, ease: 'power2.out' }, 
+        .fromTo(chips.children,
+          { y: '6vh', opacity: 0 },
+          { y: 0, opacity: 1, stagger: 0.06, ease: 'power2.out' },
           0.18
         );
 
@@ -58,21 +58,21 @@ export default function CraftSection() {
 
       // EXIT (70-100%)
       scrollTl
-        .to(card, { 
-          x: '28vw', 
-          opacity: 0, 
-          ease: 'power2.in' 
+        .to(card, {
+          x: '28vw',
+          opacity: 0,
+          ease: 'power2.in'
         }, 0.70)
-        .to(text, { 
-          x: '-18vw', 
-          opacity: 0, 
-          ease: 'power2.in' 
+        .to(text, {
+          x: '-18vw',
+          opacity: 0,
+          ease: 'power2.in'
         }, 0.70)
-        .to(chips.children, { 
-          y: '4vh', 
-          opacity: 0, 
+        .to(chips.children, {
+          y: '4vh',
+          opacity: 0,
           stagger: 0.03,
-          ease: 'power2.in' 
+          ease: 'power2.in'
         }, 0.72);
 
     }, section);
@@ -98,9 +98,9 @@ export default function CraftSection() {
           Our Story Starts in the Soil
         </h2>
         <p className="text-body text-ivory-muted mb-8 leading-relaxed">
-          Every leaf and bark is handpicked from smallholder farms, nurtured by 
-          generations of growers. Sun-dried, hand-processed, and rigorously inspected — 
-          from the grove to the rack, from the bark to the quill, nothing is rushed 
+          Every leaf and bark is handpicked from smallholder farms, nurtured by
+          generations of growers. Sun-dried, hand-processed, and rigorously inspected —
+          from the grove to the rack, from the bark to the quill, nothing is rushed
           because true quality cannot be hurried.
         </p>
 
@@ -127,11 +127,16 @@ export default function CraftSection() {
         ref={cardRef}
         className="absolute right-[7vw] top-[18vh] w-[40vw] h-[64vh] rounded-card overflow-hidden shadow-card will-change-transform"
       >
-        <img
-          src="/craft_mortar.jpg"
-          alt="Spice Craft"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/craft_mortar.webp" type="image/webp" />
+          <img
+            src="/craft_mortar.jpg"
+            alt="Spice Craft"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
       </div>
     </section>

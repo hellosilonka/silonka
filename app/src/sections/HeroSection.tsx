@@ -108,11 +108,16 @@ export default function HeroSection() {
         ref={bgRef}
         className="absolute inset-0 z-1"
       >
-        <img
-          src="/hero_spice_field.jpg"
-          alt="Ceylon spice garden"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/hero_spice_field.webp" type="image/webp" />
+          <img
+            src="/hero_spice_field.jpg"
+            alt="Ceylon spice garden"
+            className="w-full h-full object-cover"
+            fetchPriority="high"
+            decoding="sync"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/40 to-transparent" />
       </div>
 

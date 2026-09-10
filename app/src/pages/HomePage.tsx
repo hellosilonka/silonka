@@ -149,7 +149,7 @@ export default function HomePage() {
         ref={heroRef}
         className="relative h-[100dvh] min-h-screen w-full overflow-hidden"
       >
-        {/* Background Video with Parallax */}
+        {/* Background Video with Parallax — poster handles LCP, video loads after */}
         <div
           ref={bgRef}
           className="absolute inset-0 scale-150 sm:scale-110"
@@ -159,7 +159,8 @@ export default function HomePage() {
             loop
             muted
             playsInline
-            poster="/hero_spice_field.jpg"
+            preload="none"
+            poster="/hero_spice_field.webp"
             className="w-full h-full object-cover object-center"
           >
             <source src="/heronew.mp4" type="video/mp4" />
@@ -262,15 +263,19 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
             {/* Image */}
             <div className="relative order-2 lg:order-1">
-              <div className="aspect-[4/5] rounded-card overflow-hidden">
-                <img
-                  src="/craft_mortar.jpg"
-                  alt="Traditional mortar and pestle used for grinding fresh Ceylon spices by hand"
-                  width={864}
-                  height={1184}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                  loading="lazy"
-                />
+              <div className="aspect-[4/5] rounded-card overflow-hidden p-10 lg:p-20">
+                <picture>
+                  <source srcSet="/craft_cinnamon.webp" type="image/webp" />
+                  <img
+                    src="/craft_cinnamon.png"
+                    alt="Ceylon cinnamon bundle with golden accents"
+                    width={864}
+                    height={1080}
+                    className="w-full h-full object-contain scale-90 hover:scale-100 transition-transform duration-700"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
               </div>
 
             </div>
@@ -468,15 +473,22 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
     >
       {/* Image */}
       <div className="aspect-square overflow-hidden relative">
-        <img
-          src={imageSrc}
-          alt={product.name}
-          width={600}
-          height={600}
-          loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-          onError={(e) => { (e.target as HTMLImageElement).src = '/collection_set.jpg'; }}
-        />
+        <picture>
+          <source
+            srcSet={imageSrc?.replace(/\.(jpg|jpeg|png)$/i, '.webp')}
+            type="image/webp"
+          />
+          <img
+            src={imageSrc}
+            alt={product.name}
+            width={600}
+            height={600}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            onError={(e) => { (e.target as HTMLImageElement).src = '/collection_set.jpg'; }}
+          />
+        </picture>
         {/* Badge */}
         <div className="absolute top-3 sm:top-4 left-3 sm:left-4">
           <span className="px-2 sm:px-3 py-1 rounded-full bg-gold text-charcoal font-mono text-[10px] sm:text-xs uppercase tracking-wider">

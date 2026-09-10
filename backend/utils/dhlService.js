@@ -43,8 +43,6 @@ function soapPost(url, xmlBody, label = 'DHL') {
             res.on('data', (chunk) => (data += chunk));
             res.on('end', () => {
                 console.log(`[${label}] ← HTTP ${res.statusCode} | Length: ${data.length}`);
-                // Log first 800 chars of response for debugging without flooding logs
-                console.log(`[${label}] RAW (first 800):\n${data.substring(0, 800)}`);
                 resolve(data);
             });
         });

@@ -146,11 +146,16 @@ export default function PepperSection() {
         ref={cardRef}
         className="absolute right-[7vw] top-[18vh] w-[40vw] h-[64vh] rounded-card overflow-hidden shadow-card will-change-transform"
       >
-        <img
-          src="/pepper_palette.jpg"
-          alt="Ceylon Black Pepper"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/pepper_palette.webp" type="image/webp" />
+          <img
+            src="/pepper_palette.jpg"
+            alt="Ceylon Black Pepper"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
       </div>
     </section>

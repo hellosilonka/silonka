@@ -215,14 +215,18 @@ export default function OriginsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
             <div className="story-image relative order-2 lg:order-1">
               <div className="aspect-[4/3] rounded-card overflow-hidden">
-                <img
-                  src="/cgarden_opt.jpg"
-                  alt="Silonka spice farm"
-                  width={1200}
-                  height={800}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
+                <picture>
+                  <source srcSet="/cgarden_opt.webp" type="image/webp" />
+                  <img
+                    src="/cgarden_opt.jpg"
+                    alt="Silonka spice farm"
+                    width={1200}
+                    height={800}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
+                </picture>
               </div>
 
             </div>
@@ -278,20 +282,38 @@ export default function OriginsPage() {
           <div className="space-y-20 sm:space-y-32">
             {spices.map((spice, index) => (
               <div key={index} className={`grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-start ${index % 2 === 1 ? '' : ''}`}>
+                {/* Mobile Title */}
+                <div className="lg:hidden -mb-2">
+                  <h3 className="font-display text-[clamp(24px,3.5vw,40px)] text-ivory mb-1">
+                    {spice.name}
+                  </h3>
+                  <p className="font-mono text-[10px] sm:text-label text-ivory-muted uppercase tracking-widest mb-6 italic">
+                    {spice.subtitle}
+                  </p>
+                  <div className="w-16 h-px bg-gradient-to-r from-gold to-transparent" />
+                </div>
+
                 {/* Image side */}
                 <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                  <div className="aspect-[4/3] rounded-card overflow-hidden mb-6">
-                    <img
-                      src={spice.image}
-                      alt={spice.name}
-                      width={1200}
-                      height={800}
-                      loading="lazy"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                    />
+                  <div className="aspect-[4/3] rounded-card overflow-hidden lg:mb-6">
+                    <picture>
+                      <source
+                        srcSet={spice.image.replace(/\.(jpg|jpeg|png)$/i, '.webp')}
+                        type="image/webp"
+                      />
+                      <img
+                        src={spice.image}
+                        alt={spice.name}
+                        width={1200}
+                        height={800}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                      />
+                    </picture>
                   </div>
-                  {/* Fast Facts */}
-                  <div className="p-5 sm:p-6 rounded-card bg-charcoal-card border border-white/5">
+                  {/* Fast Facts Desktop */}
+                  <div className="hidden lg:block p-5 sm:p-6 rounded-card bg-charcoal-card border border-white/5">
                     <p className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-widest mb-4">Fast Facts</p>
                     <ul className="space-y-3">
                       {spice.facts.map((fact, i) => (
@@ -306,18 +328,35 @@ export default function OriginsPage() {
 
                 {/* Text side */}
                 <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
-                  <h3 className="font-display text-[clamp(24px,3.5vw,40px)] text-ivory mb-1">
-                    {spice.name}
-                  </h3>
-                  <p className="font-mono text-[10px] sm:text-label text-ivory-muted uppercase tracking-widest mb-6 italic">
-                    {spice.subtitle}
-                  </p>
-                  <div className="w-16 h-px bg-gradient-to-r from-gold to-transparent mb-6" />
+                  {/* Desktop Title */}
+                  <div className="hidden lg:block">
+                    <h3 className="font-display text-[clamp(24px,3.5vw,40px)] text-ivory mb-1">
+                      {spice.name}
+                    </h3>
+                    <p className="font-mono text-[10px] sm:text-label text-ivory-muted uppercase tracking-widest mb-6 italic">
+                      {spice.subtitle}
+                    </p>
+                    <div className="w-16 h-px bg-gradient-to-r from-gold to-transparent mb-6" />
+                  </div>
+                  
                   {spice.description.split('\n\n').map((para, i) => (
                     <p key={i} className="text-sm sm:text-body text-ivory-muted leading-relaxed mb-4">
                       {para}
                     </p>
                   ))}
+
+                  {/* Fast Facts Mobile */}
+                  <div className="lg:hidden mt-8 p-5 sm:p-6 rounded-card bg-charcoal-card border border-white/5">
+                    <p className="font-mono text-[10px] sm:text-label text-gold uppercase tracking-widest mb-4">Fast Facts</p>
+                    <ul className="space-y-3">
+                      {spice.facts.map((fact, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gold mt-2 flex-shrink-0" />
+                          <span className="text-ivory-muted text-xs sm:text-sm leading-relaxed">{fact}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             ))}
@@ -344,21 +383,37 @@ export default function OriginsPage() {
                 key={index}
                 className="timeline-item grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center"
               >
+                {/* Mobile Title Block */}
+                <div className="lg:hidden -mb-2">
+                  <span className="font-display text-4xl sm:text-5xl text-gold/30 mb-2 block">{event.year}</span>
+                  <h3 className="font-display text-xl sm:text-2xl text-ivory">{event.title}</h3>
+                </div>
+
                 <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
                   <div className="aspect-video rounded-card overflow-hidden">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      width={1200}
-                      height={800}
-                      loading="lazy"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                    />
+                    <picture>
+                      <source
+                        srcSet={event.image.replace(/\.jpg$/i, '.webp')}
+                        type="image/webp"
+                      />
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        width={1200}
+                        height={800}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                      />
+                    </picture>
                   </div>
                 </div>
                 <div className={index % 2 === 1 ? 'lg:order-1 lg:text-right' : ''}>
-                  <span className="font-display text-4xl sm:text-5xl text-gold/30 mb-2 block">{event.year}</span>
-                  <h3 className="font-display text-xl sm:text-2xl text-ivory mb-3 sm:mb-4">{event.title}</h3>
+                  {/* Desktop Title Block */}
+                  <div className="hidden lg:block">
+                    <span className="font-display text-4xl sm:text-5xl text-gold/30 mb-2 block">{event.year}</span>
+                    <h3 className="font-display text-xl sm:text-2xl text-ivory mb-3 sm:mb-4">{event.title}</h3>
+                  </div>
                   <p className="text-sm sm:text-body text-ivory-muted leading-relaxed">{event.description}</p>
                 </div>
               </div>

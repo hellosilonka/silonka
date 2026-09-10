@@ -199,7 +199,7 @@ export default function Footer() {
           <div className="grid grid-cols-6 gap-8 mb-16">
             {/* Brand Column */}
             <div className="col-span-2">
-              <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group">
+              <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group">
                 <img
                   src="/logo.png"
                   alt="Silonka logo"
@@ -209,10 +209,9 @@ export default function Footer() {
                   Silonka
                 </span>
               </Link>
-              <p className="text-ivory-muted leading-relaxed mb-6 max-w-sm text-sm" />
 
               {/* Contact Info */}
-              <address className="flex flex-col space-y-4 not-italic">
+              <address className="flex flex-col space-y-3 not-italic">
                 <a
                   href="mailto:hello@silonka.com"
                   className="flex items-center gap-3 text-ivory-muted hover:text-gold transition-colors"

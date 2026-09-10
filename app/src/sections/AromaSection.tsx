@@ -86,11 +86,16 @@ export default function AromaSection() {
         ref={cardRef}
         className="absolute left-[7vw] top-[18vh] w-[40vw] h-[64vh] rounded-card overflow-hidden shadow-card will-change-transform"
       >
-        <img
-          src="/aroma_steam.jpg"
-          alt="Aroma and Steam"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/aroma_steam.webp" type="image/webp" />
+          <img
+            src="/aroma_steam.jpg"
+            alt="Aroma and Steam"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
       </div>
 

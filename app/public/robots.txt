@@ -14,3 +14,6 @@ Sitemap: https://www.silonka.co/sitemap.xml
 
 # Dynamic sitemap (blog posts + products from database)
 Sitemap: https://www.silonka.co/api/sitemap.xml
+
+# AI agent discovery
+# https://llmstxt.org

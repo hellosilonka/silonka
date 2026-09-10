@@ -108,11 +108,16 @@ export default function WholeSpicesSection() {
         ref={cardRef}
         className="absolute right-[7vw] top-[18vh] w-[40vw] h-[64vh] rounded-card overflow-hidden shadow-card will-change-transform"
       >
-        <img
-          src="/whole_spices.jpg"
-          alt="Whole Spices"
-          className="w-full h-full object-cover"
-        />
+        <picture>
+          <source srcSet="/whole_spices.webp" type="image/webp" />
+          <img
+            src="/whole_spices.jpg"
+            alt="Whole Spices"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
       </div>
     </section>
