@@ -61,11 +61,8 @@
       rel="stylesheet">
   </noscript>
 
-  <!-- Preload hero WebP image for LCP (WebP has priority, JPG is fallback) -->
-  <link rel="preload" as="image" href="/hero_spice_field.webp" type="image/webp" fetchpriority="high" />
-
-  <!-- Preload hero JPG fallback for non-WebP browsers -->
-  <link rel="preload" as="image" href="/hero_spice_field.jpg" type="image/jpeg" fetchpriority="high" media="not all and (min-width: 0px)" />
+  <!-- Preload hero poster for LCP — fetchpriority=high tells browser to load immediately -->
+  <link rel="preload" as="image" href="/hero_poster.webp" type="image/webp" fetchpriority="high" />
 
   <!-- Structured Data: Organization -->
   <script type="application/ld+json">
@@ -128,8 +125,9 @@
     }
   </style>
 
-  <!-- AI Agent discovery: llms.txt -->
+  <!-- AI Agent discovery: llms.txt + llms-full.txt -->
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt" />
+  <link rel="alternate" type="text/plain" title="LLMs-Full.txt" href="/llms-full.txt" />
 </head>
 
 <body>

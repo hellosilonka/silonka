@@ -64,32 +64,30 @@ export default function HomePage() {
       // Background fade (removed scale animation so Tailwind classes persist)
       tl.fromTo(bg,
         { opacity: 0 },
-        { opacity: 1, duration: 2 }
+        { opacity: 1, duration: 1.5 }
       )
-        // Title words with 3D effect
+        // Title words — use opacity-only to avoid CLS from y movement
         .fromTo(title.querySelectorAll('.word'),
-          { y: 100, opacity: 0, rotateX: -60, transformOrigin: 'center bottom' },
+          { opacity: 0 },
           {
-            y: 0,
             opacity: 1,
-            rotateX: 0,
-            duration: 1.2,
+            duration: 1.0,
             stagger: 0.12,
-            ease: 'power4.out'
+            ease: 'power3.out'
           },
-          '-=1'
+          '-=0.8'
         )
         // Subtitle
         .fromTo(subtitle,
-          { y: 50, opacity: 0 },
-          { y: 0, opacity: 1, duration: 1 },
-          '-=0.7'
+          { opacity: 0 },
+          { opacity: 1, duration: 0.8 },
+          '-=0.5'
         )
         // CTA buttons
         .fromTo(cta.children,
-          { y: 40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.8, stagger: 0.1 },
-          '-=0.5'
+          { opacity: 0 },
+          { opacity: 1, duration: 0.6, stagger: 0.1 },
+          '-=0.4'
         );
 
       // Parallax scroll effect for background
@@ -149,18 +147,30 @@ export default function HomePage() {
         ref={heroRef}
         className="relative h-[100dvh] min-h-screen w-full overflow-hidden"
       >
-        {/* Background Video with Parallax — poster handles LCP, video loads after */}
+        {/* Background: poster image loads instantly as LCP, video plays on top after loading */}
         <div
           ref={bgRef}
           className="absolute inset-0 scale-150 sm:scale-110"
         >
+          {/* LCP element: static poster that's immediately visible */}
+          <img
+            src="/hero_poster.webp"
+            alt=""
+            aria-hidden="true"
+            width={1920}
+            height={1080}
+            fetchPriority="high"
+            decoding="sync"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          {/* Video loads lazily on top; hides poster once playing */}
           <video
             autoPlay
             loop
             muted
             playsInline
-            preload="auto"
-            className="w-full h-full object-cover object-center"
+            preload="none"
+            className="absolute inset-0 w-full h-full object-cover object-center"
           >
             <source src="/heronew.mp4" type="video/mp4" />
           </video>
@@ -205,9 +215,9 @@ export default function HomePage() {
             </a>
             <button
               onClick={handleQuickAdd}
-              className="px-6 sm:px-8 py-3 sm:py-4 rounded-pill font-mono text-label uppercase tracking-widest text-ivory border border-ivory/30 hover:border-gold hover:text-gold transition-all duration-300 text-xs sm:text-sm"
+              className="min-w-[200px] px-6 sm:px-8 py-3 sm:py-4 rounded-pill font-mono text-label uppercase tracking-widest text-ivory border border-ivory/30 hover:border-gold hover:text-gold transition-all duration-300 text-xs sm:text-sm"
             >
-              Quick Add — {featuredProducts.length > 0 ? format(featuredProducts[0].price) : ''}
+              {featuredProducts.length > 0 ? `Quick Add — ${format(featuredProducts[0].price)}` : 'Shop Collection'}
             </button>
           </div>
         </div>
@@ -234,11 +244,26 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Product Grid */}
+          {/* Product Grid — skeletons prevent CLS while API loads */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {featuredProducts.map((product, index) => (
-              <ProductCard key={product._id} product={product} index={index} />
-            ))}
+            {featuredProducts.length === 0
+              ? [0, 1, 2].map((i) => (
+                  <div key={i} className="rounded-card overflow-hidden bg-charcoal-card border border-white/5 animate-pulse">
+                    <div className="aspect-square bg-white/5" />
+                    <div className="p-4 sm:p-6">
+                      <div className="h-6 bg-white/5 rounded mb-2 w-2/3" />
+                      <div className="h-4 bg-white/5 rounded mb-4 w-full" />
+                      <div className="flex justify-between items-center">
+                        <div className="h-7 bg-white/5 rounded w-16" />
+                        <div className="h-8 bg-white/5 rounded-full w-14" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              : featuredProducts.map((product, index) => (
+                  <ProductCard key={product._id} product={product} index={index} />
+                ))
+            }
           </div>
 
           {/* View All Button */}
