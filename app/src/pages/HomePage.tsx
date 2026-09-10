@@ -287,21 +287,17 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
             {/* Image */}
             <div className="relative order-2 lg:order-1">
-              <div className="aspect-[4/5] rounded-card overflow-hidden p-10 lg:p-20">
-                <picture>
-                  <source srcSet="/craft_cinnamon.webp" type="image/webp" />
-                  <img
-                    src="/craft_cinnamon.png"
-                    alt="Ceylon cinnamon bundle with golden accents"
-                    width={864}
-                    height={1080}
-                    className="w-full h-full object-contain scale-90 hover:scale-100 transition-transform duration-700"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </picture>
+              <div className="aspect-[4/5] rounded-card overflow-hidden flex items-center justify-center p-4 lg:p-8">
+                <img
+                  src="/our_story_harvester.png"
+                  alt="Traditional cinnamon harvester working in Sri Lanka"
+                  width={864}
+                  height={1080}
+                  className="w-full h-full object-contain scale-110 hover:scale-125 transition-transform duration-700 drop-shadow-[0_8px_40px_rgba(0,0,0,0.6)]"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
-
             </div>
 
             {/* Content */}
