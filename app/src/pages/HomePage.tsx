@@ -159,8 +159,7 @@ export default function HomePage() {
             loop
             muted
             playsInline
-            preload="none"
-            poster="/hero_spice_field.webp"
+            preload="auto"
             className="w-full h-full object-cover object-center"
           >
             <source src="/heronew.mp4" type="video/mp4" />

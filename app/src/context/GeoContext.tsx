@@ -36,16 +36,16 @@ const GeoContext = createContext<GeoContextValue>({
     countryCode: null,
     countryName: null,
     loading: false,
-    requestLocation: () => {},
+    requestLocation: () => { },
 });
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function GeoProvider({ children }: { children: React.ReactNode }) {
-    const [status, setStatus]       = useState<GeoStatus>('idle');
-    const [countryCode, setCC]      = useState<string | null>(null);
-    const [countryName, setCN]      = useState<string | null>(null);
-    const requestedRef              = useRef(false); // prevent double-call in StrictMode
+    const [status, setStatus] = useState<GeoStatus>('idle');
+    const [countryCode, setCC] = useState<string | null>(null);
+    const [countryName, setCN] = useState<string | null>(null);
+    const requestedRef = useRef(false); // prevent double-call in StrictMode
 
     // Reverse-geocode helper
     const resolveCoords = useCallback(async (lat: number, lng: number) => {
@@ -107,7 +107,7 @@ export function GeoProvider({ children }: { children: React.ReactNode }) {
             },
             { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
         );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
