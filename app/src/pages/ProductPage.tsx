@@ -129,10 +129,12 @@ export default function ProductPage() {
       weightKg: 0.5,
     })
       .then((result) => {
-        if (result.error || result.amount === 0) {
+        if (result.error || !result.services || result.services.length === 0) {
           setShippingError('Rate unavailable');
         } else {
-          setShippingRate({ amount: result.amount, currency: result.currency });
+          // Always pick the cheapest service (services are sorted by price ascending)
+          const cheapest = result.services[0];
+          setShippingRate({ amount: cheapest.amount, currency: cheapest.currency });
         }
       })
       .catch(() => setShippingError('Rate unavailable'))

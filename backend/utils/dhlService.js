@@ -74,7 +74,8 @@ function buildWsseHeader() {
 function shipTimestamp(offsetMinutes = 120) {
     const d = new Date(Date.now() + offsetMinutes * 60 * 1000);
     const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00 GMT+00:00`;
+    // DHL requires NO space before GMT — their working template confirms this format
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00GMT+00:00`;
 }
 
 /**
@@ -145,17 +146,34 @@ function getDefaultPostal(countryCode) {
     return DEFAULT_POSTAL[countryCode] || '00000';
 }
 
+// ─── DHL Service name mapping ────────────────────────────────────────────────
+const SERVICE_NAMES = {
+    'P': 'Express Worldwide',
+    'Y': 'Express 12:00',
+    'M': 'Express 10:30',
+    '8': 'Express Easy',
+    'Q': 'Medical Express',
+    'N': 'Express Domestic',
+    'D': 'Express Worldwide (Doc)',
+    'T': 'Express 12:00 (Doc)',
+    'K': 'Express 9:00',
+};
+
 // ─── 1. Get Shipping Rates ───────────────────────────────────────────────────
 
 /**
- * @param {object} destination  { city, postalCode, countryCode }
+ * @param {object} destination  { city, postalCode, countryCode, streetLines }
  * @param {object} pkg          { weightKg, lengthCm, widthCm, heightCm }
- * @returns {object}            { currency, amount, productCode, deliveryTime }
+ * @returns {object}            { currency, amount, productCode, deliveryTime, services[] }
  */
 export async function getRates(destination, pkg) {
     const ts = shipTimestamp(120);
-    const ref = msgRef();
 
+    // Build XML matching DHL's confirmed working template:
+    // - No <Request>/<ServiceHeader> block
+    // - PaymentInfo = DDU
+    // - StreetLines present for recipient
+    // - Element order: DropOffType, NextBusinessDay, Ship, Packages, ShipTimestamp, UnitOfMeasurement, Content, PaymentInfo, Account
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -165,19 +183,9 @@ export async function getRates(destination, pkg) {
   </soapenv:Header>
   <soapenv:Body>
     <rat:RateRequest>
-      <Request>
-        <ServiceHeader>
-          <MessageTime>${new Date().toISOString()}</MessageTime>
-          <MessageReference>${ref}</MessageReference>
-        </ServiceHeader>
-      </Request>
       <ClientDetail/>
       <RequestedShipment>
         <DropOffType>REGULAR_PICKUP</DropOffType>
-        <ShipTimestamp>${ts}</ShipTimestamp>
-        <UnitOfMeasurement>SI</UnitOfMeasurement>
-        <Content>NON_DOCUMENTS</Content>
-        <PaymentInfo>DAP</PaymentInfo>
         <NextBusinessDay>Y</NextBusinessDay>
         <Ship>
           <Shipper>
@@ -187,6 +195,7 @@ export async function getRates(destination, pkg) {
             <CountryCode>${process.env.DHL_SHIPPER_COUNTRY}</CountryCode>
           </Shipper>
           <Recipient>
+            <StreetLines>${(destination.streetLines && destination.streetLines.trim()) || 'Main Street'}</StreetLines>
             <City>${(destination.city && destination.city.trim()) || 'MAIN'}</City>
             <PostalCode>${(destination.postalCode && destination.postalCode.trim()) || getDefaultPostal(destination.countryCode)}</PostalCode>
             <CountryCode>${destination.countryCode}</CountryCode>
@@ -204,6 +213,10 @@ export async function getRates(destination, pkg) {
             </Dimensions>
           </RequestedPackages>
         </Packages>
+        <ShipTimestamp>${ts}</ShipTimestamp>
+        <UnitOfMeasurement>SI</UnitOfMeasurement>
+        <Content>NON_DOCUMENTS</Content>
+        <PaymentInfo>DDU</PaymentInfo>
         <Account>${process.env.DHL_ACCOUNT_NUMBER}</Account>
       </RequestedShipment>
     </rat:RateRequest>
@@ -214,26 +227,76 @@ export async function getRates(destination, pkg) {
 
     const response = await soapPost(DHL_ENDPOINTS.rate, xml, 'DHL-RATES');
 
-    // Parse response — DHL wraps charges in Provider/Service
-    const currency = extractTag(response, 'CurrencyCode') || 'USD';
+    // ── Parse multi-service response ─────────────────────────────────────────
+    // DHL returns multiple <Service type="X"> blocks, each with its own
+    // TotalNet, Charges, DeliveryTime, CutoffTime.
+    const serviceBlocks = extractAllTags(response, 'Service');
+    const services = [];
 
-    // TotalNet appears inside Provider → Service → Charges → TotalNet
-    let amount = extractAmount(response, 'TotalNet');
-    if (!amount) amount = extractAmount(response, 'Amount');
-    if (!amount) amount = extractAmount(response, 'ShippingCharge');
+    for (const block of serviceBlocks) {
+        // Extract service type from the block — we need to find it in the raw XML
+        // The type attribute is on the opening tag: <Service type="P">
+        let serviceType = null;
+        const typeMatch = response.match(new RegExp(`<(?:[^:>]+:)?Service\\s+type="([^"]+)"[^>]*>[\\s\\S]*?${escapeRegex(block.substring(0, 40))}`, 'i'));
+        if (typeMatch) {
+            serviceType = typeMatch[1];
+        }
 
-    const productCode = extractTag(response, 'GlobalProductCode') || extractTag(response, 'ProductCode') || 'P';
-    const deliveryTime = extractTag(response, 'DlvyDateTime') || extractTag(response, 'DeliveryDate') || null;
+        const currency = extractTag(block, 'Currency') || 'USD';
+        const totalNetBlock = extractTag(block, 'TotalNet');
+        const amount = totalNetBlock ? parseFloat(extractTag(totalNetBlock, 'Amount') || '0') : 0;
+        const deliveryTime = extractTag(block, 'DeliveryTime') || null;
+        const cutoffTime = extractTag(block, 'CutoffTime') || null;
+
+        // Parse individual charges
+        const chargeBlocks = extractAllTags(block, 'Charge');
+        const charges = chargeBlocks.map(ch => ({
+            type: extractTag(ch, 'ChargeType') || '',
+            code: extractTag(ch, 'ChargeCode') || '',
+            amount: parseFloat(extractTag(ch, 'ChargeAmount') || '0'),
+        }));
+
+        if (amount > 0) {
+            services.push({
+                serviceType,
+                serviceName: SERVICE_NAMES[serviceType] || `DHL ${serviceType}`,
+                currency,
+                amount,
+                deliveryTime,
+                cutoffTime,
+                charges,
+            });
+        }
+    }
+
+    // Sort by amount ascending (cheapest first)
+    services.sort((a, b) => a.amount - b.amount);
 
     const errorMsg = extractDHLError(response);
 
-    console.log(`[DHL rates] Parsed → currency=${currency}, amount=${amount}, error=${errorMsg}`);
+    console.log(`[DHL rates] Parsed ${services.length} services. Error=${errorMsg}`);
+    services.forEach(s => console.log(`  [${s.serviceType}] ${s.serviceName}: ${s.currency} ${s.amount}`));
 
-    if (amount === 0 && errorMsg) {
+    if (services.length === 0 && errorMsg) {
         throw new Error(`DHL: ${errorMsg}`);
     }
 
-    return { currency, amount, productCode, deliveryTime, rawResponse: response };
+    // Primary service: prefer Express Worldwide (P), fallback to cheapest
+    const primary = services.find(s => s.serviceType === 'P') || services[0] || {};
+
+    return {
+        currency: primary.currency || 'USD',
+        amount: primary.amount || 0,
+        productCode: primary.serviceType || 'P',
+        deliveryTime: primary.deliveryTime || null,
+        services,
+        rawResponse: response,
+    };
+}
+
+/** Escape special regex characters in a string */
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // ─── 2. Create Shipment ──────────────────────────────────────────────────────

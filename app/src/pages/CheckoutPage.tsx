@@ -66,7 +66,7 @@ export default function CheckoutPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const [creatingOrder, setCreatingOrder] = useState(false);
 
-    // DHL rate state
+    // DHL rate state — always uses the cheapest service
     const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string; deliveryTime: string | null } | null>(null);
     const [rateLoading, setRateLoading] = useState(false);
     const [rateError, setRateError] = useState('');
@@ -76,7 +76,7 @@ export default function CheckoutPage() {
     // Estimate package weight from cart items (0.3 kg per item as fallback)
     const estimatedWeightKg = Math.max(0.3, items.reduce((sum, item) => sum + item.quantity * 0.3, 0));
 
-    // Fetch DHL rate when country + postalCode change (debounced 800ms)
+    // Fetch DHL rates when country + postalCode change (debounced 800ms)
     useEffect(() => {
         if (!address.countryCode) {
             setShippingRate(null);
@@ -94,13 +94,16 @@ export default function CheckoutPage() {
                     countryCode: address.countryCode,
                     city: address.city,
                     postalCode: address.postalCode,
+                    streetLines: address.address,
                     weightKg: estimatedWeightKg,
                 });
-                if (result.error) {
+                if (result.error || !result.services || result.services.length === 0) {
                     setRateError('Could not calculate shipping. Please contact us.');
                     setShippingRate(null);
                 } else {
-                    setShippingRate({ amount: result.amount, currency: result.currency, deliveryTime: result.deliveryTime });
+                    // Always pick the cheapest service (services are sorted by price ascending)
+                    const cheapest = result.services[0];
+                    setShippingRate({ amount: cheapest.amount, currency: cheapest.currency, deliveryTime: cheapest.deliveryTime });
                 }
             } catch {
                 setRateError('Shipping rate unavailable.');
@@ -278,7 +281,6 @@ export default function CheckoutPage() {
                                         <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ivory-muted">▾</div>
                                     </div>
                                 </div>
-
 
                                 {errorMsg && (
                                     <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between gap-3">

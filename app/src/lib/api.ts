@@ -212,14 +212,40 @@ export const deleteBlog = async (id: string) => {
 };
 
 // ─── DHL Express ─────────────────────────────────────────────────────────────
+export interface DHLCharge {
+    type: string;
+    code: string;
+    amount: number;
+}
+
+export interface DHLService {
+    serviceType: string;
+    serviceName: string;
+    currency: string;
+    amount: number;
+    deliveryTime: string | null;
+    cutoffTime: string | null;
+    charges: DHLCharge[];
+}
+
+export interface DHLRatesResponse {
+    currency: string;
+    amount: number;
+    productCode: string;
+    deliveryTime: string | null;
+    services: DHLService[];
+    error?: string;
+}
+
 export const getDHLRates = async (destination: {
     countryCode: string;
     city?: string;
     postalCode?: string;
+    streetLines?: string;
     weightKg?: number;
-}) => {
+}): Promise<DHLRatesResponse> => {
     const { data } = await api.post('/dhl/rates', destination);
-    return data as { currency: string; amount: number; productCode: string; deliveryTime: string | null; error?: string };
+    return data;
 };
 
 export const trackDHLShipment = async (awb: string) => {

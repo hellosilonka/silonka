@@ -10,14 +10,14 @@ const router = express.Router();
 // Body: { countryCode, city?, postalCode?, weightKg?, items? }
 router.post('/rates', async (req, res) => {
     try {
-        const { countryCode, city = '', postalCode = '', weightKg = 0.5 } = req.body;
+        const { countryCode, city = '', postalCode = '', streetLines = '', weightKg = 0.5 } = req.body;
 
         if (!countryCode) {
             return res.status(400).json({ message: 'countryCode is required' });
         }
 
         const result = await getRates(
-            { city, postalCode, countryCode },
+            { city, postalCode, countryCode, streetLines },
             { weightKg }
         );
 
@@ -26,6 +26,16 @@ router.post('/rates', async (req, res) => {
             amount: result.amount,
             productCode: result.productCode,
             deliveryTime: result.deliveryTime,
+            // All available shipping options for the customer to choose from
+            services: (result.services || []).map(s => ({
+                serviceType: s.serviceType,
+                serviceName: s.serviceName,
+                currency: s.currency,
+                amount: s.amount,
+                deliveryTime: s.deliveryTime,
+                cutoffTime: s.cutoffTime,
+                charges: s.charges,
+            })),
         });
     } catch (err) {
         console.error('[DHL rates error]', err.message);
@@ -35,6 +45,7 @@ router.post('/rates', async (req, res) => {
             amount: 0,
             productCode: 'P',
             deliveryTime: null,
+            services: [],
             error: err.message,
         });
     }
