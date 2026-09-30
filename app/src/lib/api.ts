@@ -5,6 +5,22 @@ const api = axios.create({
     withCredentials: true,
 });
 
+/**
+ * Parse a product weight string (e.g. "100g", "250 g", "1.2kg", "1kg") into kg.
+ * Returns null when the string cannot be parsed — callers should fall back to a default.
+ */
+export function parseWeightKg(weightStr?: string | null): number | null {
+    if (!weightStr) return null;
+    const s = weightStr.trim().toLowerCase();
+    // Match a number optionally followed by g / kg
+    const m = s.match(/^([\d.]+)\s*(g|kg)?$/);
+    if (!m) return null;
+    const value = parseFloat(m[1]);
+    if (isNaN(value) || value <= 0) return null;
+    const unit = m[2] || 'g';
+    return unit === 'kg' ? value : value / 1000;
+}
+
 // ─── Auth ───────────────────────────────
 export const login = async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });

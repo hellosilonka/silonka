@@ -8,6 +8,11 @@
  */
 
 import https from 'node:https';
+import path  from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 
 const DHL_ENDPOINTS = {
     rate:     'https://wsbexpress.dhl.com:443/sndpt/expressRateBook',
@@ -15,6 +20,7 @@ const DHL_ENDPOINTS = {
     pickup:   'https://wsbexpress.dhl.com:443/sndpt/requestPickup',
     track:    'https://wsbexpress.dhl.com:443/sndpt/glDHLExpressTrack',
 };
+
 
 // ─── SOAP transport ──────────────────────────────────────────────────────────
 
@@ -43,7 +49,7 @@ function soapPost(url, xmlBody, label = 'DHL') {
             res.on('data', (chunk) => (data += chunk));
             res.on('end', () => {
                 console.log(`[${label}] ← HTTP ${res.statusCode} | Length: ${data.length}`);
-                resolve(data);
+                resolve({ body: data, requestXml: xmlBody });
             });
         });
 
@@ -146,6 +152,36 @@ function getDefaultPostal(countryCode) {
     return DEFAULT_POSTAL[countryCode] || '00000';
 }
 
+// ─── Standard shipping box sizes ─────────────────────────────────────────────
+// Dimensions confirmed by DHL support (Rate Request.zip attachment).
+// DHL charges by the greater of actual weight vs volumetric weight (L×W×H / 5000).
+// Using real box dimensions is critical for accurate rate quotes.
+const SHIPPING_BOXES = [
+    // Small: single small item (up to 0.5 kg)
+    { maxWeightKg: 0.5, lengthCm: 25,   widthCm: 20,   heightCm: 8   },
+    // Standard: 1–3 items (up to 2 kg) — DHL-confirmed box
+    { maxWeightKg: 2.0, lengthCm: 33.7, widthCm: 32.2, heightCm: 9.2 },
+    // Large: 4+ items (up to 5 kg)
+    { maxWeightKg: 5.0, lengthCm: 40,   widthCm: 35,   heightCm: 15  },
+    // Extra large: bulk orders (above 5 kg)
+    { maxWeightKg: Infinity, lengthCm: 50, widthCm: 40, heightCm: 20  },
+];
+
+/**
+ * Select the appropriate shipping box based on total package weight.
+ * Returns { lengthCm, widthCm, heightCm }.
+ */
+function selectBox(weightKg) {
+    for (const box of SHIPPING_BOXES) {
+        if (weightKg <= box.maxWeightKg) {
+            return { lengthCm: box.lengthCm, widthCm: box.widthCm, heightCm: box.heightCm };
+        }
+    }
+    // Fallback to largest box
+    const last = SHIPPING_BOXES[SHIPPING_BOXES.length - 1];
+    return { lengthCm: last.lengthCm, widthCm: last.widthCm, heightCm: last.heightCm };
+}
+
 // ─── DHL Service name mapping ────────────────────────────────────────────────
 const SERVICE_NAMES = {
     'P': 'Express Worldwide',
@@ -169,6 +205,17 @@ const SERVICE_NAMES = {
 export async function getRates(destination, pkg) {
     const ts = shipTimestamp(120);
 
+    // Auto-select box dimensions based on weight when not explicitly provided
+    const weight = pkg.weightKg || 1.2;
+    const box = selectBox(weight);
+    pkg = {
+        ...pkg,
+        weightKg: weight,
+        lengthCm: pkg.lengthCm || box.lengthCm,
+        widthCm:  pkg.widthCm  || box.widthCm,
+        heightCm: pkg.heightCm || box.heightCm,
+    };
+
     // Build XML matching DHL's confirmed working template:
     // - No <Request>/<ServiceHeader> block
     // - PaymentInfo = DDU
@@ -186,6 +233,7 @@ export async function getRates(destination, pkg) {
       <ClientDetail/>
       <RequestedShipment>
         <DropOffType>REGULAR_PICKUP</DropOffType>
+        <ServiceType>P</ServiceType>
         <NextBusinessDay>Y</NextBusinessDay>
         <Ship>
           <Shipper>
@@ -204,12 +252,12 @@ export async function getRates(destination, pkg) {
         <Packages>
           <RequestedPackages number="1">
             <Weight>
-              <Value>${pkg.weightKg || 0.5}</Value>
+              <Value>${pkg.weightKg || 1.2}</Value>
             </Weight>
             <Dimensions>
-              <Length>${pkg.lengthCm || 20}</Length>
-              <Width>${pkg.widthCm || 15}</Width>
-              <Height>${pkg.heightCm || 10}</Height>
+              <Length>${pkg.lengthCm}</Length>
+              <Width>${pkg.widthCm}</Width>
+              <Height>${pkg.heightCm}</Height>
             </Dimensions>
           </RequestedPackages>
         </Packages>
@@ -225,7 +273,8 @@ export async function getRates(destination, pkg) {
 
     console.log('[DHL rates] Request for:', destination.countryCode, '| Weight:', pkg.weightKg, 'kg');
 
-    const response = await soapPost(DHL_ENDPOINTS.rate, xml, 'DHL-RATES');
+    const { body: response, requestXml: rateRequestXml } = await soapPost(DHL_ENDPOINTS.rate, xml, 'DHL-RATES');
+
 
     // ── Parse multi-service response ─────────────────────────────────────────
     // DHL returns multiple <Service type="X"> blocks, each with its own
@@ -291,6 +340,7 @@ export async function getRates(destination, pkg) {
         deliveryTime: primary.deliveryTime || null,
         services,
         rawResponse: response,
+        rawRequest: rateRequestXml,
     };
 }
 
@@ -446,7 +496,7 @@ export async function createShipment(order, weightKg = 1) {
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-    const response = await soapPost(DHL_ENDPOINTS.shipment, xml, 'DHL-SHIPMENT');
+    const { body: response } = await soapPost(DHL_ENDPOINTS.shipment, xml, 'DHL-SHIPMENT');
 
     const awbNumber = extractTag(response, 'AirwayBillNumber') || extractTag(response, 'AWBNumber');
     const labelPdfBase64 = extractTag(response, 'OutputImage') || extractTag(response, 'LabelImage');
@@ -551,7 +601,7 @@ export async function schedulePickup(awbNumber, pickupDate) {
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-    const response = await soapPost(DHL_ENDPOINTS.pickup, xml, 'DHL-PICKUP');
+    const { body: response } = await soapPost(DHL_ENDPOINTS.pickup, xml, 'DHL-PICKUP');
 
     const confirmationNumber = extractTag(response, 'ConfirmationNumber') || extractTag(response, 'PickupConfirmationNumber');
     const errorMsg = extractDHLError(response);
@@ -598,7 +648,7 @@ export async function trackShipment(awbNumber) {
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-    const response = await soapPost(DHL_ENDPOINTS.track, xml, 'DHL-TRACK');
+    const { body: response } = await soapPost(DHL_ENDPOINTS.track, xml, 'DHL-TRACK');
 
     // Check for errors first
     const errorMsg = extractDHLError(response);

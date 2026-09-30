@@ -82,6 +82,8 @@ export default function PepperSection() {
       price: 24,
       image: '/pepper_palette.jpg',
       variant: '100g Whole',
+      weightKg: 0.1,
+      shippingWeightKg: 0.35,
     });
   };
 

@@ -5,7 +5,7 @@ import { ArrowLeft, Star, ShoppingBag, Truck, Shield, Leaf, ChevronRight, Minus,
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { getProductById, getRelatedProducts, addProductReview, getDHLRates } from '@/lib/api';
+import { getProductById, getRelatedProducts, addProductReview, getDHLRates, parseWeightKg } from '@/lib/api';
 import { useGeo } from '@/context/GeoContext';
 import SEOHead, { breadcrumbSchema, productSchema } from '@/components/SEOHead';
 
@@ -126,7 +126,7 @@ export default function ProductPage() {
     setShippingError('');
     getDHLRates({
       countryCode: geo.countryCode,
-      weightKg: 0.5,
+      weightKg: product.shippingWeightKg ?? 1.2,
     })
       .then((result) => {
         if (result.error || !result.services || result.services.length === 0) {
@@ -199,6 +199,8 @@ export default function ProductPage() {
       price: activePrice,
       image: product.image,
       variant: currentVariation ? currentVariation.label : product.weight,
+      weightKg: parseWeightKg(currentVariation?.label ?? product.weight) ?? 0.3,
+      shippingWeightKg: product.shippingWeightKg ?? 1.2,
     });
   };
 

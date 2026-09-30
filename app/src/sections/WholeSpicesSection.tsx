@@ -69,6 +69,8 @@ export default function WholeSpicesSection() {
       price: 45,
       image: '/whole_spices.jpg',
       variant: 'Mixed 200g',
+      weightKg: 0.2,
+      shippingWeightKg: 0.5,
     });
   };
 

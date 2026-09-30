@@ -82,6 +82,8 @@ export default function CollectionSection() {
       price: 89,
       image: '/collection_set.jpg',
       variant: '4 Spices',
+      weightKg: 0.4,
+      shippingWeightKg: 1.2,
     });
   };
 

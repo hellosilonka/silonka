@@ -18,7 +18,7 @@ router.post('/rates', async (req, res) => {
 
         const result = await getRates(
             { city, postalCode, countryCode, streetLines },
-            { weightKg }
+            { weightKg: weightKg || 1.2 }
         );
 
         res.json({
@@ -36,6 +36,12 @@ router.post('/rates', async (req, res) => {
                 cutoffTime: s.cutoffTime,
                 charges: s.charges,
             })),
+            // ── DHL Debug: exact SOAP XML exchanged ──────────────────────────
+            // Share these with DHL support when rates are incorrect.
+            _dhlDebug: {
+                requestXml:  result.rawRequest  || null,
+                responseXml: result.rawResponse || null,
+            },
         });
     } catch (err) {
         console.error('[DHL rates error]', err.message);

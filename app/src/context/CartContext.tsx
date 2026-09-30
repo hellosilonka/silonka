@@ -7,6 +7,8 @@ export interface CartItem {
   quantity: number;
   image: string;
   variant?: string;
+  weightKg?: number;   // net product weight in kg (parsed from product.weight string)
+  shippingWeightKg?: number;  // gross shipping weight in kg (from product.shippingWeightKg — includes packaging)
 }
 
 interface CartContextType {
@@ -17,6 +19,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  totalWeightKg: number;   // sum of (weightKg * quantity) for DHL rate calls
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
 }
@@ -64,6 +67,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Use gross shipping weight (shippingWeightKg) for DHL rate calculation;
+  // fall back to net content weight (weightKg) or 0.3 kg/unit when neither is set.
+  const totalWeightKg = parseFloat(
+    items.reduce((sum, item) => sum + (item.shippingWeightKg ?? item.weightKg ?? 0.3) * item.quantity, 0).toFixed(3)
+  );
 
   return (
     <CartContext.Provider
@@ -75,6 +83,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         totalItems,
         totalPrice,
+        totalWeightKg,
         isCartOpen,
         setIsCartOpen,
       }}

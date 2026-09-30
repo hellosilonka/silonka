@@ -46,8 +46,8 @@ const COUNTRIES = [
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 export default function CheckoutPage() {
-    const { items, totalPrice, clearCart } = useCart();
-    const { format } = useCurrency();
+    const { items, totalPrice, totalWeightKg, clearCart } = useCart();
+    const { format, convert } = useCurrency();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -73,8 +73,7 @@ export default function CheckoutPage() {
 
     const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Estimate package weight from cart items (0.3 kg per item as fallback)
-    const estimatedWeightKg = Math.max(0.3, items.reduce((sum, item) => sum + item.quantity * 0.3, 0));
+    // Use actual per-product weights carried in CartItem.weightKg; CartContext computes the total.
 
     // Fetch DHL rates when country + postalCode change (debounced 800ms)
     useEffect(() => {
@@ -95,7 +94,7 @@ export default function CheckoutPage() {
                     city: address.city,
                     postalCode: address.postalCode,
                     streetLines: address.address,
-                    weightKg: estimatedWeightKg,
+                    weightKg: totalWeightKg,
                 });
                 if (result.error || !result.services || result.services.length === 0) {
                     setRateError('Could not calculate shipping. Please contact us.');
@@ -118,7 +117,11 @@ export default function CheckoutPage() {
     }, [address.countryCode, address.postalCode]);
 
     const shippingCostUSD = shippingRate?.amount ?? 0;
-    const orderTotal = totalPrice + shippingCostUSD;
+    // DHL returns rates in USD; DB prices are in EUR.
+    // Convert shipping USD → EUR (÷1.08) so both values share the same base before summing.
+    const USD_TO_EUR = 1 / 1.08;
+    const shippingCostEUR = shippingCostUSD * USD_TO_EUR;
+    const orderTotalEUR = totalPrice + shippingCostEUR;
 
     // Create the order in our DB when user proceeds to payment
     const handleProceedToPayment = async (e: React.FormEvent) => {
@@ -138,8 +141,8 @@ export default function CheckoutPage() {
                 paymentMethod: 'PayPal',
                 itemsPrice: totalPrice,
                 taxPrice: 0,
-                shippingPrice: shippingCostUSD,
-                totalPrice: orderTotal,
+                shippingPrice: shippingCostEUR,
+                totalPrice: orderTotalEUR,
             });
             setDbOrderId(order._id);
             setStep('payment');
@@ -384,7 +387,7 @@ export default function CheckoutPage() {
                                         </span>
                                     ) : shippingRate ? (
                                         <span className="font-mono text-gold">
-                                            {shippingRate.currency} {shippingRate.amount.toFixed(2)}
+                                            {format(shippingCostEUR)}
                                         </span>
                                     ) : (
                                         <span className="font-mono text-ivory-muted/50">
@@ -403,7 +406,7 @@ export default function CheckoutPage() {
                                 <span className="font-display text-lg text-ivory">Total</span>
                                 <span className="font-display text-2xl text-gold">
                                     {shippingRate
-                                        ? `USD ${orderTotal.toFixed(2)}`
+                                        ? format(orderTotalEUR)
                                         : format(totalPrice)
                                     }
                                 </span>

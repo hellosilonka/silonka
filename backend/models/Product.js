@@ -27,6 +27,9 @@ const productSchema = new mongoose.Schema({
         enum: ['Ceylon Cinnamon', 'Ceylon Black Pepper', 'Cloves and Cardamom', 'Gift Set'],
     },
     weight: { type: String, required: true },
+    // Gross shipping weight (product + packaging + box) in kg — used for DHL rate calculation.
+    // Different from 'weight' which is the net content weight shown on the label.
+    shippingWeightKg: { type: Number, default: 1.2 },
     intensity: { type: Number },
     inStock: { type: Boolean, default: true },
     origin: { type: String, default: 'Sri Lanka' },

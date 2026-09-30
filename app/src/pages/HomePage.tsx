@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Star, Leaf, Truck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { getProducts } from '@/lib/api';
+import { getProducts, parseWeightKg } from '@/lib/api';
 import SEOHead, { ORGANIZATION_SCHEMA, WEBSITE_SCHEMA } from '@/components/SEOHead';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -129,6 +129,8 @@ export default function HomePage() {
         price: first.price,
         image: first.image?.startsWith('/uploads') ? `${BASE_URL}${first.image}` : first.image,
         variant: first.weight || '',
+        weightKg: parseWeightKg(first.weight) ?? 0.3,
+        shippingWeightKg: first.shippingWeightKg ?? 1.2,
       });
     }
   };
@@ -483,6 +485,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       name: product.name,
       price: product.price,
       image: imageSrc,
+      weightKg: parseWeightKg(product.weight) ?? 0.3,
+      shippingWeightKg: product.shippingWeightKg ?? 1.2,
     });
   };
 

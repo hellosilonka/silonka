@@ -5,7 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Filter, ChevronDown, ShoppingBag, Search, X, Package } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { getProducts } from '@/lib/api';
+import { getProducts, parseWeightKg } from '@/lib/api';
 import SEOHead, { breadcrumbSchema } from '@/components/SEOHead';
 
 const BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
@@ -311,6 +311,8 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
       price: product.price,
       image: product.image,
       variant: product.weight,
+      weightKg: parseWeightKg(product.weight) ?? 0.3,
+      shippingWeightKg: product.shippingWeightKg ?? 1.2,
     });
   };
 

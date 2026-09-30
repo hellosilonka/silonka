@@ -80,6 +80,8 @@ export default function PowderSection() {
       price: 32,
       image: '/ground_powder.jpg',
       variant: '3x 75g',
+      weightKg: 0.225,
+      shippingWeightKg: 0.6,
     });
   };
 
