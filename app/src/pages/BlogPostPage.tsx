@@ -69,17 +69,21 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     if (!slug) return;
+    let active = true;
     const fetch = async () => {
+      setLoading(true);
+      setNotFound(false);
       try {
         const data = await getBlogBySlug(slug);
-        setPost(data);
+        if (active) setPost(data);
       } catch {
-        setNotFound(true);
+        if (active) setNotFound(true);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     fetch();
+    return () => { active = false; };
   }, [slug]);
 
   const handleShare = () => {

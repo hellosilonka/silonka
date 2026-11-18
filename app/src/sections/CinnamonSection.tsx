@@ -91,7 +91,7 @@ export default function CinnamonSection() {
         <picture>
           <source srcSet="/cinnamon_signature.webp" type="image/webp" />
           <img
-            src="/cinnamon_signature.jpg"
+            src="/cinnamon_signature.webp"
             alt="Ceylon Cinnamon"
             className="w-full h-full object-cover"
             loading="lazy"

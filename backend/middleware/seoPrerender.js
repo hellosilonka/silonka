@@ -45,7 +45,7 @@ export function seoPrerender(distPath) {
 
             if (!fs.default.existsSync(indexPath)) return next();
 
-            let html = fs.default.readFileSync(indexPath, 'utf-8');
+            let html = await fs.default.promises.readFile(indexPath, 'utf-8');
 
             // Replace the default <title> with page-specific title
             html = html.replace(
@@ -124,7 +124,7 @@ export function seoPrerender(distPath) {
             if (meta.jsonLd) {
                 html = html.replace(
                     '</head>',
-                    `  <script type="application/ld+json">${JSON.stringify(meta.jsonLd)}</script>\n</head>`
+                    `  <script type="application/ld+json">${JSON.stringify(meta.jsonLd).replace(/</g, '\\u003c')}</script>\n</head>`
                 );
             }
 

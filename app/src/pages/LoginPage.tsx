@@ -1,7 +1,8 @@
+import { errorMessage } from '@/lib/api';
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { login, googleLogin } from '@/lib/api';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '@/context/AuthContext';
 import SEOHead from '@/components/SEOHead';
 
@@ -11,6 +12,9 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [params] = useSearchParams();
+    const requested = params.get('redirect');
+    const redirect = requested && requested.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\') ? requested : '/';
     const { setUser } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -20,32 +24,32 @@ export default function LoginPage() {
         try {
             const userData = await login(email, password);
             setUser(userData);
-            if (userData.isAdmin) {
+            if (userData.isAdmin && redirect === '/') {
                 navigate('/admin');
             } else {
-                navigate('/');
+                navigate(redirect);
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed');
+        } catch (err) {
+            setError(errorMessage(err, 'Login failed'));
         } finally {
             setLoading(false);
         }
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
         if (!credentialResponse.credential) return;
         setLoading(true);
         setError('');
         try {
             const userData = await googleLogin(credentialResponse.credential);
             setUser(userData);
-            if (userData.isAdmin) {
+            if (userData.isAdmin && redirect === '/') {
                 navigate('/admin');
             } else {
-                navigate('/');
+                navigate(redirect);
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Google Login failed');
+        } catch (err) {
+            setError(errorMessage(err, 'Google Login failed'));
         } finally {
             setLoading(false);
         }
@@ -67,7 +71,7 @@ export default function LoginPage() {
                     <div>
                         <label className="block font-mono text-label text-ivory-muted uppercase mb-2">Email</label>
                         <input
-                            type="email"
+                            type="email" aria-label="Email" autoComplete="email" maxLength={254}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-4 py-3 rounded bg-charcoal border border-white/10 text-ivory focus:border-gold/50 outline-none transition-colors"
@@ -77,7 +81,7 @@ export default function LoginPage() {
                     <div>
                         <label className="block font-mono text-label text-ivory-muted uppercase mb-2">Password</label>
                         <input
-                            type="password"
+                            type="password" aria-label="Password" autoComplete="current-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded bg-charcoal border border-white/10 text-ivory focus:border-gold/50 outline-none transition-colors"
@@ -93,7 +97,7 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <div className="mt-6 flex items-center justify-between">
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID && <><div className="mt-6 flex items-center justify-between">
                     <span className="border-b border-white/10 w-1/5 lg:w-1/4"></span>
                     <span className="text-xs text-center text-ivory-muted font-mono uppercase">or sign in with</span>
                     <span className="border-b border-white/10 w-1/5 lg:w-1/4"></span>
@@ -109,11 +113,11 @@ export default function LoginPage() {
                         useOneTap={false}
                         use_fedcm_for_prompt={false}
                     />
-                </div>
+                </div></>}
 
                 <p className="mt-8 text-center text-sm font-mono text-ivory-muted">
                     Don't have an account?{' '}
-                    <Link to="/signup" className="text-gold hover:underline">
+                    <Link to={`/signup?redirect=${encodeURIComponent(redirect)}`} className="text-gold hover:underline">
                         Sign up
                     </Link>
                 </p>

@@ -1,3 +1,5 @@
+import { errorMessage } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '@/lib/api';
@@ -7,19 +9,20 @@ export default function AdminLogin() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { setUser } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const userData = await login(email, password);
             if (userData.isAdmin) {
-                localStorage.setItem('adminInfo', JSON.stringify(userData));
+                setUser(userData);
                 navigate('/admin');
             } else {
                 setError('Access denied. Admin privileges required.');
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed');
+        } catch (err) {
+            setError(errorMessage(err, 'Login failed'));
         }
     };
 

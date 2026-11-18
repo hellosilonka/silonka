@@ -1,61 +1,28 @@
-/**
- * seed.js — Seeds ONLY the admin user.
- * Products are managed through the Admin Dashboard.
- *
- * Usage: node seed.js
- * Warning: This clears ALL users and orders before re-seeding.
- */
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'node:url';
 import User from './models/User.js';
-import Order from './models/Order.js';
-import bcrypt from 'bcryptjs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.join(__dirname, '.env') });
-
-const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGO_URI);
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
-    } catch (error) {
-        console.error(`Error: ${error.message}`);
-        process.exit(1);
+import Category from './models/Category.js';
+import { emailField } from './utils/http.js';
+dotenv.config({ path: fileURLToPath(new URL('.env', import.meta.url)) });
+try {
+    const email = emailField(process.env.SEED_ADMIN_EMAIL);
+    const password = process.env.SEED_ADMIN_PASSWORD;
+    if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password) > 72) throw new Error('Set SEED_ADMIN_PASSWORD to a unique password of 12–72 bytes.');
+    await mongoose.connect(process.env.MONGO_URI);
+    const existing = await User.findOne({ email });
+    if (existing) {
+        if (!existing.isAdmin) throw new Error('This email belongs to an existing customer. Choose another email.');
+        if (process.argv.includes('--reset-admin-password')) { existing.password = password; await existing.save(); }
+        console.log('Existing administrator retained. Password changes require --reset-admin-password.');
+    } else {
+        await User.create({ name: 'Silonka Administrator', email, password, isAdmin: true });
+        console.log('Administrator created. No customer data was removed.');
     }
-};
-
-const importData = async () => {
-    try {
-        await connectDB();
-
-        await Order.deleteMany();
-        await User.deleteMany();
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('Silonka@2026', salt);
-
-        await User.insertMany([
-            {
-                name: 'Admin Silonka',
-                email: 'admin@silonka.com',
-                password: hashedPassword,
-                isAdmin: true,
-            }
-        ]);
-
-        console.log('✅ Admin user seeded!');
-        console.log('   Email:    admin@silonka.com');
-        console.log('   Password: Silonka@2026');
-        console.log('   → Add products via the Admin Dashboard at /admin');
-        process.exit();
-    } catch (error) {
-        console.error(`Error: ${error.message}`);
-        process.exit(1);
+    for (const name of ['Ceylon Cinnamon', 'Ceylon Black Pepper', 'Cloves and Cardamom', 'Gift Set']) {
+        await Category.updateOne({ name }, { $setOnInsert: { name, slug: name.toLowerCase().replaceAll(' ', '-') } }, { upsert: true });
     }
-};
-
-importData();
+} catch (err) {
+    console.error(err.message);
+    process.exitCode = 1;
+} finally { await mongoose.disconnect(); }

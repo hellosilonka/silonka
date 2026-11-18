@@ -1,13 +1,14 @@
+import { errorMessage } from '@/lib/api';
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { login, googleLogin, register } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type UserInfo } from '@/context/AuthContext';
 
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: (userData: any) => void;
+    onSuccess: (userData: UserInfo) => void;
 }
 
 export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
@@ -33,19 +34,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             onSuccess(userData);
             setUser(userData);
             onClose();
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Authentication failed');
+        } catch (err) {
+            setError(errorMessage(err, 'Authentication failed'));
         }
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+        if (!credentialResponse.credential) return;
         try {
             const userData = await googleLogin(credentialResponse.credential);
             onSuccess(userData);
             setUser(userData);
             onClose();
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Google Auth failed');
+        } catch (err) {
+            setError(errorMessage(err, 'Google Auth failed'));
         }
     };
 
@@ -92,12 +94,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 </div>
 
                 <div className="flex justify-center mb-6">
-                    <GoogleLogin
+                    {import.meta.env.VITE_GOOGLE_CLIENT_ID && <GoogleLogin
                         onSuccess={handleGoogleSuccess}
                         onError={() => setError('Google Login Failed')}
                         theme="filled_black"
                         shape="rectangular"
-                    />
+                    />}
                 </div>
 
                 <p className="text-center text-ivory-muted font-mono text-xs">

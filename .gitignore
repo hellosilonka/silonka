@@ -13,6 +13,14 @@ npm-debug.log*
 .env
 .env.local
 .env.*
+!.env.example
+
+# Local validation output
+.audit-*.py
+app/lint-report.json
+app/test-results/
+app/playwright-report/
+.tools/
 
 # Local blog upload assets (already uploaded to Cloudinary)
 backend/uploads/blog_*.png

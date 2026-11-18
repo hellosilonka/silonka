@@ -1,29 +1,16 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-
-const protect = async (req, res, next) => {
-    let token = req.cookies.jwt;
-
-    if (token) {
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = await User.findById(decoded.userId).select('-password');
-            next();
-        } catch (error) {
-            console.error(error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
-        }
-    } else {
-        res.status(401).json({ message: 'Not authorized, no token' });
-    }
-};
-
-const admin = (req, res, next) => {
-    if (req.user && req.user.isAdmin) {
+export const protect = async (req, res, next) => {
+    try {
+        if (!req.cookies?.jwt) return res.status(401).json({ message: 'Please sign in to continue.' });
+        const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        if (typeof decoded.userId !== 'string' || !/^[a-f\d]{24}$/i.test(decoded.userId)) return res.status(401).json({ message: 'Session expired. Please sign in.' });
+        req.user = await User.findById(decoded.userId).select('-password');
+        if (!req.user) return res.status(401).json({ message: 'Session expired. Please sign in.' });
         next();
-    } else {
-        res.status(401).json({ message: 'Not authorized as admin' });
+    } catch (err) {
+        if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(err.name)) return res.status(401).json({ message: 'Session expired. Please sign in.' });
+        next(err);
     }
 };
-
-export { protect, admin };
+export const admin = (req, res, next) => req.user?.isAdmin ? next() : res.status(403).json({ message: 'Administrator access required.' });

@@ -11,31 +11,31 @@ const timelineEvents = [
     year: 'Ancient',
     title: 'Ancient Trade Routes',
     description: 'Long before European ships reached the island, Sri Lanka was already a thriving center of the Indian Ocean spice trade. Arab, Persian, Indian, and Chinese merchants regularly sailed to the island\'s ports to obtain highly prized spices—especially cinnamon—which were then carried to markets across the Middle East and the Mediterranean.',
-    image: '/ancient_trade.jpg',
+    image: '/ancient_trade.webp',
   },
   {
     year: '1500s',
     title: 'Portuguese Era',
     description: 'Soon after their arrival in the early 1500s, the Portuguese established control over the cinnamon trade, creating a monopoly that forced local communities to supply cinnamon bark to colonial authorities. This only served to boost Ceylon Cinnamon\'s reputation as the most coveted spice in the world.',
-    image: '/1518_opt.jpg',
+    image: '/1518_opt.webp',
   },
   {
     year: '1658',
     title: 'Dutch Spice Empire',
     description: 'After the Dutch East India Company (VOC) wrested control of the island\'s coastal regions, they were able to strengthen the monopoly. The Dutch introduced systematic cultivation methods to cinnamon plantations and developed transport networks to aid in moving the spices from growing regions to ports like Colombo and Negombo.',
-    image: '/dutch_empire.jpg',
+    image: '/dutch_empire.webp',
   },
   {
     year: '1800s',
     title: 'British Colonial Era',
     description: 'Under British rule in the 19th century, Sri Lanka\'s spice trade became more systematically organized and integrated into the global colonial economy. Cinnamon plantations were expanded and infrastructure improved. Although tea eventually became the island\'s dominant export, Sri Lankan cinnamon and other spices remained highly valued commodities.',
-    image: '/british_colonial.jpg',
+    image: '/british_colonial.webp',
   },
   {
     year: 'Today',
     title: "Sri Lanka's Spice Legacy",
     description: 'Sri Lanka is responsible for producing over 80% of the world\'s "True Cinnamon." Despite technological advancements and industrial changes, Sri Lanka\'s spice cultivators remain rooted in centuries-old traditions—hand-picking bark, sun-drying pepper vines, and hand-picking clove buds at dawn. This ensures the utmost care and delicacy of skill preserves the true essence of the spice.',
-    image: '/Today_opt.jpg',
+    image: '/Today_opt.webp',
   },
 ];
 
@@ -44,7 +44,7 @@ const spices = [
     name: 'Ceylon Cinnamon',
     subtitle: 'Cinnamomum verum — The World\'s "True Cinnamon"',
     region: 'Western Province (Galle, Matara, Kalutara)',
-    image: '/cinnamon_signature.jpg',
+    image: '/cinnamon_signature.webp',
     facts: [
       'Dubbed the world\'s "True Cinnamon" for its fine quality',
       'Stark differences from the more common cassia cinnamon of Indonesia and China',
@@ -62,7 +62,7 @@ The quills are then dried in the shade, never directly in the sun, in order to p
     name: 'Black Pepper',
     subtitle: 'Piper nigrum — The Black Gold',
     region: 'Kandy, Matale & Kurunegala Districts',
-    image: '/pepper_palette.jpg',
+    image: '/pepper_palette.webp',
     facts: [
       'Known as "Black Gold" among the traders and merchants of old',
       'Widely traded across the Indian Ocean as both a seasoning agent and a preservative',
@@ -80,7 +80,7 @@ The harvest season follows the northeast monsoon — farmers and their families 
     name: 'Cloves',
     subtitle: 'Syzygium aromaticum — The Aromatic Bud',
     region: 'Central Region & Wet Zone',
-    image: '/whole_spices.jpg',
+    image: '/whole_spices.webp',
     facts: [
       'Originally native to the Maluku Islands of Indonesia, introduced to Sri Lanka during British colonial period',
       'Quickly adapted to the island\'s climatic temperament, mainly cultivated in the central region and wet zone',
@@ -183,7 +183,7 @@ export default function OriginsPage() {
         description="Discover how Ceylon Cinnamon (Cinnamomum verum) has been hand-harvested in Sri Lanka for over 2,000 years. Learn the origin story of the world's only true cinnamon and the families who cultivate it."
         keywords="Ceylon cinnamon origin, true cinnamon history, Sri Lanka cinnamon, Cinnamomum verum story, Ceylon spice trade, ancient cinnamon routes, where does true cinnamon come from"
         canonicalPath="/origins"
-        ogImage="/cgarden_opt.jpg"
+        ogImage="/cgarden_opt.webp"
         jsonLd={breadcrumbSchema([
           { name: 'Home', url: '/' },
           { name: 'Our Origins', url: '/origins' },
@@ -218,7 +218,7 @@ export default function OriginsPage() {
                 <picture>
                   <source srcSet="/cgarden_opt.webp" type="image/webp" />
                   <img
-                    src="/cgarden_opt.jpg"
+                    src="/cgarden_opt.webp"
                     alt="Silonka spice farm"
                     width={1200}
                     height={800}

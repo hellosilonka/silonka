@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -8,7 +8,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
 import { GeoProvider } from '@/context/GeoContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { PayPalScriptProvider } from '@paypal/react-paypal-js';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 import Navigation from '@/components/Navigation';
 import CartDrawer from '@/components/CartDrawer';
@@ -35,13 +35,15 @@ const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
 const ProductPage = lazy(() => import('@/pages/ProductPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const TrackOrderPage = lazy(() => import('@/pages/TrackOrderPage'));
+const PaymentResultPage = lazy(() => import('@/pages/PaymentResultPage'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Minimal loading fallback for route transitions
 function RouteLoader() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
+    <div role="status" aria-label="Loading page" className="flex items-center justify-center min-h-[60vh]">
       <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
     </div>
   );
@@ -53,6 +55,7 @@ let lenisInstance: Lenis | null = null;
 // Smooth scroll wrapper component
 function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -66,14 +69,14 @@ function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
 
     lenis.on('scroll', ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
 
     gsap.ticker.lagSmoothing(0);
 
     return () => {
       lenisInstance = null;
+      gsap.ticker.remove(tick);
       lenis.destroy();
     };
   }, []);
@@ -109,12 +112,13 @@ function ScrollToTop() {
 }
 
 function MainLayout() {
+  const { pathname } = useLocation();
   return (
     <div className="relative bg-charcoal min-h-screen">
       <div className="noise-overlay" />
-      <Navigation />
+      <Navigation key={pathname} />
       <CartDrawer />
-      <main className="relative">
+      <main id="main-content" className="relative overflow-x-clip">
         <Suspense fallback={<RouteLoader />}>
           <Outlet />
         </Suspense>
@@ -156,6 +160,7 @@ function AppContent() {
         <Route path="/craft" element={<CraftPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/checkout/result" element={<PaymentResultPage />} />
         <Route path="/bulk-order" element={<BulkOrderPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -167,6 +172,7 @@ function AppContent() {
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/track" element={<TrackOrderPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
 
       {/* Admin Pages with isolated navigation */}
@@ -179,16 +185,15 @@ function AppContent() {
   );
 }
 
+function OptionalGoogleProvider({ children }: { children: ReactNode }) {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  return clientId ? <GoogleOAuthProvider clientId={clientId}>{children}</GoogleOAuthProvider> : children;
+}
+
 function App() {
   return (
-    // PayPal: deferLoading=true means the SDK script only loads when
-    // a PayPalButtons component is rendered (i.e. on /checkout)
-    <PayPalScriptProvider
-      options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'USD' }}
-      deferLoading={true}
-    >
-      {/* Google OAuth: only loads the script when GoogleLogin component mounts */}
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '12345678-placeholder.apps.googleusercontent.com'}>
+    <ErrorBoundary>
+      <OptionalGoogleProvider>
         <AuthProvider>
           <GeoProvider>
             <CurrencyProvider>
@@ -205,8 +210,8 @@ function App() {
             </CurrencyProvider>
           </GeoProvider>
         </AuthProvider>
-      </GoogleOAuthProvider>
-    </PayPalScriptProvider>
+      </OptionalGoogleProvider>
+    </ErrorBoundary>
   );
 }
 

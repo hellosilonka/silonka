@@ -198,3 +198,11 @@
     perspective: 1000px;
   }
 }
+
+/* Keyboard focus and reduced motion are available across the storefront. */
+:focus-visible { outline: 2px solid #c9a96e; outline-offset: 4px; }
+button:disabled { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

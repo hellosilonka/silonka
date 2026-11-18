@@ -213,15 +213,14 @@ const seedBlogs = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected');
 
-        // Clear existing blog posts
-        await Blog.deleteMany({});
-        console.log('Cleared existing blog posts');
+        // Existing articles are preserved; seeding is safe to repeat.
 
         // Upload images and create posts
         const uploadsDir = path.join(__dirname, 'uploads');
 
         for (let i = 0; i < blogArticles.length; i++) {
             const article = blogArticles[i];
+            if (await Blog.exists({ slug: article.slug })) continue;
             console.log(`\n[${i + 1}/${blogArticles.length}] ${article.title}`);
 
             // Upload image to Cloudinary

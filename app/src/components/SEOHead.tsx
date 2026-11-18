@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME = 'Silonka';
 const SITE_URL = 'https://www.silonka.co';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/hero_spice_field.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/hero_spice_field.webp`;
 const HREFLANG_LOCALES = ['en-US', 'en-GB'] as const;
 
 interface SEOHeadProps {

@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "Render deployment root for Silonka",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "start": "node backend/server.js",
-    "build": "npm install --prefix backend && npm install --include=dev --prefix app && npm run build --prefix app"
+    "build": "npm ci --prefix backend && npm ci --include=dev --prefix app && npm run build --prefix app",
+    "test": "npm test --prefix backend"
   }
 }

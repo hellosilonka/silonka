@@ -1,0 +1,281 @@
+[
+  {
+    "source": "products/Cinnamon Wood Natural Bird Chew/bird 1.jpg",
+    "image": "/products/cinnabeak-bird-1.webp",
+    "originalBytes": 2688692,
+    "optimizedBytes": 108656,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Natural Bird Chew/bird 2.jpg",
+    "image": "/products/cinnabeak-bird-2.webp",
+    "originalBytes": 2508813,
+    "optimizedBytes": 58726,
+    "width": 1200,
+    "height": 896,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Natural Bird Chew/large/Gemini_Generated_Image_nbw7sbnbw7sbnbw7 (3).jpeg",
+    "image": "/products/cinnabeak-large.webp",
+    "originalBytes": 2971476,
+    "optimizedBytes": 67008,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Natural Bird Chew/medium/Gemini_Generated_Image_3igike3igike3igi.jpeg",
+    "image": "/products/cinnabeak-medium.webp",
+    "originalBytes": 3055877,
+    "optimizedBytes": 72344,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Natural Bird Chew/size chart.jpg",
+    "image": "/products/cinnabeak-size-chart.webp",
+    "originalBytes": 2696138,
+    "optimizedBytes": 173344,
+    "width": 1600,
+    "height": 1600,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Natural Bird Chew/small/Gemini_Generated_Image_utuqv5utuqv5utuq.jpeg",
+    "image": "/products/cinnabeak-small.webp",
+    "originalBytes": 3044287,
+    "optimizedBytes": 64886,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Platform Bird Chew Perch/1.jpg",
+    "image": "/products/cinnaledge-1.webp",
+    "originalBytes": 2731439,
+    "optimizedBytes": 98458,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Platform Bird Chew Perch/2.jpg",
+    "image": "/products/cinnaledge-2.webp",
+    "originalBytes": 2487533,
+    "optimizedBytes": 78238,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Platform Bird Chew Perch/medium/Gemini_Generated_Image_1tdy8b1tdy8b1tdy.jpeg",
+    "image": "/products/cinnaledge-medium.webp",
+    "originalBytes": 2843638,
+    "optimizedBytes": 74860,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Platform Bird Chew Perch/size chart.jpg",
+    "image": "/products/cinnaledge-size-chart.webp",
+    "originalBytes": 2287375,
+    "optimizedBytes": 181548,
+    "width": 1600,
+    "height": 1600,
+    "reference": false
+  },
+  {
+    "source": "products/Cinnamon Wood Platform Bird Chew Perch/small/Gemini_Generated_Image_3knrr83knrr83knr (1).jpeg",
+    "image": "/products/cinnaledge-small.webp",
+    "originalBytes": 2924106,
+    "optimizedBytes": 128586,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/1.jpg",
+    "image": "/products/cinnachew-1.webp",
+    "originalBytes": 2865993,
+    "optimizedBytes": 64078,
+    "width": 1200,
+    "height": 896,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/2.jpg",
+    "image": "/products/cinnachew-2.webp",
+    "originalBytes": 2914920,
+    "optimizedBytes": 78944,
+    "width": 1200,
+    "height": 896,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/large/Gemini_Generated_Image_vzf7d1vzf7d1vzf7.jpeg",
+    "image": "/products/cinnachew-large.webp",
+    "originalBytes": 3424229,
+    "optimizedBytes": 158970,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/medium/Gemini_Generated_Image_r0s30yr0s30yr0s3.jpeg",
+    "image": "/products/cinnachew-medium.webp",
+    "originalBytes": 3322070,
+    "optimizedBytes": 144534,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/size chart.jpg",
+    "image": "/products/cinnachew-size-chart.webp",
+    "originalBytes": 687235,
+    "optimizedBytes": 60802,
+    "width": 1200,
+    "height": 896,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/small/Gemini_Generated_Image_c816cmc816cmc816.jpeg",
+    "image": "/products/cinnachew-small.webp",
+    "originalBytes": 3174052,
+    "optimizedBytes": 112314,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/dog chew/small/Gemini_Generated_Image_xf6f4fxf6f4fxf6f.jpeg",
+    "image": "/products/cinnachew-small-2.webp",
+    "originalBytes": 3141353,
+    "optimizedBytes": 113812,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/1.jpg",
+    "image": "/products/cinnatug-1.webp",
+    "originalBytes": 858556,
+    "optimizedBytes": 106370,
+    "width": 1200,
+    "height": 896,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/2.jpg",
+    "image": "/products/cinnatug-2.webp",
+    "originalBytes": 269998,
+    "optimizedBytes": 56742,
+    "width": 1200,
+    "height": 670,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/3.jpg",
+    "image": "/products/cinnatug-3.webp",
+    "originalBytes": 870436,
+    "optimizedBytes": 83552,
+    "width": 896,
+    "height": 1195,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/large/Gemini_Generated_Image_sa810ssa810ssa81.jpeg",
+    "image": "/products/cinnatug-large.webp",
+    "originalBytes": 2726522,
+    "optimizedBytes": 32958,
+    "width": 1200,
+    "height": 670,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/Main image.jpg",
+    "image": "/products/cinnatug-main-image.webp",
+    "originalBytes": 2331975,
+    "optimizedBytes": 52160,
+    "width": 1200,
+    "height": 670,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/medium/Gemini_Generated_Image_i1wrcoi1wrcoi1wr.jpeg",
+    "image": "/products/cinnatug-medium.webp",
+    "originalBytes": 2683595,
+    "optimizedBytes": 36442,
+    "width": 1200,
+    "height": 805,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/small/Gemini_Generated_Image_a62332a62332a623.jpeg",
+    "image": "/products/cinnatug-small.webp",
+    "originalBytes": 3482026,
+    "optimizedBytes": 150638,
+    "width": 1200,
+    "height": 1200,
+    "reference": false
+  },
+  {
+    "source": "products/wood + coco rop/small/Gemini_Generated_Image_tptmw2tptmw2tptm.jpeg",
+    "image": "/products/cinnatug-small-2.webp",
+    "originalBytes": 2717049,
+    "optimizedBytes": 34228,
+    "width": 1200,
+    "height": 805,
+    "reference": false
+  },
+  {
+    "source": "products/reference/cinnamon-bark-oil.png",
+    "image": "/products/cinnamon-bark-oil.webp",
+    "originalBytes": 1718593,
+    "optimizedBytes": 34072,
+    "width": 1200,
+    "height": 1200,
+    "reference": true
+  },
+  {
+    "source": "products/reference/cinnamon-candle.png",
+    "image": "/products/cinnamon-candle.webp",
+    "originalBytes": 1792295,
+    "optimizedBytes": 27110,
+    "width": 1200,
+    "height": 1200,
+    "reference": true
+  },
+  {
+    "source": "products/reference/cinnamon-leaf-oil.png",
+    "image": "/products/cinnamon-leaf-oil.webp",
+    "originalBytes": 1858203,
+    "optimizedBytes": 48226,
+    "width": 1200,
+    "height": 1200,
+    "reference": true
+  },
+  {
+    "source": "products/reference/cinnamon-powder.png",
+    "image": "/products/cinnamon-powder.webp",
+    "originalBytes": 2143379,
+    "optimizedBytes": 87598,
+    "width": 1200,
+    "height": 1200,
+    "reference": true
+  },
+  {
+    "source": "products/reference/cinnamon-sticks-alba.png",
+    "image": "/products/cinnamon-sticks-alba.webp",
+    "originalBytes": 2132870,
+    "optimizedBytes": 90866,
+    "width": 1200,
+    "height": 1200,
+    "reference": true
+  }
+]

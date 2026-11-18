@@ -1,10 +1,10 @@
+import { escapeMarkup as xmlEscape } from './http.js';
 /**
  * DHL Express SOAP Service
  * Wraps Rate, CreateShipment, SchedulePickup, and Track calls.
  * All credentials come from process.env — never exposed to the browser.
  *
- * NOTE: wsbexpress.dhl.com uses DHL's own CA; we disable strict TLS
- * verification only for this internal utility (not affecting other requests).
+ * TLS certificates are verified; configure NODE_EXTRA_CA_CERTS if required.
  */
 
 import https from 'node:https';
@@ -14,12 +14,25 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
-const DHL_ENDPOINTS = {
+const SANDBOX_ENDPOINTS = {
     rate:     'https://wsbexpress.dhl.com:443/sndpt/expressRateBook',
     shipment: 'https://wsbexpress.dhl.com:443/sndpt/expressRateBook',
     pickup:   'https://wsbexpress.dhl.com:443/sndpt/requestPickup',
     track:    'https://wsbexpress.dhl.com:443/sndpt/glDHLExpressTrack',
 };
+
+export function dhlEndpoint(service) {
+    const mode = process.env.DHL_MODE || 'sandbox';
+    if (!Object.hasOwn(SANDBOX_ENDPOINTS, service)) throw new Error('Unknown DHL service');
+    if (mode === 'sandbox') return SANDBOX_ENDPOINTS[service];
+    if (mode !== 'live') throw new Error('Set DHL_MODE to sandbox or live');
+    // Production endpoints are supplied by DHL after account certification.
+    const configured = process.env[`DHL_${service.toUpperCase()}_ENDPOINT`];
+    let url;
+    try { url = new URL(configured); } catch { throw new Error('DHL production endpoint is not configured'); }
+    if (url.protocol !== 'https:' || !url.hostname.endsWith('.dhl.com') || url.username || url.password || url.search || url.hash || url.pathname.includes('/sndpt/')) throw new Error('Invalid DHL production endpoint');
+    return url.href;
+}
 
 
 // ─── SOAP transport ──────────────────────────────────────────────────────────
@@ -34,7 +47,7 @@ function soapPost(url, xmlBody, label = 'DHL') {
             port: parsed.port || 443,
             path: parsed.pathname + parsed.search,
             method: 'POST',
-            rejectUnauthorized: false, // DHL uses their own intermediate CA
+            rejectUnauthorized: true,
             headers: {
                 'Content-Type': 'text/xml; charset=utf-8',
                 'Content-Length': body.length,
@@ -46,10 +59,13 @@ function soapPost(url, xmlBody, label = 'DHL') {
 
         const req = https.request(options, (res) => {
             let data = '';
-            res.on('data', (chunk) => (data += chunk));
+            res.on('data', (chunk) => { data += chunk; if (data.length > 10 * 1024 * 1024) req.destroy(new Error('DHL response too large')); });
+            res.on('error', reject);
+            res.on('aborted', () => reject(new Error('DHL response interrupted')));
             res.on('end', () => {
                 console.log(`[${label}] ← HTTP ${res.statusCode} | Length: ${data.length}`);
-                resolve({ body: data, requestXml: xmlBody });
+                if (res.statusCode < 200 || res.statusCode >= 300) return reject(new Error('DHL service request failed'));
+                resolve({ body: data });
             });
         });
 
@@ -57,6 +73,7 @@ function soapPost(url, xmlBody, label = 'DHL') {
             console.error(`[${label}] Network error:`, err.message);
             reject(err);
         });
+        req.setTimeout(15000, () => req.destroy(new Error('DHL request timed out')));
         req.write(body);
         req.end();
     });
@@ -65,10 +82,11 @@ function soapPost(url, xmlBody, label = 'DHL') {
 // ─── XML helpers ─────────────────────────────────────────────────────────────
 
 function buildWsseHeader() {
+    if (!process.env.DHL_USERNAME || !process.env.DHL_PASSWORD || !process.env.DHL_ACCOUNT_NUMBER) throw new Error('DHL is not configured');
     return `<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1">
       <wsse:UsernameToken>
-        <wsse:Username>${process.env.DHL_USERNAME}</wsse:Username>
-        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${process.env.DHL_PASSWORD}</wsse:Password>
+        <wsse:Username>${xmlEscape(process.env.DHL_USERNAME)}</wsse:Username>
+        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${xmlEscape(process.env.DHL_PASSWORD)}</wsse:Password>
       </wsse:UsernameToken>
     </wsse:Security>`;
 }
@@ -81,7 +99,7 @@ function shipTimestamp(offsetMinutes = 120) {
     const d = new Date(Date.now() + offsetMinutes * 60 * 1000);
     const pad = (n) => String(n).padStart(2, '0');
     // DHL requires NO space before GMT — their working template confirms this format
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00GMT+00:00`;
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:00GMT+00:00`;
 }
 
 /**
@@ -139,17 +157,85 @@ function extractDHLError(xml) {
  * so the schema validation passes and we get a rate back.
  */
 const DEFAULT_POSTAL = {
-    US: '10001', CA: 'M5H2N2', GB: 'SW1A1AA', AU: '2000',  NZ: '1010',
-    DE: '10115', FR: '75001', IT: '00100', ES: '28001', PT: '1000001',
-    NL: '1011',  BE: '1000',  CH: '8001',  AT: '1010',  SE: '11120',
-    NO: '0150',  DK: '1000',  FI: '00100', GR: '10431', IE: 'D01',
-    SG: '018989',MY: '50000', HK: '999077',JP: '1000001',CN: '100000',
-    IN: '110001',PK: '44000', PH: '1000',  QA: '00000',  SA: '11564',
-    AE: '00000', ZA: '0001',  MV: '20026',
+    // Americas
+    US: '10001',   CA: 'M5H2N2',  BR: '01310100',MX: '06600',  AR: 'C1001',
+    CL: '8320000', CO: '110111',  PE: '15001',   UY: '11300',  VE: '1010',
+    BO: '0000',    PY: '1000',    EC: '170101',  PA: '0000',   CR: '10101',
+    GT: '01001',   HN: '11101',   SV: '01101',   NI: '14000',  DO: '10101',
+    JM: '00001',   TT: '000000',  BB: '11000',   GY: '00001',  SR: '00001',
+    BZ: '00001',   BS: '00001',   AG: '00001',   LC: '00001',  VC: '00001',
+    GD: '00001',   KN: '00001',   DM: '00001',   KY: '00001',  TC: '00001',
+    VG: '00001',   VI: '00100',
+    // Europe
+    GB: 'SW1A1AA', DE: '10115',   FR: '75001',   IT: '00100',  ES: '28001',
+    PT: '1000001', NL: '1011',    BE: '1000',    CH: '8001',   AT: '1010',
+    SE: '11120',   NO: '0150',    DK: '1000',    FI: '00100',  GR: '10431',
+    IE: 'D02X285', PL: '00001',   CZ: '11000',   HU: '1011',   RO: '010011',
+    BG: '1000',    RS: '11000',   HR: '10000',   SK: '81101',  SI: '1000',
+    EE: '10001',   LV: 'LV1050',  LT: '01001',   LU: '1009',   MT: 'VLT1000',
+    CY: '1010',    IS: '101',     AL: '1001',    BA: '71000',  ME: '81000',
+    LI: '9490',    MC: '98000',   SM: '47890',   VA: '00120',
+    GI: 'GX111AA', GG: 'GY11AA',  JE: 'JE23QR',  FO: '100',    GL: '3900',
+    // Asia Pacific
+    CN: '100000',  JP: '1000001', IN: '110001',  ID: '10110',  SG: '018989',
+    MY: '50000',   TH: '10200',   VN: '100000',  PH: '1000',   KR: '03000',
+    HK: '999077',  TW: '100',     BD: '1000',    PK: '44000',  LK: '00100',
+    MM: '11141',   KH: '12000',   LA: '01000',   MN: '14191',  NP: '44600',
+    BT: '11001',   MV: '20026',   BN: 'BS8811',  TL: '00000',  MO: '000000',
+    PG: '00001',   FJ: '00001',   WS: '00001',   TO: '00001',  VU: '00001',
+    KI: '00001',   NR: '00001',   PW: '96940',   MH: '96960',  FM: '96941',
+    SB: '00001',   TV: '00001',   CK: '00001',   PF: '98714',  NC: '98800',
+    GU: '96910',   NZ: '1010',    AU: '2000',
+    // Middle East
+    AE: '00000',   SA: '11564',   QA: '00000',   KW: '13001',  BH: '317',
+    OM: '100',     JO: '11118',   IL: '10000',   LB: '00000',  IQ: '10001',
+    YE: '00001',
+    // Central Asia
+    KZ: '050000',  UZ: '100000',  AZ: '1000',    GE: '0179',   AM: '0001',
+    TM: '744000',  TJ: '734025',  KG: '720001',
+    // Africa
+    ZA: '0001',    EG: '11511',   NG: '100001',  KE: '00100',  GH: '00233',
+    ET: '1000',    TZ: '00501',   UG: '256',     SN: '12000',  CI: '00225',
+    CM: '00000',   ZM: '10101',   ZW: '00263',   MZ: '1100',   MG: '101',
+    AO: '00000',   MU: '00001',   RW: '00001',   BW: '00001',  NA: '00001',
+    SL: '00001',   LR: '00001',   GM: '00001',   GN: '00001',  ML: '00001',
+    BF: '00001',   NE: '00001',   TD: '00001',   ER: '00001',  DJ: '00001',
+    SO: '00001',   SS: '00001',   SD: '11111',   LY: '00001',  TN: '1000',
+    DZ: '16000',   MA: '10000',   SC: '00001',   MR: '00001',  BJ: '00001',
+    TG: '00001',   GW: '00001',   CV: '00001',   ST: '00001',  GQ: '00001',
+    CF: '00001',   CD: '00243',   CG: '00001',   GA: '00001',  MW: '00001',
+    SZ: '00001',   LS: '100',
+    // Other territories
+    UA: '01001',   TR: '34000',   GF: '97300',   GP: '97100',  MQ: '97200',
+    FK: '00001',
 };
 
 function getDefaultPostal(countryCode) {
     return DEFAULT_POSTAL[countryCode] || '00000';
+}
+
+const DEFAULT_CITY = {
+    AU: 'Sydney',        AT: 'Vienna',        AZ: 'Baku',          BD: 'Dhaka',
+    BE: 'Brussels',      BR: 'Sao Paulo',     BN: 'Bandar Seri Begawan', BG: 'Sofia',
+    CA: 'Toronto',       CL: 'Santiago',      CN: 'Beijing',       CO: 'Bogota',
+    HR: 'Zagreb',        CY: 'Nicosia',       CZ: 'Prague',        DK: 'Copenhagen',
+    EG: 'Cairo',         EE: 'Tallinn',       FI: 'Helsinki',      FR: 'Paris',
+    DE: 'Berlin',        GR: 'Athens',        HK: 'Hong Kong',     HU: 'Budapest',
+    IS: 'Reykjavik',     IN: 'New Delhi',     ID: 'Jakarta',       IE: 'Dublin',
+    IT: 'Rome',          JP: 'Tokyo',         JO: 'Amman',         KZ: 'Almaty',
+    KR: 'Seoul',         KW: 'Kuwait City',   LV: 'Riga',          LT: 'Vilnius',
+    LU: 'Luxembourg',    MY: 'Kuala Lumpur',  MV: 'Male',          MT: 'Valletta',
+    MX: 'Mexico City',   NL: 'Amsterdam',     NZ: 'Auckland',      NO: 'Oslo',
+    OM: 'Muscat',        PK: 'Islamabad',     PH: 'Manila',        PL: 'Warsaw',
+    PT: 'Lisbon',        QA: 'Doha',          RO: 'Bucharest',     SA: 'Riyadh',
+    SG: 'Singapore',     SK: 'Bratislava',    SI: 'Ljubljana',     ZA: 'Pretoria',
+    ES: 'Madrid',        SE: 'Stockholm',     CH: 'Zurich',        TW: 'Taipei',
+    TH: 'Bangkok',       TR: 'Istanbul',      AE: 'Dubai',         GB: 'London',
+    US: 'New York',      VN: 'Hanoi',         BH: 'Manama',
+};
+
+function getDefaultCity(countryCode) {
+    return DEFAULT_CITY[countryCode] || 'City';
 }
 
 // ─── Standard shipping box sizes ─────────────────────────────────────────────
@@ -237,16 +323,16 @@ export async function getRates(destination, pkg) {
         <NextBusinessDay>Y</NextBusinessDay>
         <Ship>
           <Shipper>
-            <StreetLines>${process.env.DHL_SHIPPER_STREET}</StreetLines>
-            <City>${process.env.DHL_SHIPPER_CITY}</City>
-            <PostalCode>${process.env.DHL_SHIPPER_POSTAL}</PostalCode>
-            <CountryCode>${process.env.DHL_SHIPPER_COUNTRY}</CountryCode>
+            <StreetLines>${xmlEscape(process.env.DHL_SHIPPER_STREET)}</StreetLines>
+            <City>${xmlEscape(process.env.DHL_SHIPPER_CITY)}</City>
+            <PostalCode>${xmlEscape(process.env.DHL_SHIPPER_POSTAL)}</PostalCode>
+            <CountryCode>${xmlEscape(process.env.DHL_SHIPPER_COUNTRY)}</CountryCode>
           </Shipper>
           <Recipient>
-            <StreetLines>${(destination.streetLines && destination.streetLines.trim()) || 'Main Street'}</StreetLines>
-            <City>${(destination.city && destination.city.trim()) || 'MAIN'}</City>
-            <PostalCode>${(destination.postalCode && destination.postalCode.trim()) || getDefaultPostal(destination.countryCode)}</PostalCode>
-            <CountryCode>${destination.countryCode}</CountryCode>
+            <StreetLines>${xmlEscape((destination.streetLines && destination.streetLines.trim()) || 'Main Street')}</StreetLines>
+            <City>${xmlEscape((destination.city && destination.city.trim()) || getDefaultCity(destination.countryCode))}</City>
+            <PostalCode>${xmlEscape((destination.postalCode && destination.postalCode.trim()) || getDefaultPostal(destination.countryCode))}</PostalCode>
+            <CountryCode>${xmlEscape(destination.countryCode)}</CountryCode>
           </Recipient>
         </Ship>
         <Packages>
@@ -265,7 +351,7 @@ export async function getRates(destination, pkg) {
         <UnitOfMeasurement>SI</UnitOfMeasurement>
         <Content>NON_DOCUMENTS</Content>
         <PaymentInfo>DDU</PaymentInfo>
-        <Account>${process.env.DHL_ACCOUNT_NUMBER}</Account>
+        <Account>${xmlEscape(process.env.DHL_ACCOUNT_NUMBER)}</Account>
       </RequestedShipment>
     </rat:RateRequest>
   </soapenv:Body>
@@ -273,26 +359,19 @@ export async function getRates(destination, pkg) {
 
     console.log('[DHL rates] Request for:', destination.countryCode, '| Weight:', pkg.weightKg, 'kg');
 
-    const { body: response, requestXml: rateRequestXml } = await soapPost(DHL_ENDPOINTS.rate, xml, 'DHL-RATES');
+    const { body: response } = await soapPost(dhlEndpoint('rate'), xml, 'DHL-RATES');
 
 
     // ── Parse multi-service response ─────────────────────────────────────────
     // DHL returns multiple <Service type="X"> blocks, each with its own
     // TotalNet, Charges, DeliveryTime, CutoffTime.
-    const serviceBlocks = extractAllTags(response, 'Service');
+    const serviceBlocks = [...response.matchAll(/<(?:[\w-]+:)?Service\b[^>]*\btype="([^"]+)"[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?Service>/gi)];
     const services = [];
 
-    for (const block of serviceBlocks) {
-        // Extract service type from the block — we need to find it in the raw XML
-        // The type attribute is on the opening tag: <Service type="P">
-        let serviceType = null;
-        const typeMatch = response.match(new RegExp(`<(?:[^:>]+:)?Service\\s+type="([^"]+)"[^>]*>[\\s\\S]*?${escapeRegex(block.substring(0, 40))}`, 'i'));
-        if (typeMatch) {
-            serviceType = typeMatch[1];
-        }
-
-        const currency = extractTag(block, 'Currency') || 'USD';
+    for (const match of serviceBlocks) {
+        const [, serviceType, block] = match;
         const totalNetBlock = extractTag(block, 'TotalNet');
+        const currency = extractTag(totalNetBlock || block, 'Currency') || 'USD';
         const amount = totalNetBlock ? parseFloat(extractTag(totalNetBlock, 'Amount') || '0') : 0;
         const deliveryTime = extractTag(block, 'DeliveryTime') || null;
         const cutoffTime = extractTag(block, 'CutoffTime') || null;
@@ -339,8 +418,8 @@ export async function getRates(destination, pkg) {
         productCode: primary.serviceType || 'P',
         deliveryTime: primary.deliveryTime || null,
         services,
-        rawResponse: response,
-        rawRequest: rateRequestXml,
+
+
     };
 }
 
@@ -357,6 +436,8 @@ function escapeRegex(str) {
  * @returns {object}        { awbNumber, labelPdfBase64, pickupDate }
  */
 export async function createShipment(order, weightKg = 1) {
+    if (!['USD', 'EUR'].includes(order.currency)) { const error = new Error('Record the original order currency before creating a shipment.'); error.status = 400; throw error; }
+    const box = selectBox(weightKg);
     const ts = shipTimestamp(120);
     const today = new Date().toISOString().split('T')[0];
     const invoiceNum = String(order._id).slice(-9).toUpperCase();
@@ -372,7 +453,7 @@ export async function createShipment(order, weightKg = 1) {
           <ItemNumber>${idx + 1}</ItemNumber>
           <Quantity>${item.qty || 1}</Quantity>
           <QuantityUnitOfMeasurement>PCS</QuantityUnitOfMeasurement>
-          <ItemDescription>${item.name}</ItemDescription>
+          <ItemDescription>${xmlEscape(item.name)}</ItemDescription>
           <UnitPrice>${item.price}</UnitPrice>
           <NetWeight>${((weightKg / items.length) * 0.9).toFixed(2)}</NetWeight>
           <GrossWeight>${(weightKg / items.length).toFixed(2)}</GrossWeight>
@@ -397,16 +478,16 @@ export async function createShipment(order, weightKg = 1) {
       <RequestedShipment>
         <ShipmentInfo>
           <DropOffType>REGULAR_PICKUP</DropOffType>
-          <ServiceType>P</ServiceType>
+          <ServiceType>${xmlEscape(order.shippingProductCode || 'P')}</ServiceType>
           <Billing>
-            <ShipperAccountNumber>${process.env.DHL_ACCOUNT_NUMBER}</ShipperAccountNumber>
+            <ShipperAccountNumber>${xmlEscape(process.env.DHL_ACCOUNT_NUMBER)}</ShipperAccountNumber>
             <ShippingPaymentType>S</ShippingPaymentType>
-            <BillingAccountNumber>${process.env.DHL_ACCOUNT_NUMBER}</BillingAccountNumber>
+            <BillingAccountNumber>${xmlEscape(process.env.DHL_ACCOUNT_NUMBER)}</BillingAccountNumber>
           </Billing>
           <SpecialServices>
             <Service><ServiceType>WY</ServiceType></Service>
           </SpecialServices>
-          <Currency>USD</Currency>
+          <Currency>${xmlEscape(order.currency)}</Currency>
           <UnitOfMeasurement>SI</UnitOfMeasurement>
           <ShipmentReferences>
             <ShipmentReference>
@@ -441,7 +522,7 @@ export async function createShipment(order, weightKg = 1) {
             <InvoiceDate>${today}</InvoiceDate>
             <InvoiceNumber>${invoiceNum}</InvoiceNumber>
             <InvoiceSignatureDetails>
-              <SignatureName>${process.env.DHL_SHIPPER_NAME}</SignatureName>
+              <SignatureName>${xmlEscape(process.env.DHL_SHIPPER_NAME)}</SignatureName>
               <SignatureTitle>MR</SignatureTitle>
             </InvoiceSignatureDetails>
             <PackageMarks>Silonka Premium Ceylon Spices</PackageMarks>
@@ -452,31 +533,31 @@ export async function createShipment(order, weightKg = 1) {
         <Ship>
           <Shipper>
             <Contact>
-              <PersonName>${process.env.DHL_SHIPPER_NAME}</PersonName>
-              <CompanyName>${process.env.DHL_SHIPPER_COMPANY}</CompanyName>
-              <PhoneNumber>${process.env.DHL_SHIPPER_PHONE}</PhoneNumber>
-              <EmailAddress>${process.env.DHL_SHIPPER_EMAIL}</EmailAddress>
-              <MobilePhoneNumber>${process.env.DHL_SHIPPER_PHONE}</MobilePhoneNumber>
+              <PersonName>${xmlEscape(process.env.DHL_SHIPPER_NAME)}</PersonName>
+              <CompanyName>${xmlEscape(process.env.DHL_SHIPPER_COMPANY)}</CompanyName>
+              <PhoneNumber>${xmlEscape(process.env.DHL_SHIPPER_PHONE)}</PhoneNumber>
+              <EmailAddress>${xmlEscape(process.env.DHL_SHIPPER_EMAIL)}</EmailAddress>
+              <MobilePhoneNumber>${xmlEscape(process.env.DHL_SHIPPER_PHONE)}</MobilePhoneNumber>
             </Contact>
             <Address>
-              <StreetLines>${process.env.DHL_SHIPPER_STREET}</StreetLines>
-              <City>${process.env.DHL_SHIPPER_CITY}</City>
-              <PostalCode>${process.env.DHL_SHIPPER_POSTAL}</PostalCode>
-              <CountryCode>${process.env.DHL_SHIPPER_COUNTRY}</CountryCode>
+              <StreetLines>${xmlEscape(process.env.DHL_SHIPPER_STREET)}</StreetLines>
+              <City>${xmlEscape(process.env.DHL_SHIPPER_CITY)}</City>
+              <PostalCode>${xmlEscape(process.env.DHL_SHIPPER_POSTAL)}</PostalCode>
+              <CountryCode>${xmlEscape(process.env.DHL_SHIPPER_COUNTRY)}</CountryCode>
             </Address>
           </Shipper>
           <Recipient>
             <Contact>
-              <PersonName>${shippingAddress.fullName || 'Customer'}</PersonName>
-              <CompanyName>${shippingAddress.company || 'N/A'}</CompanyName>
-              <PhoneNumber>${shippingAddress.phone || '000000000'}</PhoneNumber>
-              <EmailAddress>${shippingAddress.email || 'customer@silonka.com'}</EmailAddress>
+              <PersonName>${xmlEscape(shippingAddress.fullName || 'Customer')}</PersonName>
+              <CompanyName>${xmlEscape(shippingAddress.company || 'N/A')}</CompanyName>
+              <PhoneNumber>${xmlEscape(shippingAddress.phone || '000000000')}</PhoneNumber>
+              <EmailAddress>${xmlEscape(shippingAddress.email || 'customer@silonka.com')}</EmailAddress>
             </Contact>
             <Address>
-              <StreetLines>${shippingAddress.address}</StreetLines>
-              <City>${shippingAddress.city}</City>
-              <PostalCode>${shippingAddress.postalCode || ''}</PostalCode>
-              <CountryCode>${shippingAddress.countryCode || shippingAddress.country}</CountryCode>
+              <StreetLines>${xmlEscape(shippingAddress.address)}</StreetLines>
+              <City>${xmlEscape(shippingAddress.city)}</City>
+              <PostalCode>${xmlEscape(shippingAddress.postalCode || '')}</PostalCode>
+              <CountryCode>${xmlEscape(shippingAddress.countryCode || shippingAddress.country)}</CountryCode>
             </Address>
           </Recipient>
         </Ship>
@@ -484,9 +565,9 @@ export async function createShipment(order, weightKg = 1) {
           <RequestedPackages number="1">
             <Weight>${weightKg}</Weight>
             <Dimensions>
-              <Length>20</Length>
-              <Width>15</Width>
-              <Height>10</Height>
+              <Length>${box.lengthCm}</Length>
+              <Width>${box.widthCm}</Width>
+              <Height>${box.heightCm}</Height>
             </Dimensions>
             <CustomerReferences>ORD-${invoiceNum}</CustomerReferences>
           </RequestedPackages>
@@ -496,17 +577,17 @@ export async function createShipment(order, weightKg = 1) {
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-    const { body: response } = await soapPost(DHL_ENDPOINTS.shipment, xml, 'DHL-SHIPMENT');
+    const { body: response } = await soapPost(dhlEndpoint('shipment'), xml, 'DHL-SHIPMENT');
 
     const awbNumber = extractTag(response, 'AirwayBillNumber') || extractTag(response, 'AWBNumber');
     const labelPdfBase64 = extractTag(response, 'OutputImage') || extractTag(response, 'LabelImage');
     const errorMsg = extractDHLError(response);
 
-    if (!awbNumber && errorMsg) {
+    if (!awbNumber) {
         throw new Error(`DHL: ${errorMsg}`);
     }
 
-    return { awbNumber, labelPdfBase64, rawResponse: response };
+    return { awbNumber, labelPdfBase64 };
 }
 
 // ─── 3. Schedule Pickup ──────────────────────────────────────────────────────
@@ -539,9 +620,9 @@ export async function schedulePickup(awbNumber, pickupDate) {
         <ShipmentInfo>
           <ServiceType>P</ServiceType>
           <Billing>
-            <ShipperAccountNumber>${process.env.DHL_ACCOUNT_NUMBER}</ShipperAccountNumber>
+            <ShipperAccountNumber>${xmlEscape(process.env.DHL_ACCOUNT_NUMBER)}</ShipperAccountNumber>
             <ShippingPaymentType>S</ShippingPaymentType>
-            <BillingAccountNumber>${process.env.DHL_ACCOUNT_NUMBER}</BillingAccountNumber>
+            <BillingAccountNumber>${xmlEscape(process.env.DHL_ACCOUNT_NUMBER)}</BillingAccountNumber>
           </Billing>
           <UnitOfMeasurement>SI</UnitOfMeasurement>
         </ShipmentInfo>
@@ -558,30 +639,30 @@ export async function schedulePickup(awbNumber, pickupDate) {
         <Ship>
           <Shipper>
             <Contact>
-              <PersonName>${process.env.DHL_SHIPPER_NAME}</PersonName>
-              <CompanyName>${process.env.DHL_SHIPPER_COMPANY}</CompanyName>
-              <PhoneNumber>${process.env.DHL_SHIPPER_PHONE}</PhoneNumber>
-              <EmailAddress>${process.env.DHL_SHIPPER_EMAIL}</EmailAddress>
+              <PersonName>${xmlEscape(process.env.DHL_SHIPPER_NAME)}</PersonName>
+              <CompanyName>${xmlEscape(process.env.DHL_SHIPPER_COMPANY)}</CompanyName>
+              <PhoneNumber>${xmlEscape(process.env.DHL_SHIPPER_PHONE)}</PhoneNumber>
+              <EmailAddress>${xmlEscape(process.env.DHL_SHIPPER_EMAIL)}</EmailAddress>
             </Contact>
             <Address>
-              <StreetLines>${process.env.DHL_SHIPPER_STREET}</StreetLines>
-              <City>${process.env.DHL_SHIPPER_CITY}</City>
-              <PostalCode>${process.env.DHL_SHIPPER_POSTAL}</PostalCode>
-              <CountryCode>${process.env.DHL_SHIPPER_COUNTRY}</CountryCode>
+              <StreetLines>${xmlEscape(process.env.DHL_SHIPPER_STREET)}</StreetLines>
+              <City>${xmlEscape(process.env.DHL_SHIPPER_CITY)}</City>
+              <PostalCode>${xmlEscape(process.env.DHL_SHIPPER_POSTAL)}</PostalCode>
+              <CountryCode>${xmlEscape(process.env.DHL_SHIPPER_COUNTRY)}</CountryCode>
             </Address>
           </Shipper>
           <Pickup>
             <Contact>
-              <PersonName>${process.env.DHL_SHIPPER_NAME}</PersonName>
-              <CompanyName>${process.env.DHL_SHIPPER_COMPANY}</CompanyName>
-              <PhoneNumber>${process.env.DHL_SHIPPER_PHONE}</PhoneNumber>
-              <EmailAddress>${process.env.DHL_SHIPPER_EMAIL}</EmailAddress>
+              <PersonName>${xmlEscape(process.env.DHL_SHIPPER_NAME)}</PersonName>
+              <CompanyName>${xmlEscape(process.env.DHL_SHIPPER_COMPANY)}</CompanyName>
+              <PhoneNumber>${xmlEscape(process.env.DHL_SHIPPER_PHONE)}</PhoneNumber>
+              <EmailAddress>${xmlEscape(process.env.DHL_SHIPPER_EMAIL)}</EmailAddress>
             </Contact>
             <Address>
-              <StreetLines>${process.env.DHL_SHIPPER_STREET}</StreetLines>
-              <City>${process.env.DHL_SHIPPER_CITY}</City>
-              <PostalCode>${process.env.DHL_SHIPPER_POSTAL}</PostalCode>
-              <CountryCode>${process.env.DHL_SHIPPER_COUNTRY}</CountryCode>
+              <StreetLines>${xmlEscape(process.env.DHL_SHIPPER_STREET)}</StreetLines>
+              <City>${xmlEscape(process.env.DHL_SHIPPER_CITY)}</City>
+              <PostalCode>${xmlEscape(process.env.DHL_SHIPPER_POSTAL)}</PostalCode>
+              <CountryCode>${xmlEscape(process.env.DHL_SHIPPER_COUNTRY)}</CountryCode>
             </Address>
           </Pickup>
         </Ship>
@@ -601,7 +682,7 @@ export async function schedulePickup(awbNumber, pickupDate) {
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-    const { body: response } = await soapPost(DHL_ENDPOINTS.pickup, xml, 'DHL-PICKUP');
+    const { body: response } = await soapPost(dhlEndpoint('pickup'), xml, 'DHL-PICKUP');
 
     const confirmationNumber = extractTag(response, 'ConfirmationNumber') || extractTag(response, 'PickupConfirmationNumber');
     const errorMsg = extractDHLError(response);
@@ -610,7 +691,7 @@ export async function schedulePickup(awbNumber, pickupDate) {
         throw new Error(`DHL: ${errorMsg}`);
     }
 
-    return { confirmationNumber, pickupDate, rawResponse: response };
+    return { confirmationNumber, pickupDate };
 }
 
 // ─── 4. Track Shipment ───────────────────────────────────────────────────────
@@ -648,7 +729,7 @@ export async function trackShipment(awbNumber) {
   </soapenv:Body>
 </soapenv:Envelope>`;
 
-    const { body: response } = await soapPost(DHL_ENDPOINTS.track, xml, 'DHL-TRACK');
+    const { body: response } = await soapPost(dhlEndpoint('track'), xml, 'DHL-TRACK');
 
     // Check for errors first
     const errorMsg = extractDHLError(response);
@@ -691,9 +772,9 @@ export async function trackShipment(awbNumber) {
 
     return {
         awbNumber,
-        status: shipmentStatus || 'In Transit',
+        status: shipmentStatus || 'No tracking updates available',
         shipperRef,
         events: uniqueEvents,
-        rawResponse: response,
+
     };
 }

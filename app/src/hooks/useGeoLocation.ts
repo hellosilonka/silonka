@@ -71,10 +71,10 @@ export function useGeoLocation(): GeoState {
                     setCountryName(result.countryName);
                     setStatus('resolved');
                     setCached({ countryCode: result.countryCode, countryName: result.countryName });
-                } catch (err: any) {
+                } catch (err) {
                     setStatus('error');
                     setError('Could not determine your country. Please select manually.');
-                    console.warn('[useGeoLocation] Reverse geocode failed:', err.message);
+                    console.warn('[useGeoLocation] Reverse geocode failed:', err instanceof Error ? err.message : 'Unknown error');
                 }
             },
             (positionError) => {

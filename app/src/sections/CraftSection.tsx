@@ -130,7 +130,7 @@ export default function CraftSection() {
         <picture>
           <source srcSet="/craft_mortar.webp" type="image/webp" />
           <img
-            src="/craft_mortar.jpg"
+            src="/craft_mortar.webp"
             alt="Spice Craft"
             className="w-full h-full object-cover"
             loading="lazy"

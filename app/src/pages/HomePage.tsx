@@ -19,7 +19,11 @@ interface Product {
   image: string;
   category: string;
   weight?: string;
+  shippingWeightKg?: number;
   inStock?: boolean;
+  priceIsSample?: boolean;
+  imageIsReference?: boolean;
+  variations?: { _id: string; label: string; price: number; image?: string; shippingWeightKg?: number; inStock: boolean }[];
 }
 
 export default function HomePage() {
@@ -123,14 +127,17 @@ export default function HomePage() {
   const handleQuickAdd = () => {
     if (featuredProducts.length > 0) {
       const first = featuredProducts[0];
+      const option = first.variations?.find(v => v.inStock !== false);
+      if (first.inStock === false || (first.variations?.length && !option)) return;
       addItem({
         id: first._id,
         name: first.name,
-        price: first.price,
-        image: first.image?.startsWith('/uploads') ? `${BASE_URL}${first.image}` : first.image,
-        variant: first.weight || '',
+        price: option?.price ?? first.price,
+        variationId: option?._id,
+        image: option?.image || (first.image?.startsWith('/uploads') ? `${BASE_URL}${first.image}` : first.image),
+        variant: option?.label || first.weight || '',
         weightKg: parseWeightKg(first.weight) ?? 0.3,
-        shippingWeightKg: first.shippingWeightKg ?? 1.2,
+        shippingWeightKg: option?.shippingWeightKg ?? first.shippingWeightKg ?? 1.2,
       });
     }
   };
@@ -142,7 +149,7 @@ export default function HomePage() {
         description="Buy authentic Ceylon Cinnamon (Cinnamomum verum) — the world's only true cinnamon. Single-origin, hand-harvested from Sri Lanka's hill country. Low coumarin. Ships to USA, UK & Europe."
         keywords="buy Ceylon cinnamon, Ceylon cinnamon USA, true cinnamon UK, Ceylon cinnamon Europe, Cinnamomum verum, organic Ceylon cinnamon, Ceylon cinnamon sticks, Ceylon black pepper, low coumarin cinnamon, premium spices Sri Lanka, Silonka"
         canonicalPath="/"
-        ogImage="/hero_spice_field.jpg"
+        ogImage="/hero_spice_field.webp"
         jsonLd={[ORGANIZATION_SCHEMA, WEBSITE_SCHEMA]}
       />
       <section
@@ -480,13 +487,18 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
   }, [index]);
 
   const handleAddToCart = () => {
+    if (product.inStock === false) return;
+    const option = product.variations?.find(v => v.inStock !== false);
+    if (product.variations?.length && !option) return;
     addItem({
       id: product._id,
       name: product.name,
-      price: product.price,
-      image: imageSrc,
+      price: option?.price ?? product.price,
+      variationId: option?._id,
+      variant: option?.label || product.weight,
+      image: option?.image || imageSrc,
       weightKg: parseWeightKg(product.weight) ?? 0.3,
-      shippingWeightKg: product.shippingWeightKg ?? 1.2,
+      shippingWeightKg: option?.shippingWeightKg ?? product.shippingWeightKg ?? 1.2,
     });
   };
 
@@ -510,7 +522,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            onError={(e) => { (e.target as HTMLImageElement).src = '/collection_set.jpg'; }}
+            onError={(e) => { (e.target as HTMLImageElement).src = '/collection_set.webp'; }}
           />
         </picture>
         {/* Badge */}
@@ -522,10 +534,10 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         {/* Quick Add Overlay */}
         <div className="absolute inset-0 bg-charcoal/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <button
-            onClick={handleAddToCart}
+            disabled={product.inStock === false} onClick={handleAddToCart}
             className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gold text-charcoal font-mono text-label uppercase tracking-wider hover:bg-gold-light transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 text-xs sm:text-sm"
           >
-            Add to Cart
+            {product.inStock === false ? 'Sold out' : 'Add to Cart'}
           </button>
         </div>
       </div>
@@ -535,9 +547,9 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         <h3 className="font-display text-lg sm:text-xl text-ivory mb-1 sm:mb-2">{product.name}</h3>
         <p className="text-ivory-muted text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{product.description}</p>
         <div className="flex items-center justify-between">
-          <span className="font-display text-xl sm:text-2xl text-gold">{format(product.price)}</span>
+          <span className="font-display text-xl sm:text-2xl text-gold">{format(product.price)}{product.priceIsSample && <span className="block text-xs font-sans text-ivory-muted">Sample price</span>}</span>
           <button
-            onClick={handleAddToCart}
+            disabled={product.inStock === false} onClick={handleAddToCart}
             className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-gold/50 text-gold font-mono text-[10px] sm:text-xs uppercase tracking-wider hover:bg-gold hover:text-charcoal transition-all duration-300"
           >
             Add

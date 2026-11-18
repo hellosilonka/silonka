@@ -1,3 +1,4 @@
+import { asyncHandler } from '../utils/http.js';
 import express from 'express';
 import {
     getProducts,
@@ -13,25 +14,25 @@ import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
-// Accept 'image' (1 primary) + 'images' (up to 9 gallery) in one multipart request
+// One cover plus up to six gallery images, matching the editor and upload limit.
 const productUpload = upload.fields([
     { name: 'image', maxCount: 1 },
-    { name: 'images', maxCount: 9 },
+    { name: 'images', maxCount: 6 },
 ]);
 
 router.route('/')
-    .get(getProducts)
-    .post(protect, admin, productUpload, createProduct);
+    .get(asyncHandler(getProducts))
+    .post(protect, admin, productUpload, asyncHandler(createProduct));
 
 router.route('/:id')
-    .get(getProductById)
-    .put(protect, admin, productUpload, updateProduct)
-    .delete(protect, admin, deleteProduct);
+    .get(asyncHandler(getProductById))
+    .put(protect, admin, productUpload, asyncHandler(updateProduct))
+    .delete(protect, admin, asyncHandler(deleteProduct));
 
 router.route('/:id/reviews')
-    .post(protect, addReview);
+    .post(protect, asyncHandler(addReview));
 
 router.route('/:id/related')
-    .get(getRelatedProducts);
+    .get(asyncHandler(getRelatedProducts));
 
 export default router;

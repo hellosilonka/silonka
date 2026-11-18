@@ -12,14 +12,14 @@ const router = express.Router();
 router.get('/reverse', async (req, res) => {
     const { lat, lng } = req.query;
 
-    if (!lat || !lng) {
+    if (typeof lat !== 'string' || typeof lng !== 'string' || !lat.trim() || !lng.trim()) {
         return res.status(400).json({ message: 'lat and lng are required' });
     }
 
-    const latitude  = parseFloat(lat);
-    const longitude = parseFloat(lng);
+    const latitude  = Number(lat);
+    const longitude = Number(lng);
 
-    if (isNaN(latitude) || isNaN(longitude)) {
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
         return res.status(400).json({ message: 'Invalid lat/lng values' });
     }
 
@@ -27,6 +27,7 @@ router.get('/reverse', async (req, res) => {
         const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`;
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(8000),
             headers: {
                 // Nominatim requires a User-Agent to identify the app
                 'User-Agent': 'Silonka/1.0 (hellosilonka@gmail.com)',
@@ -50,7 +51,7 @@ router.get('/reverse', async (req, res) => {
         res.json({ countryCode, countryName });
     } catch (err) {
         console.error('[geo/reverse] Error:', err.message);
-        res.status(500).json({ message: 'Geo lookup failed', error: err.message });
+        res.status(500).json({ message: 'Geo lookup failed. Please choose your destination manually.' });
     }
 });
 

@@ -1,252 +1,69 @@
+import crypto from 'node:crypto';
 import User from '../models/User.js';
-import generateToken from '../utils/generateToken.js';
+import generateToken, { cookieOptions } from '../utils/generateToken.js';
 import { OAuth2Client } from 'google-auth-library';
+import { emailField, textField, pagination, httpError } from '../utils/http.js';
 
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
-// @access  Public
+const publicUser = user => ({ _id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin, createdAt: user.createdAt });
+function passwordField(value, registering = false) {
+    if (typeof value !== 'string' || !value || Buffer.byteLength(value) > 72 || (registering && value.length < 8)) throw httpError(400, 'Use a password of at least 8 characters and no more than 72 bytes.');
+    return value;
+}
 export const authUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const user = await User.findOne({ email });
-
-        if (user && (await user.matchPassword(password))) {
-            generateToken(res, user._id);
-
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                isAdmin: user.isAdmin,
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: error.message });
-    }
+    const email = emailField(req.body.email), password = passwordField(req.body.password);
+    const user = await User.findOne({ email }).select('+password');
+    if (!user || !await user.matchPassword(password)) throw httpError(401, 'Invalid email or password.');
+    generateToken(res, user._id);
+    res.json(publicUser(user));
 };
-
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
 export const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
-
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-        res.status(400).json({ message: 'User already exists' });
-        return;
-    }
-
-    const user = await User.create({
-        name,
-        email,
-        password,
-    });
-
-    if (user) {
-        generateToken(res, user._id);
-
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            isAdmin: user.isAdmin,
-        });
-    } else {
-        res.status(400).json({ message: 'Invalid user data' });
-    }
+    const name = textField(req.body.name, 'name', 100), email = emailField(req.body.email), password = passwordField(req.body.password, true);
+    if (await User.exists({ email })) throw httpError(409, 'An account with this email already exists. Please sign in.');
+    const user = await User.create({ name, email, password });
+    generateToken(res, user._id);
+    res.status(201).json(publicUser(user));
 };
-
-// @desc    Logout user / clear cookie
-// @route   POST /api/auth/logout
-// @access  Public
 export const logoutUser = (req, res) => {
-    res.cookie('jwt', '', {
-        httpOnly: true,
-        expires: new Date(0),
-    });
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.clearCookie('jwt', cookieOptions());
+    res.json({ message: 'Logged out successfully' });
 };
-
-// @desc    Get user profile
-// @route   GET /api/auth/profile
-// @access  Private
-export const getUserProfile = async (req, res) => {
-    const user = await User.findById(req.user._id);
-
-    if (user) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            isAdmin: user.isAdmin,
-        });
-    } else {
-        res.status(404).json({ message: 'User not found' });
-    }
-};
-
-// @desc    Get all users
-// @route   GET /api/auth/users
-// @access  Private/Admin
+export const getUserProfile = (req, res) => res.json(publicUser(req.user));
 export const getUsers = async (req, res) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const count = await User.countDocuments();
-    const users = await User.find({}).skip(skip).limit(limit).sort({ createdAt: -1 });
-
+    const { page, limit, skip } = pagination(req.query);
+    const [count, users] = await Promise.all([User.countDocuments(), User.find({}).select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }).lean()]);
     res.json({ users, page, pages: Math.ceil(count / limit), total: count });
 };
-
-// @desc    Delete user
-// @route   DELETE /api/auth/users/:id
-// @access  Private/Admin
 export const deleteUser = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-
-        if (user) {
-            if (user.email === req.user.email) {
-                return res.status(400).json({ message: 'Cannot delete yourself' });
-            }
-            await User.deleteOne({ _id: user._id });
-            res.json({ message: 'User removed' });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    if (String(req.user._id) === req.params.id) throw httpError(400, 'Cannot delete yourself.');
+    const user = await User.findById(req.params.id);
+    if (!user) throw httpError(404, 'User not found.');
+    await User.deleteOne({ _id: user._id });
+    res.json({ message: 'User removed' });
 };
-
-// @desc    Update user (Toggle Admin)
-// @route   PUT /api/auth/users/:id
-// @access  Private/Admin
 export const updateUser = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-
-        if (user) {
-            if (user.email === req.user.email) {
-                 return res.status(400).json({ message: 'Cannot demote yourself' });
-            }
-            user.isAdmin = req.body.isAdmin !== undefined ? req.body.isAdmin : user.isAdmin;
-
-            const updatedUser = await user.save();
-
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                isAdmin: updatedUser.isAdmin,
-            });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    if (String(req.user._id) === req.params.id) throw httpError(400, 'Cannot change your own administrator access.');
+    if (typeof req.body.isAdmin !== 'boolean') throw httpError(400, 'Invalid administrator setting.');
+    const user = await User.findById(req.params.id);
+    if (!user) throw httpError(404, 'User not found.');
+    user.isAdmin = req.body.isAdmin;
+    await user.save();
+    res.json(publicUser(user));
 };
-
-// @desc    Auth user via Google
-// @route   POST /api/auth/google
-// @access  Public
 export const googleAuth = async (req, res) => {
+    if (typeof req.body.token !== 'string' || req.body.token.length > 10000) throw httpError(400, 'Google token is required.');
+    if (!process.env.GOOGLE_CLIENT_ID) throw httpError(503, 'Google sign-in is not configured.');
+    let payload;
     try {
-        const { token } = req.body;
-
-        if (!token) {
-            return res.status(400).json({ message: 'Google token is required' });
-        }
-
-        const googleClientId = process.env.GOOGLE_CLIENT_ID;
-        if (!googleClientId) {
-            console.error('GOOGLE_CLIENT_ID is not set in environment variables');
-            return res.status(500).json({ message: 'Google authentication is not configured on the server' });
-        }
-
-        // Verify token with Google's public endpoint (robust fallback method)
-        let payload;
-        try {
-            // Method 1: Use google-auth-library
-            const oauthClient = new OAuth2Client(googleClientId);
-            const ticket = await oauthClient.verifyIdToken({
-                idToken: token,
-                audience: googleClientId,
-            });
-            payload = ticket.getPayload();
-        } catch (verifyErr) {
-            console.error('google-auth-library verifyIdToken failed:', verifyErr.message);
-            // Method 2: Fallback to Google's tokeninfo endpoint
-            try {
-                const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
-                const tokenInfo = await response.json();
-                console.log('tokeninfo response:', JSON.stringify(tokenInfo));
-
-                if (tokenInfo.error || tokenInfo.error_description) {
-                    console.error('Google tokeninfo error:', tokenInfo.error_description || tokenInfo.error);
-                    return res.status(401).json({ message: 'Invalid Google token. Please try signing in again.' });
-                }
-
-                // Validate audience
-                if (tokenInfo.aud !== googleClientId) {
-                    console.error('Token audience mismatch. Got:', tokenInfo.aud, 'Expected:', googleClientId);
-                    return res.status(401).json({ message: 'Token audience mismatch.' });
-                }
-
-                payload = tokenInfo;
-                payload.name = tokenInfo.name;
-                payload.email = tokenInfo.email;
-                payload.picture = tokenInfo.picture;
-            } catch (fallbackErr) {
-                console.error('Fallback tokeninfo also failed:', fallbackErr.message);
-                return res.status(401).json({ message: 'Google token verification failed. Please try again.' });
-            }
-        }
-
-        if (!payload || !payload.email) {
-            return res.status(401).json({ message: 'Invalid Google token payload - no email found' });
-        }
-
-        const { name, email, picture } = payload;
-        console.log('Google auth: Verified user email:', email);
-
-        let user = await User.findOne({ email });
-
-        if (!user) {
-            console.log('Google auth: Creating new user for', email);
-            user = await User.create({
-                name: name || email.split('@')[0],
-                email,
-                // Random password for Google users — they'll never use it
-                password: `google_${Date.now()}_${Math.random().toString(36)}`,
-                isAdmin: false
-            });
-        } else {
-            console.log('Google auth: Found existing user for', email);
-        }
-
-        generateToken(res, user._id);
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            isAdmin: user.isAdmin,
-            picture
-        });
-
-    } catch (error) {
-        console.error('Google auth unhandled error:', error);
-        if (!res.headersSent) {
-            res.status(500).json({ message: 'Google sign-in failed: ' + error.message });
-        }
+        const ticket = await new OAuth2Client(process.env.GOOGLE_CLIENT_ID).verifyIdToken({ idToken: req.body.token, audience: process.env.GOOGLE_CLIENT_ID });
+        payload = ticket.getPayload();
+    } catch { throw httpError(401, 'Google sign-in could not be verified. Please try again.'); }
+    if (!payload?.email_verified || !payload.email || !payload.sub) throw httpError(401, 'A verified Google email is required.');
+    const email = emailField(payload.email);
+    let user = await User.findOne({ email });
+    if (!user) {
+        try { user = await User.create({ name: payload.name || email.split('@')[0], email, password: crypto.randomBytes(32).toString('hex') }); }
+        catch (err) { if (err.code !== 11000) throw err; user = await User.findOne({ email }); }
     }
+    generateToken(res, user._id);
+    res.json({ ...publicUser(user), picture: payload.picture });
 };
-

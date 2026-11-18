@@ -89,7 +89,7 @@ export default function AromaSection() {
         <picture>
           <source srcSet="/aroma_steam.webp" type="image/webp" />
           <img
-            src="/aroma_steam.jpg"
+            src="/aroma_steam.webp"
             alt="Aroma and Steam"
             className="w-full h-full object-cover"
             loading="lazy"

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { errorMessage } from '@/lib/api';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createBulkOrder } from '@/lib/api';
 import { Plus, Trash2, ChevronLeft, CheckCircle, Send, Package, Users, Mail, Phone, Building, FileText } from 'lucide-react';
@@ -19,11 +20,12 @@ export default function BulkOrderPage() {
     });
     const [products, setProducts] = useState<ProductRow[]>([{ productName: '', quantity: '' }]);
     const [submitting, setSubmitting] = useState(false);
+    const submitLock = useRef(false);
     const [submitted, setSubmitted] = useState(false);
     const [orderId, setOrderId] = useState('');
     const [error, setError] = useState('');
 
-    const addRow = () => setProducts([...products, { productName: '', quantity: '' }]);
+    const addRow = () => setProducts(previous => previous.length < 50 ? [...previous, { productName: '', quantity: '' }] : previous);
     const removeRow = (i: number) => setProducts(products.filter((_, idx) => idx !== i));
     const updateRow = (i: number, key: keyof ProductRow, value: string) => {
         const updated = [...products];
@@ -33,13 +35,18 @@ export default function BulkOrderPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (submitLock.current) return;
         setError('');
-        const validProducts = products.filter(p => p.productName.trim() && p.quantity);
+        const validProducts = products.filter(p => p.productName.trim() || p.quantity.trim());
+        if (validProducts.some(p => !p.productName.trim() || !Number.isInteger(Number(p.quantity)) || Number(p.quantity) < 1 || Number(p.quantity) > 100000)) {
+            setError('Complete each product row with a name and a whole quantity from 1 to 100,000, or remove the row.');
+            return;
+        }
         if (validProducts.length === 0) {
             setError('Please add at least one product with a quantity.');
             return;
         }
-        setSubmitting(true);
+        submitLock.current = true; setSubmitting(true);
         try {
             const res = await createBulkOrder({
                 ...form,
@@ -47,10 +54,10 @@ export default function BulkOrderPage() {
             });
             setOrderId(res.orderId || '');
             setSubmitted(true);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+        } catch (err) {
+            setError(errorMessage(err, 'Something went wrong. Please try again.'));
         } finally {
-            setSubmitting(false);
+            submitLock.current = false; setSubmitting(false);
         }
     };
 
@@ -117,7 +124,7 @@ export default function BulkOrderPage() {
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} aria-busy={submitting}><fieldset disabled={submitting} className="space-y-6">
                     {/* Company Info */}
                     <div className="rounded-2xl border border-white/8 bg-charcoal-card p-6">
                         <h2 className="font-mono text-xs uppercase tracking-widest text-ivory-muted mb-5 flex items-center gap-2">
@@ -131,14 +138,16 @@ export default function BulkOrderPage() {
                                 { label: 'Phone Number', key: 'phone', icon: <Phone className="w-4 h-4" />, placeholder: '+1 (555) 000-0000', required: true },
                             ].map(field => (
                                 <div key={field.key}>
-                                    <label className="block font-mono text-[11px] uppercase tracking-widest text-ivory-muted mb-2">{field.label} {field.required && '*'}</label>
+                                    <label htmlFor={`bulk-${field.key}`} className="block font-mono text-[11px] uppercase tracking-widest text-ivory-muted mb-2">{field.label} {field.required && '*'}</label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ivory-muted">{field.icon}</span>
                                         <input
-                                            type={(field as any).type || 'text'}
+                                            type={('type' in field ? field.type : 'text') || 'text'}
+                                            id={`bulk-${field.key}`}
+                                            maxLength={field.key === 'email' ? 254 : field.key === 'companyName' ? 150 : field.key === 'phone' ? 30 : 100}
                                             required={field.required}
                                             placeholder={field.placeholder}
-                                            value={(form as any)[field.key]}
+                                            value={form[field.key as keyof typeof form]}
                                             onChange={e => setForm({ ...form, [field.key]: e.target.value })}
                                             className="w-full bg-charcoal border border-white/10 text-ivory pl-10 pr-4 py-3 rounded-xl outline-none focus:border-gold/60 transition-colors text-sm placeholder:text-ivory-muted/40"
                                         />
@@ -154,7 +163,7 @@ export default function BulkOrderPage() {
                             <h2 className="font-mono text-xs uppercase tracking-widest text-ivory-muted flex items-center gap-2">
                                 <Package className="w-4 h-4" /> Products Required
                             </h2>
-                            <button type="button" onClick={addRow} className="flex items-center gap-1.5 text-gold hover:text-gold/80 font-mono text-xs uppercase tracking-widest transition-colors">
+                            <button type="button" onClick={addRow} disabled={products.length >= 50} className="flex items-center gap-1.5 text-gold hover:text-gold/80 font-mono text-xs uppercase tracking-widest transition-colors">
                                 <Plus className="w-4 h-4" /> Add Row
                             </button>
                         </div>
@@ -170,7 +179,8 @@ export default function BulkOrderPage() {
                                 <div key={i} className="grid grid-cols-12 gap-3 items-center">
                                     <div className="col-span-7">
                                         <input
-                                            placeholder={`e.g. Ceylon Earl Grey 100g`}
+                                            aria-label={`Product ${i + 1} name`} maxLength={150}
+                                            placeholder="e.g. Ceylon Cinnamon 100 g"
                                             value={row.productName}
                                             onChange={e => updateRow(i, 'productName', e.target.value)}
                                             className="w-full bg-charcoal border border-white/10 text-ivory px-4 py-2.5 rounded-xl outline-none focus:border-gold/60 transition-colors text-sm placeholder:text-ivory-muted/40"
@@ -179,7 +189,7 @@ export default function BulkOrderPage() {
                                     <div className="col-span-3">
                                         <input
                                             type="number"
-                                            min={1}
+                                            min={1} max={100000} step={1} aria-label={`Product ${i + 1} quantity`}
                                             placeholder="1"
                                             value={row.quantity}
                                             onChange={e => updateRow(i, 'quantity', e.target.value)}
@@ -188,7 +198,7 @@ export default function BulkOrderPage() {
                                     </div>
                                     <div className="col-span-2 flex items-center justify-center">
                                         {products.length > 1 && (
-                                            <button type="button" onClick={() => removeRow(i)} className="p-2 rounded-lg hover:bg-red-500/10 text-ivory-muted hover:text-red-400 transition-colors">
+                                            <button type="button" aria-label={`Remove product ${i + 1}`} onClick={() => removeRow(i)} className="p-2 rounded-lg hover:bg-red-500/10 text-ivory-muted hover:text-red-400 transition-colors">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         )}
@@ -197,7 +207,7 @@ export default function BulkOrderPage() {
                             ))}
                         </div>
 
-                        <button type="button" onClick={addRow} className="mt-4 w-full py-2.5 border border-dashed border-white/15 rounded-xl font-mono text-xs uppercase tracking-widest text-ivory-muted hover:border-gold/40 hover:text-gold transition-colors flex items-center justify-center gap-2">
+                        <button type="button" onClick={addRow} disabled={products.length >= 50} className="mt-4 w-full py-2.5 border border-dashed border-white/15 rounded-xl font-mono text-xs uppercase tracking-widest text-ivory-muted hover:border-gold/40 hover:text-gold transition-colors flex items-center justify-center gap-2">
                             <Plus className="w-3.5 h-3.5" /> Add Another Product
                         </button>
                     </div>
@@ -208,7 +218,7 @@ export default function BulkOrderPage() {
                             <FileText className="w-4 h-4" /> Additional Notes
                         </h2>
                         <textarea
-                            rows={4}
+                            rows={4} maxLength={5000} aria-label="Additional notes"
                             placeholder="Delivery timeline, special packaging requirements, frequency of orders, any other relevant information..."
                             value={form.notes}
                             onChange={e => setForm({ ...form, notes: e.target.value })}
@@ -217,7 +227,7 @@ export default function BulkOrderPage() {
                     </div>
 
                     {error && (
-                        <div className="bg-red-900/30 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
+                        <div role="alert" className="bg-red-900/30 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
                             {error}
                         </div>
                     )}
@@ -238,7 +248,7 @@ export default function BulkOrderPage() {
                     <p className="text-center font-mono text-xs text-ivory-muted">
                         By submitting, you agree to our terms. We'll contact you within 2 business days.
                     </p>
-                </form>
+                </fieldset></form>
             </div>
         </div>
     );

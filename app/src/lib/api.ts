@@ -3,7 +3,22 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: '/api',
     withCredentials: true,
+    timeout: 25000,
+    headers: { 'X-Silonka-Request': '1' },
 });
+
+export function errorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+    return axios.isAxiosError(error) ? error.response?.data?.message || fallback : fallback;
+}
+export interface ShippingAddress { address: string; city: string; postalCode: string; country: string; countryCode: string; fullName: string; phone: string; email: string }
+export interface CheckoutItem { product: string; qty: number; variationId?: string }
+export interface CheckoutQuote { quoteToken: string; currency: 'USD'; itemsPrice: number; shippingPrice: number; taxPrice: number; totalPrice: number; expiresAt: number; deliveryTime: string | null; orderItems?: (CheckoutItem & { name: string; price: number; image: string; variant?: string })[] }
+export interface CustomerOrder { _id: string; isPaid: boolean; paymentStatus: 'pending' | 'paid' | 'failed' | 'cancelled' | 'chargedback'; totalPrice: number; currency: string; orderItems: CheckoutItem[]; paymentExpiresAt?: string }
+export const getCheckoutQuote = async (orderItems: CheckoutItem[], shippingAddress: ShippingAddress) => (await api.post<CheckoutQuote>('/orders/quote', { orderItems, shippingAddress })).data;
+export const getOrder = async (id: string) => (await api.get<CustomerOrder>(`/orders/${id}`)).data;
+export const getPaymentConfig = async () => (await api.get<{ available: boolean; mode?: string; currency: string }>('/payment/config')).data;
+export const createPayHerePayment = async (orderId: string) => (await api.post<{ action: string; fields: Record<string, string> }>('/payment/payhere/create', { orderId })).data;
+export const sendContactMessage = async (form: { name: string; email: string; subject: string; message: string }) => (await api.post('/contact', form)).data;
 
 /**
  * Parse a product weight string (e.g. "100g", "250 g", "1.2kg", "1kg") into kg.
@@ -75,7 +90,7 @@ export const createProduct = async (formData: FormData) => {
     return data;
 };
 
-export const updateProduct = async (id: string, formData: FormData | Record<string, any>) => {
+export const updateProduct = async (id: string, formData: FormData | Record<string, unknown>) => {
     const isFormData = formData instanceof FormData;
     const { data } = await api.put(`/products/${id}`, formData, {
         headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
@@ -103,21 +118,19 @@ export const getOrders = async (params?: { page?: number; limit?: number }) => {
     const { data } = await api.get('/orders', { params });
     return data;
 };
+export const getDashboardSummary = async () => (await api.get<{ totalOrders: number; pendingOrders: number; revenue: number; products: number; inStock: number; bulkOrders: number; pendingBulk: number }>('/orders/summary')).data;
+export const getShippingLabel = async (id: string) => (await api.get<Blob>(`/orders/${id}/label`, { responseType: 'blob' })).data;
 
 export const getMyOrders = async () => {
     const { data } = await api.get('/orders/myorders');
     return data;
 };
 
-export const createOrder = async (orderData: any) => {
+export const createOrder = async (orderData: { orderItems: CheckoutItem[]; shippingAddress: ShippingAddress; paymentMethod: 'PayHere'; quoteToken: string }) => {
     const { data } = await api.post('/orders', orderData);
     return data;
 };
 
-export const markOrderPaid = async (id: string, paymentResult: any) => {
-    const { data } = await api.put(`/orders/${id}/pay`, paymentResult);
-    return data;
-};
 
 export const markOrderDelivered = async (id: string) => {
     const { data } = await api.put(`/orders/${id}/deliver`);
@@ -151,7 +164,7 @@ export const deleteCategory = async (id: string) => {
 };
 
 // ─── Bulk Orders ─────────────────────────
-export const createBulkOrder = async (bulkOrderData: any) => {
+export const createBulkOrder = async (bulkOrderData: { companyName: string; contactName: string; email: string; phone: string; notes: string; products: { productName: string; quantity: number }[] }) => {
     const { data } = await api.post('/bulk-orders', bulkOrderData);
     return data;
 };
@@ -177,20 +190,6 @@ export const deleteBulkOrdersBulk = async (ids: string[]) => {
 };
 
 // ─── Payment (PayPal) ────────────────────
-export const createPayPalOrder = async (orderId: string) => {
-    const { data } = await api.post('/payment/create-order', { orderId });
-    return data;
-};
-
-export const capturePayPalOrder = async (paypalOrderId: string, orderId: string) => {
-    const { data } = await api.post('/payment/capture-order', { paypalOrderId, orderId });
-    return data;
-};
-
-export const getPayPalConfig = async () => {
-    const { data } = await api.get('/payment/config');
-    return data;
-};
 
 // ─── Blog ─────────────────────────────────
 export const getBlogs = async (adminMode = false) => {

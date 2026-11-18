@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useCurrency } from '@/context/CurrencyContext';
 import { useCart } from '@/context/CartContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -11,6 +12,7 @@ export default function CollectionSection() {
   const textRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLButtonElement>(null);
   const { addItem } = useCart();
+  const { format } = useCurrency();
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -80,7 +82,7 @@ export default function CollectionSection() {
       id: 'ceylon-set',
       name: 'The Ceylon Set',
       price: 89,
-      image: '/collection_set.jpg',
+      image: '/collection_set.webp',
       variant: '4 Spices',
       weightKg: 0.4,
       shippingWeightKg: 1.2,
@@ -104,7 +106,7 @@ export default function CollectionSection() {
         <picture>
           <source srcSet="/collection_set.webp" type="image/webp" />
           <img
-            src="/collection_set.jpg"
+            src="/collection_set.webp"
             alt="The Ceylon Set"
             className="w-full h-full object-cover"
             loading="lazy"
@@ -131,7 +133,7 @@ export default function CollectionSection() {
           and sealed to preserve its essential oils.
         </p>
         <div className="flex items-center gap-6 mb-8">
-          <span className="font-display text-3xl text-gold">€89.00</span>
+          <span className="font-display text-3xl text-gold">{format(89)}</span>
           <span className="font-mono text-label text-ivory-muted uppercase">Free Shipping</span>
         </div>
         <button

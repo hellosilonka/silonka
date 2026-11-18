@@ -1,7 +1,8 @@
+import { errorMessage } from '@/lib/api';
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { register, googleLogin } from '@/lib/api';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '@/context/AuthContext';
 import SEOHead from '@/components/SEOHead';
 
@@ -13,6 +14,9 @@ export default function SignupPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [params] = useSearchParams();
+    const requested = params.get('redirect');
+    const redirect = requested && requested.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\') ? requested : '/';
     const { setUser } = useAuth();
 
     const handleSignup = async (e: React.FormEvent) => {
@@ -25,24 +29,24 @@ export default function SignupPage() {
         try {
             const userData = await register(name, email, password);
             setUser(userData);
-            navigate('/');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Registration failed');
+            navigate(redirect);
+        } catch (err) {
+            setError(errorMessage(err, 'Registration failed'));
         } finally {
             setLoading(false);
         }
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
         if (!credentialResponse.credential) return;
         setLoading(true);
         setError('');
         try {
             const userData = await googleLogin(credentialResponse.credential);
             setUser(userData);
-            navigate('/');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Google Sign Up failed');
+            navigate(redirect);
+        } catch (err) {
+            setError(errorMessage(err, 'Google Sign Up failed'));
         } finally {
             setLoading(false);
         }
@@ -73,7 +77,7 @@ export default function SignupPage() {
                     <div>
                         <label className="block font-mono text-label text-ivory-muted uppercase mb-2">Email</label>
                         <input
-                            type="email"
+                            type="email" aria-label="Email" autoComplete="email" maxLength={254}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-4 py-3 rounded bg-charcoal border border-white/10 text-ivory focus:border-gold/50 outline-none transition-colors"
@@ -83,23 +87,21 @@ export default function SignupPage() {
                     <div>
                         <label className="block font-mono text-label text-ivory-muted uppercase mb-2">Password</label>
                         <input
-                            type="password"
+                            type="password" aria-label="Password" autoComplete="new-password" minLength={8}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded bg-charcoal border border-white/10 text-ivory focus:border-gold/50 outline-none transition-colors"
                             required
-                            minLength={6}
                         />
                     </div>
                     <div>
                         <label className="block font-mono text-label text-ivory-muted uppercase mb-2">Confirm Password</label>
                         <input
-                            type="password"
+                            type="password" aria-label="Password" autoComplete="new-password" minLength={8}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded bg-charcoal border border-white/10 text-ivory focus:border-gold/50 outline-none transition-colors"
                             required
-                            minLength={6}
                         />
                     </div>
                     <button
@@ -111,7 +113,7 @@ export default function SignupPage() {
                     </button>
                 </form>
 
-                <div className="mt-6 flex items-center justify-between">
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID && <><div className="mt-6 flex items-center justify-between">
                     <span className="border-b border-white/10 w-1/5 lg:w-1/4"></span>
                     <span className="text-xs text-center text-ivory-muted font-mono uppercase">or sign up with</span>
                     <span className="border-b border-white/10 w-1/5 lg:w-1/4"></span>
@@ -125,11 +127,11 @@ export default function SignupPage() {
                         shape="rectangular"
                         text="signup_with"
                     />
-                </div>
+                </div></>}
 
                 <p className="mt-8 text-center text-sm font-mono text-ivory-muted">
                     Already have an account?{' '}
-                    <Link to="/login" className="text-gold hover:underline">
+                    <Link to={`/login?redirect=${encodeURIComponent(redirect)}`} className="text-gold hover:underline">
                         Sign In
                     </Link>
                 </p>

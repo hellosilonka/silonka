@@ -2,144 +2,89 @@ import express from 'express';
 import { getRates, createShipment, schedulePickup, trackShipment } from '../utils/dhlService.js';
 import Order from '../models/Order.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import { asyncHandler, textField, httpError } from '../utils/http.js';
+import { shipmentOrderId, pickupDate } from '../utils/shippingInput.js';
 
 const router = express.Router();
-
-// ─── POST /api/dhl/rates ─────────────────────────────────────────────────────
-// Public — called by checkout page when user fills in their address.
-// Body: { countryCode, city?, postalCode?, weightKg?, items? }
-router.post('/rates', async (req, res) => {
-    try {
-        const { countryCode, city = '', postalCode = '', streetLines = '', weightKg = 0.5 } = req.body;
-
-        if (!countryCode) {
-            return res.status(400).json({ message: 'countryCode is required' });
+const cache = new Map();
+const inFlight = new Map();
+router.post('/rates', asyncHandler(async (req, res) => {
+    const countryCode = textField(req.body.countryCode, 'country code', 2).toUpperCase();
+    const city = textField(req.body.city || '', 'city', 100, false), postalCode = textField(req.body.postalCode || '', 'postal code', 30, false), streetLines = textField(req.body.streetLines || '', 'address', 250, false);
+    const weightKg = req.body.weightKg ?? 1.2;
+    if (!/^[A-Z]{2}$/.test(countryCode) || typeof weightKg !== 'number' || !Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 70) throw httpError(400, 'Invalid destination or shipping weight.');
+    const key = JSON.stringify({ countryCode, city, postalCode, streetLines, weightKg });
+    let cached = cache.get(key);
+    if (!cached || cached.expires < Date.now()) {
+        if (!inFlight.has(key)) {
+            const promise = getRates({ countryCode, city, postalCode, streetLines }, { weightKg }).then(result => {
+                const data = {
+                    currency: result.currency, amount: result.amount, productCode: result.productCode, deliveryTime: result.deliveryTime,
+                    services: (result.services || []).map(({ serviceType, serviceName, currency, amount, deliveryTime, cutoffTime, charges }) => ({ serviceType, serviceName, currency, amount, deliveryTime, cutoffTime, charges })),
+                };
+                if (!data.services.length) throw new Error('No shipping services');
+                if (cache.size >= 200) cache.delete(cache.keys().next().value);
+                const entry = { expires: Date.now() + 300000, data };
+                cache.set(key, entry);
+                return entry;
+            }).finally(() => inFlight.delete(key));
+            inFlight.set(key, promise);
         }
-
-        const result = await getRates(
-            { city, postalCode, countryCode, streetLines },
-            { weightKg: weightKg || 1.2 }
-        );
-
-        res.json({
-            currency: result.currency,
-            amount: result.amount,
-            productCode: result.productCode,
-            deliveryTime: result.deliveryTime,
-            // All available shipping options for the customer to choose from
-            services: (result.services || []).map(s => ({
-                serviceType: s.serviceType,
-                serviceName: s.serviceName,
-                currency: s.currency,
-                amount: s.amount,
-                deliveryTime: s.deliveryTime,
-                cutoffTime: s.cutoffTime,
-                charges: s.charges,
-            })),
-            // ── DHL Debug: exact SOAP XML exchanged ──────────────────────────
-            // Share these with DHL support when rates are incorrect.
-            _dhlDebug: {
-                requestXml:  result.rawRequest  || null,
-                responseXml: result.rawResponse || null,
-            },
-        });
-    } catch (err) {
-        console.error('[DHL rates error]', err.message);
-        // Return a fallback so checkout doesn't break if DHL is unreachable
-        res.status(200).json({
-            currency: 'USD',
-            amount: 0,
-            productCode: 'P',
-            deliveryTime: null,
-            services: [],
-            error: err.message,
-        });
+        try { cached = await inFlight.get(key); }
+        catch { throw httpError(503, 'Shipping estimate unavailable. Please check your destination or try again.'); }
     }
-});
+    res.json(cached.data);
+}));
 
-// ─── GET /api/dhl/track/:awb ─────────────────────────────────────────────────
-// Public — tracking page
-router.get('/track/:awb', async (req, res) => {
+router.get('/track/:awb', asyncHandler(async (req, res) => {
+    if (!/^\d{10}$/.test(req.params.awb)) throw httpError(400, 'Enter a valid 10-digit DHL tracking number.');
     try {
-        const { awb } = req.params;
-        const result = await trackShipment(awb);
-        res.json(result);
-    } catch (err) {
-        console.error('[DHL track error]', err.message);
-        res.status(500).json({ message: err.message });
-    }
-});
+        const result = await trackShipment(req.params.awb);
+        // Only expose shipment events, never the raw SOAP response.
+        const { rawResponse, ...safe } = result;
+        res.json(safe);
+    } catch { throw httpError(503, 'Tracking is temporarily unavailable. Please try again.'); }
+}));
 
-// ─── POST /api/dhl/create-shipment ───────────────────────────────────────────
-// Admin only — generate DHL label for an existing paid order
-// Body: { orderId, weightKg }
-router.post('/create-shipment', protect, admin, async (req, res) => {
+router.post('/create-shipment', protect, admin, asyncHandler(async (req, res) => {
+    const orderId = shipmentOrderId(req.body.orderId);
+    const order = await Order.findOneAndUpdate(
+        { _id: orderId, isPaid: true, 'dhl.shipmentCreated': { $ne: true }, 'dhl.shipmentCreating': { $ne: true } },
+        { $set: { 'dhl.shipmentCreating': true } }, { new: true }
+    );
+    if (!order) throw httpError(409, 'Order is unpaid, already shipped, or shipment creation is in progress.');
     try {
-        const { orderId, weightKg = 1 } = req.body;
-        const order = await Order.findById(orderId);
-
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-        if (order.dhl?.shipmentCreated) {
-            return res.status(400).json({ message: 'Shipment already created for this order' });
-        }
-
-        const result = await createShipment(order, weightKg);
-
-        // Save DHL info back to order
-        order.dhl = {
-            awbNumber: result.awbNumber,
-            labelPdf: result.labelPdfBase64,
-            trackingUrl: result.awbNumber
-                ? `https://www.dhl.com/en/express/tracking.html?AWB=${result.awbNumber}`
-                : null,
-            shipmentCreated: true,
-            pickupConfirmed: false,
-        };
+        const weight = order.shippingWeightKg || Number(req.body.weightKg);
+        if (!Number.isFinite(weight) || weight <= 0 || weight > 70) throw httpError(400, 'Enter a valid shipping weight.');
+        const result = await createShipment(order, weight);
+        Object.assign(order.dhl, { awbNumber: result.awbNumber, labelPdf: result.labelPdfBase64, trackingUrl: `https://www.dhl.com/en/express/tracking.html?AWB=${result.awbNumber}`, shipmentCreated: true, shipmentCreating: false, pickupConfirmed: false });
         await order.save();
-
-        res.json({
-            awbNumber: result.awbNumber,
-            trackingUrl: order.dhl.trackingUrl,
-            hasLabel: !!result.labelPdfBase64,
-        });
+        res.json({ awbNumber: result.awbNumber, trackingUrl: order.dhl.trackingUrl, hasLabel: !!result.labelPdfBase64 });
     } catch (err) {
-        console.error('[DHL create-shipment error]', err.message);
-        res.status(500).json({ message: err.message });
+        // Keep the claim after a carrier/network error: a timeout may have booked
+        // a shipment. An operator must reconcile with DHL before retrying.
+        if (err.status === 400) await Order.updateOne({ _id: order._id }, { $set: { 'dhl.shipmentCreating': false } });
+        throw httpError(err.status || 503, err.status === 400 ? err.message : 'Shipment response could not be confirmed. Check DHL before retrying.');
     }
-});
+}));
 
-// ─── POST /api/dhl/schedule-pickup ───────────────────────────────────────────
-// Admin only
-// Body: { orderId, pickupDate } — pickupDate: "YYYY-MM-DD"
-router.post('/schedule-pickup', protect, admin, async (req, res) => {
+router.post('/schedule-pickup', protect, admin, asyncHandler(async (req, res) => {
+    const date = pickupDate(req.body.pickupDate);
+    const orderId = shipmentOrderId(req.body.orderId);
+    const order = await Order.findOneAndUpdate(
+        { _id: orderId, isPaid: true, 'dhl.awbNumber': { $regex: '^\\d{10}$' }, 'dhl.shipmentCreated': true, 'dhl.pickupConfirmed': { $ne: true }, 'dhl.pickupCreating': { $ne: true } },
+        { $set: { 'dhl.pickupCreating': true } }, { new: true }
+    );
+    if (!order?.dhl?.awbNumber) throw httpError(409, 'Create a shipment first, or check whether pickup was already requested.');
     try {
-        const { orderId, pickupDate } = req.body;
-        const order = await Order.findById(orderId);
-
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-        if (!order.dhl?.awbNumber) {
-            return res.status(400).json({ message: 'Create shipment first before scheduling pickup' });
-        }
-        if (order.dhl.pickupConfirmed) {
-            return res.status(400).json({ message: 'Pickup already scheduled for this order' });
-        }
-
-        const date = pickupDate || new Date(Date.now() + 86400000).toISOString().split('T')[0];
         const result = await schedulePickup(order.dhl.awbNumber, date);
-
+        if (!result.confirmationNumber) throw new Error('No pickup confirmation');
         order.dhl.pickupConfirmed = true;
+        order.dhl.pickupCreating = false;
         order.dhl.pickupDate = date;
         order.dhl.pickupConfirmationNumber = result.confirmationNumber;
         await order.save();
-
-        res.json({
-            confirmationNumber: result.confirmationNumber,
-            pickupDate: date,
-        });
-    } catch (err) {
-        console.error('[DHL schedule-pickup error]', err.message);
-        res.status(500).json({ message: err.message });
-    }
-});
-
+        res.json({ confirmationNumber: result.confirmationNumber, pickupDate: date });
+    } catch { throw httpError(503, 'Pickup response could not be confirmed. Check DHL before retrying.'); }
+}));
 export default router;

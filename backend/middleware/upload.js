@@ -1,5 +1,6 @@
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
+import { httpError } from '../utils/http.js';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -12,11 +13,11 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'), false);
+    if (['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.mimetype)) cb(null, true);
+    else cb(httpError(400, 'Upload a JPEG, PNG, WebP or AVIF image.'), false);
 };
 
-export const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+export const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024, files: 7, fields: 30 } });
 
 /**
  * Upload a single multer file buffer to Cloudinary.
@@ -29,9 +30,11 @@ export const uploadToCloudinary = (file, folder = 'silonka') => {
                 folder,
                 public_id: `product-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
                 resource_type: 'image',
+                allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
+                format: 'webp',
             },
             (error, result) => {
-                if (error) reject(error);
+                if (error || !result?.secure_url) reject(httpError(503, 'Image upload failed. Please check the image and try again.'));
                 else resolve(result.secure_url);
             }
         );

@@ -13,7 +13,7 @@ const footerLinks = {
     { label: 'Our Story', href: '/origins' },
     { label: 'The Craft', href: '/craft' },
     { label: 'Blog', href: '/blog' },
-    { label: 'Bulk Orders', href: '/contact' },
+    { label: 'Bulk Orders', href: '/bulk-order' },
   ],
   support: [
     { label: 'Contact Us', href: '/contact' },

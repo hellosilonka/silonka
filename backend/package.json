@@ -1,27 +1,33 @@
 {
-    "name": "silonka-backend",
-    "version": "1.0.0",
-    "description": "Backend for Silonka e-commerce",
-    "main": "server.js",
-    "type": "module",
-    "scripts": {
-        "start": "node --env-file=.env server.js",
-        "dev": "node --env-file=.env --watch server.js",
-        "seed": "node seed.js"
-    },
-    "dependencies": {
-        "bcryptjs": "^2.4.3",
-        "cloudinary": "^2.10.0",
-        "compression": "^1.8.1",
-        "cookie-parser": "^1.4.6",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
-        "express": "^4.19.2",
-        "google-auth-library": "^10.6.2",
-        "jsonwebtoken": "^9.0.2",
-        "mongoose": "^8.3.4",
-        "multer": "^2.1.1",
-        "my-app": "file:../app",
-        "nodemailer": "^8.0.3"
-    }
+  "name": "silonka-backend",
+  "version": "1.0.0",
+  "description": "Backend for Silonka e-commerce",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node seed.js",
+    "test": "node --test tests/*.test.js",
+    "import:products": "node scripts/import-products.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.7.4",
+    "google-auth-library": "^10.6.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.3.4",
+    "multer": "^2.1.1",
+    "nodemailer": "^10.6.0"
+  },
+  "overrides": {
+    "qs": "^6.17.1"
+  }
 }

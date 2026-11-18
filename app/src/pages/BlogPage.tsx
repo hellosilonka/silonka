@@ -27,23 +27,18 @@ function getImageSrc(image: string): string {
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [retry, setRetry] = useState(0);
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState('');
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
-    try {
-      const data = await getBlogs();
-      setPosts(data);
-    } catch (err) {
-      console.error('Error fetching blog posts', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    let active = true;
+    getBlogs().then(data => { if (active) setPosts(data); })
+      .catch(() => { if (active) setLoadError('We could not load the journal. Please try again.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [retry]);
 
   // Collect all unique tags
   const allTags = Array.from(new Set(posts.flatMap(p => p.tags))).filter(Boolean);
@@ -136,6 +131,8 @@ export default function BlogPage() {
           <div className="flex items-center justify-center py-24">
             <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
           </div>
+        ) : loadError ? (
+          <div role="alert" className="text-center py-20 text-ivory-muted"><p>{loadError}</p><button className="btn-gold mt-6" onClick={() => { setLoading(true); setLoadError(''); setRetry(value => value + 1); }}>Retry loading journal</button></div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-24">
             <p className="font-display text-2xl text-ivory-muted mb-2">No articles found</p>

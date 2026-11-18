@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useCurrency } from '@/context/CurrencyContext';
 import { useCart } from '@/context/CartContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -10,6 +11,7 @@ export default function WholeSpicesSection() {
   const cardRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const { addItem } = useCart();
+  const { format } = useCurrency();
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -67,7 +69,7 @@ export default function WholeSpicesSection() {
       id: 'whole-spices-bundle',
       name: 'Whole Spices Bundle',
       price: 45,
-      image: '/whole_spices.jpg',
+      image: '/whole_spices.webp',
       variant: 'Mixed 200g',
       weightKg: 0.2,
       shippingWeightKg: 0.5,
@@ -97,7 +99,7 @@ export default function WholeSpicesSection() {
           size and quality.
         </p>
         <div className="flex items-center gap-6 mb-8">
-          <span className="font-display text-3xl text-gold">€45.00</span>
+          <span className="font-display text-3xl text-gold">{format(45)}</span>
           <span className="font-mono text-label text-ivory-muted uppercase">Mixed 200g</span>
         </div>
         <button onClick={handleAddToCart} className="btn-gold">
@@ -113,7 +115,7 @@ export default function WholeSpicesSection() {
         <picture>
           <source srcSet="/whole_spices.webp" type="image/webp" />
           <img
-            src="/whole_spices.jpg"
+            src="/whole_spices.webp"
             alt="Whole Spices"
             className="w-full h-full object-cover"
             loading="lazy"

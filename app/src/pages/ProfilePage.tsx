@@ -20,6 +20,8 @@ interface Order {
     isDelivered: boolean;
     deliveredAt?: string;
     totalPrice: number;
+    currency?: string;
+    paymentStatus?: string;
     shippingPrice: number;
     itemsPrice: number;
     orderItems: OrderItem[];
@@ -33,6 +35,10 @@ interface Order {
 }
 
 function StatusBadge({ order }: { order: Order }) {
+    if (!order.isPaid && ['failed', 'cancelled', 'chargedback'].includes(order.paymentStatus || '')) {
+        const label = order.paymentStatus === 'chargedback' ? 'Payment reversed' : order.paymentStatus === 'cancelled' ? 'Payment cancelled' : 'Payment failed';
+        return <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-mono uppercase bg-red-500/10 text-red-300">{label}</span>;
+    }
     if (order.isDelivered) {
         return (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20">
@@ -62,23 +68,33 @@ function StatusBadge({ order }: { order: Order }) {
 }
 
 export default function ProfilePage() {
-    const { user, logoutUser } = useAuth();
+    const { user, loading } = useAuth();
+    if (loading) return <p role="status" className="pt-36 pb-20 text-center text-ivory-muted">Loading your account...</p>;
+    return <ProfileDetails key={user?._id || 'guest'} />;
+}
+
+function ProfileDetails() {
+    const { user, loading: authLoading, logoutUser } = useAuth();
     const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
+        if (authLoading) return;
         if (!user) {
-            navigate('/login');
+            navigate('/login?redirect=%2Fprofile', { replace: true });
             return;
         }
+        let active = true;
         getMyOrders()
-            .then(setOrders)
-            .catch(() => setOrders([]))
-            .finally(() => setLoading(false));
-    }, [user, navigate]);
+            .then(data => { if (active) setOrders(data); })
+            .catch(() => { if (active) setLoadError('Could not load your orders. Please refresh to try again.'); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, [user, navigate, authLoading]);
 
     if (!user) return null;
 
@@ -89,11 +105,7 @@ export default function ProfilePage() {
         .toUpperCase()
         .slice(0, 2);
 
-    const memberSince = new Date(
-        orders.length > 0
-            ? Math.min(...orders.map(o => new Date(o.createdAt).getTime()))
-            : Date.now()
-    );
+    const memberSince = user.createdAt ? new Date(user.createdAt) : null;
 
     return (
         <div className="min-h-screen bg-charcoal pt-20">
@@ -138,13 +150,13 @@ export default function ProfilePage() {
                                     {orders.length} Orders
                                 </span>
                                 <span className="px-3 py-1 rounded-full bg-white/5 text-ivory-muted text-[11px] font-mono uppercase tracking-wider border border-white/10">
-                                    Member since {memberSince.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    {memberSince ? `Member since ${memberSince.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : 'Silonka member'}
                                 </span>
                             </div>
                         </div>
 
                         <button
-                            onClick={() => { logoutUser(); navigate('/'); }}
+                            onClick={async () => { try { await logoutUser(); navigate('/'); } catch { setLoadError('Sign out failed. Please try again.'); } }}
                             className="flex-shrink-0 px-4 py-2 rounded-xl border border-white/10 text-ivory-muted hover:border-red-500/30 hover:text-red-400 font-mono text-xs uppercase tracking-widest transition-colors"
                         >
                             Sign Out
@@ -173,6 +185,7 @@ export default function ProfilePage() {
                 </div>
             </section>
 
+            {loadError && <p role="alert" className="text-red-300 px-6 py-4">{loadError}</p>}
             {/* Order history */}
             <section className="py-10 px-4 sm:px-6 lg:px-[7vw] pb-20">
                 <div className="max-w-3xl">
@@ -219,7 +232,7 @@ export default function ProfilePage() {
                                         </div>
                                         <div className="flex items-center gap-4 flex-shrink-0">
                                             <span className="font-display text-lg text-gold">
-                                                USD {order.totalPrice.toFixed(2)}
+                                                {order.currency || 'Currency not recorded'} {order.totalPrice.toFixed(2)}
                                             </span>
                                             <span className={`text-ivory-muted/40 text-xs transition-transform duration-200 ${expandedOrder === order._id ? 'rotate-180' : ''}`}>▾</span>
                                         </div>
@@ -241,7 +254,7 @@ export default function ProfilePage() {
                                                             <p className="text-ivory text-sm truncate">{item.name}</p>
                                                             <p className="text-ivory-muted/50 text-xs">Qty: {item.qty}</p>
                                                         </div>
-                                                        <span className="font-mono text-sm text-ivory/80">USD {(item.price * item.qty).toFixed(2)}</span>
+                                                        <span className="font-mono text-sm text-ivory/80">{order.currency || 'Currency not recorded'} {(item.price * item.qty).toFixed(2)}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -250,15 +263,15 @@ export default function ProfilePage() {
                                             <div className="bg-charcoal rounded-xl p-4 space-y-1.5 text-sm">
                                                 <div className="flex justify-between text-ivory-muted">
                                                     <span>Items</span>
-                                                    <span className="font-mono">USD {(order.itemsPrice || 0).toFixed(2)}</span>
+                                                    <span className="font-mono">{order.currency || 'Currency not recorded'} {(order.itemsPrice || 0).toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between text-ivory-muted">
                                                     <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> DHL Shipping</span>
-                                                    <span className="font-mono">USD {(order.shippingPrice || 0).toFixed(2)}</span>
+                                                    <span className="font-mono">{order.currency || 'Currency not recorded'} {(order.shippingPrice || 0).toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between text-ivory font-medium pt-1.5 border-t border-white/5">
                                                     <span>Total</span>
-                                                    <span className="font-mono text-gold">USD {order.totalPrice.toFixed(2)}</span>
+                                                    <span className="font-mono text-gold">{order.currency || 'Currency not recorded'} {order.totalPrice.toFixed(2)}</span>
                                                 </div>
                                             </div>
 

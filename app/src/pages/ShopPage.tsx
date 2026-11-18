@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Filter, ChevronDown, ShoppingBag, Search, X, Package } from 'lucide-react';
@@ -21,18 +21,16 @@ interface Product {
   image: string;
   category: string;
   weight: string;
+  shippingWeightKg?: number;
+  inStock?: boolean;
+  priceIsSample?: boolean;
+  imageIsReference?: boolean;
+  variations?: { _id: string; label: string; price: number; image?: string; shippingWeightKg?: number; inStock: boolean }[];
   intensity?: number;
 }
 
 
 
-const categories = [
-  { id: 'all', name: 'All' },
-  { id: 'Ceylon Cinnamon', name: 'Ceylon Cinnamon' },
-  { id: 'Ceylon Black Pepper', name: 'Ceylon Black Pepper' },
-  { id: 'Cloves and Cardamom', name: 'Cloves and Cardamom' },
-  { id: 'Gift Set', name: 'Gift Set' },
-];
 
 const sortOptions = [
   { id: 'featured', name: 'Featured' },
@@ -43,10 +41,15 @@ const sortOptions = [
 
 export default function ShopPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const categories = [{ id: 'all', name: 'All' }, ...[...new Set(allProducts.map(p => p.category))].map(name => ({ id: name, name }))];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = searchParams.get('category') || 'all';
+  const setSelectedCategory = (value: string) => setSearchParams(prev => { const next = new URLSearchParams(prev); if (value === 'all') next.delete('category'); else next.set('category', value); return next; });
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selectedSort, setSelectedSort] = useState('featured');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
   const heroRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +59,10 @@ export default function ShopPage() {
         const data = await getProducts();
         setAllProducts(data);
       } catch (error) {
-        console.error("Error fetching products", error);
+        console.error('Product loading failed', error);
+        setLoadError('We could not load products. Please reload to try again.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchProductsData();
@@ -102,7 +108,7 @@ export default function ShopPage() {
         description="Shop authentic Ceylon Cinnamon sticks, Ceylon Black Pepper, Cloves, and curated spice gift sets. Single-origin, hand-harvested from Sri Lanka. Ships to USA, UK & Europe."
         keywords="buy Ceylon cinnamon, Ceylon cinnamon sticks USA, true cinnamon UK, Ceylon black pepper Europe, organic spices shop, Ceylon spice gift sets, buy Cinnamomum verum, Silonka shop"
         canonicalPath="/shop"
-        ogImage="/collection_set.jpg"
+        ogImage="/collection_set.webp"
         jsonLd={breadcrumbSchema([
           { name: 'Home', url: '/' },
           { name: 'Shop', url: '/shop' },
@@ -118,11 +124,11 @@ export default function ShopPage() {
               Our Collection
             </span>
             <h1 className="font-display text-[clamp(32px,6vw,56px)] text-ivory mb-4 sm:mb-6 leading-tight">
-              Shop Silonka Spices
+              Shop the Silonka Collection
             </h1>
             <p className="text-sm sm:text-body text-ivory-muted leading-relaxed px-4">
-              From our partner farms in Sri Lanka to your kitchen.
-              Each spice is harvested at peak potency and sealed for maximum freshness.
+              Ceylon cinnamon, essential oils, candles and natural wood pet products.
+              Explore the collection from Sri Lanka.
             </p>
           </div>
         </div>
@@ -141,7 +147,7 @@ export default function ShopPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-ivory-muted" />
                 <input
                   type="text"
-                  placeholder="Search spices..."
+                  placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 rounded-full bg-charcoal-card border border-white/10 text-ivory placeholder:text-ivory-muted/50 focus:outline-none focus:border-gold/50 transition-colors text-sm"
@@ -231,6 +237,8 @@ export default function ShopPage() {
             Showing {filteredProducts.length} products
           </p>
 
+          {loading && <p role="status" className="text-ivory-muted py-8">Loading products…</p>}
+          {loadError && <p role="alert" className="text-red-300 py-8">{loadError}</p>}
           {/* Product Grid */}
           <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredProducts.map((product, index) => (
@@ -239,7 +247,7 @@ export default function ShopPage() {
           </div>
 
           {/* Empty State */}
-          {filteredProducts.length === 0 && (
+          {!loading && !loadError && filteredProducts.length === 0 && (
             <div className="text-center py-16 sm:py-20">
               <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 text-ivory-muted/30 mx-auto mb-4" />
               <p className="font-display text-lg sm:text-xl text-ivory-muted mb-2">No products found</p>
@@ -305,14 +313,18 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
   }, [index]);
 
   const handleAddToCart = () => {
+    if (product.inStock === false) return;
+    const option = product.variations?.find(v => v.inStock !== false);
+    if (product.variations?.length && !option) return;
     addItem({
-      id: product.id,
+      id: product._id,
       name: product.name,
-      price: product.price,
-      image: product.image,
-      variant: product.weight,
+      price: option?.price ?? product.price,
+      variationId: option?._id,
+      image: option?.image || product.image,
+      variant: option?.label || product.weight,
       weightKg: parseWeightKg(product.weight) ?? 0.3,
-      shippingWeightKg: product.shippingWeightKg ?? 1.2,
+      shippingWeightKg: option?.shippingWeightKg ?? product.shippingWeightKg ?? 1.2,
     });
   };
 
@@ -330,26 +342,27 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
           height={600}
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
         />
+        {product.imageIsReference && <span className="absolute left-3 top-3 rounded-full bg-charcoal/80 px-3 py-1 text-xs text-ivory">Reference image</span>}
         {/* Quick Add Overlay */}
         <div className="absolute inset-0 bg-charcoal/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <button
-            onClick={(e) => { e.preventDefault(); handleAddToCart(); }}
+            disabled={product.inStock === false} onClick={(e) => { e.preventDefault(); handleAddToCart(); }}
             className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gold text-charcoal font-mono text-label uppercase tracking-wider hover:bg-gold-light transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 text-xs sm:text-sm"
           >
-            Add to Cart
+            {product.inStock === false ? 'Sold out' : 'Add to Cart'}
           </button>
         </div>
       </Link>
 
       {/* Content */}
       <div className="p-4 sm:p-5">
-        <div className="flex items-start justify-between mb-1 sm:mb-2">
-          <Link to={`/product/${product._id}`} className="font-display text-base sm:text-lg text-ivory group-hover:text-gold transition-colors line-clamp-1">
+        <div className="flex flex-col gap-1 mb-2">
+          <Link to={`/product/${product._id}`} className="font-display text-base sm:text-lg text-ivory group-hover:text-gold transition-colors line-clamp-2 min-h-[3rem]">
             {product.name}
           </Link>
-          <span className="font-mono text-[10px] sm:text-xs text-ivory-muted flex-shrink-0 ml-2">{product.weight}</span>
+          <span className="font-mono text-[10px] sm:text-xs text-ivory-muted break-words">{product.weight}</span>
         </div>
         <p className="text-ivory-muted text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{product.description}</p>
 
@@ -370,9 +383,9 @@ function ShopProductCard({ product, index }: { product: Product; index: number }
         )}
 
         <div className="flex items-center justify-between">
-          <span className="font-display text-lg sm:text-xl text-gold">{format(product.price)}</span>
+          <span className="font-display text-lg sm:text-xl text-gold">{format(product.price)}{product.priceIsSample && <span className="block text-xs font-sans text-ivory-muted">Sample price</span>}</span>
           <button
-            onClick={handleAddToCart}
+            disabled={product.inStock === false} onClick={handleAddToCart}
             className="p-1.5 sm:p-2 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-charcoal transition-all duration-300"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

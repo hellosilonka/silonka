@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useCurrency } from '@/context/CurrencyContext';
 import { useCart } from '@/context/CartContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -11,6 +12,7 @@ export default function PowderSection() {
   const textRef = useRef<HTMLDivElement>(null);
   const meterRef = useRef<HTMLDivElement>(null);
   const { addItem } = useCart();
+  const { format } = useCurrency();
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -78,7 +80,7 @@ export default function PowderSection() {
       id: 'ground-powder-set',
       name: 'Ground Powder Set',
       price: 32,
-      image: '/ground_powder.jpg',
+      image: '/ground_powder.webp',
       variant: '3x 75g',
       weightKg: 0.225,
       shippingWeightKg: 0.6,
@@ -101,7 +103,7 @@ export default function PowderSection() {
         <picture>
           <source srcSet="/ground_powder.webp" type="image/webp" />
           <img
-            src="/ground_powder.jpg"
+            src="/ground_powder.webp"
             alt="Ground Powders"
             className="w-full h-full object-cover"
             loading="lazy"
@@ -140,7 +142,7 @@ export default function PowderSection() {
         </div>
 
         <div className="flex items-center gap-6 mb-8">
-          <span className="font-display text-3xl text-gold">€32.00</span>
+          <span className="font-display text-3xl text-gold">{format(32)}</span>
           <span className="font-mono text-label text-ivory-muted uppercase">3x 75g</span>
         </div>
         <button onClick={handleAddToCart} className="btn-gold">

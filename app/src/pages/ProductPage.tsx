@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/api';
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
@@ -25,10 +26,12 @@ interface Review {
 }
 
 interface Variation {
+  image?: string;
   _id: string;
   label: string;
   price: number;
   inStock: boolean;
+  shippingWeightKg?: number;
 }
 
 interface Product {
@@ -42,12 +45,16 @@ interface Product {
   images: string[];
   category: string;
   weight: string;
+  shippingWeightKg?: number;
   intensity?: number;
   inStock: boolean;
   origin: string;
   ingredients: string;
   shelfLife: string;
   certifications: string[];
+  imageIsReference?: boolean;
+  priceIsSample?: boolean;
+  specifications?: { label: string; value: string }[];
   variations: Variation[];
   reviews: Review[];
   averageRating: number;
@@ -119,16 +126,20 @@ export default function ProductPage() {
   const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string } | null>(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [shippingError, setShippingError] = useState('');
+  const selectedShippingWeight = product?.variations?.find(option => option._id === selectedVariation)?.shippingWeightKg ?? product?.shippingWeightKg;
 
   useEffect(() => {
     if (!geo.countryCode || !product) return;
+    let active = true;
     setShippingLoading(true);
     setShippingError('');
+    setShippingRate(null);
     getDHLRates({
       countryCode: geo.countryCode,
-      weightKg: product.shippingWeightKg ?? 1.2,
+      weightKg: selectedShippingWeight ?? 1.2,
     })
       .then((result) => {
+        if (!active) return;
         if (result.error || !result.services || result.services.length === 0) {
           setShippingError('Rate unavailable');
         } else {
@@ -137,35 +148,40 @@ export default function ProductPage() {
           setShippingRate({ amount: cheapest.amount, currency: cheapest.currency });
         }
       })
-      .catch(() => setShippingError('Rate unavailable'))
-      .finally(() => setShippingLoading(false));
+      .catch(() => { if (active) setShippingError('Rate unavailable'); })
+      .finally(() => { if (active) setShippingLoading(false); });
+    return () => { active = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.countryCode, product?._id]);
+  }, [geo.countryCode, product?._id, selectedShippingWeight]);
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     setLoading(true);
     const fetchData = async () => {
       try {
         const prod = await getProductById(id);
+        if (!active) return;
         setProduct(prod);
-        if (prod.variations?.length > 0) {
-          setSelectedVariation(prod.variations[0]._id);
-        }
+        setSelectedVariation(prod.variations?.length ? (prod.variations.find((v: Variation) => v.inStock) || prod.variations[0])._id : null);
+        setRelated([]);
         try {
           const rel = await getRelatedProducts(id);
-          setRelated(rel);
+          if (active) setRelated(rel);
         } catch { /* ignore */ }
       } catch {
-        navigate('/shop');
+        if (active) navigate('/shop');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     fetchData();
     setSelectedImage(0);
     setQuantity(1);
     setActiveTab('description');
+    setReviewError('');
+    setReviewSuccess('');
+    return () => { active = false; };
   }, [id, navigate]);
 
   useEffect(() => {
@@ -187,21 +203,23 @@ export default function ProductPage() {
 
   if (!product) return null;
 
-  const allImages = [product.image, ...(product.images || [])].filter(Boolean);
   const currentVariation = product.variations?.find((v) => v._id === selectedVariation);
+  const allImages = [...new Set([currentVariation?.image || product.image, product.image, ...(product.images || [])].filter(Boolean))];
   const activePrice = currentVariation ? currentVariation.price : product.price;
-  const isInStock = currentVariation ? currentVariation.inStock : product.inStock;
+  const isInStock = product.inStock && (!currentVariation || currentVariation.inStock);
 
   const handleAddToCart = () => {
+    if (!isInStock) return;
     addItem({
-      id: product.id + (currentVariation ? `-${currentVariation.label}` : ''),
+      id: product._id,
+      variationId: currentVariation?._id,
       name: product.name,
       price: activePrice,
-      image: product.image,
+      image: currentVariation?.image || product.image,
       variant: currentVariation ? currentVariation.label : product.weight,
       weightKg: parseWeightKg(currentVariation?.label ?? product.weight) ?? 0.3,
-      shippingWeightKg: product.shippingWeightKg ?? 1.2,
-    });
+      shippingWeightKg: selectedShippingWeight ?? 1.2,
+    }, quantity);
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -218,8 +236,8 @@ export default function ProductPage() {
       // Refresh product data
       const updated = await getProductById(id!);
       setProduct(updated);
-    } catch (err: any) {
-      setReviewError(err?.response?.data?.message || 'Failed to submit review');
+    } catch (err) {
+      setReviewError(errorMessage(err, 'Failed to submit review'));
     } finally {
       setReviewSubmitting(false);
     }
@@ -273,9 +291,9 @@ export default function ProductPage() {
           <div className="product-image-main">
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-charcoal-card border border-white/5 mb-4">
               <img
-                src={getImageSrc(allImages[selectedImage])}
+                src={getImageSrc(allImages[selectedImage] || allImages[0])}
                 alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-700 hover:scale-105"
               />
               {!isInStock && (
                 <div className="absolute inset-0 bg-charcoal/70 flex items-center justify-center">
@@ -291,6 +309,7 @@ export default function ProductPage() {
               )}
             </div>
 
+            {product.imageIsReference && <p className="text-xs text-ivory-muted mb-4">Reference image - final product photography will be added.</p>}
             {/* Thumbnail Strip */}
             {allImages.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2">
@@ -336,15 +355,16 @@ export default function ProductPage() {
               <span className="font-mono text-xs text-ivory-muted/60 uppercase">{currentVariation ? currentVariation.label : product.weight}</span>
             </div>
 
+            {product.priceIsSample && <p className="text-sm text-gold/80 mb-5">Sample price - final pricing to be confirmed.</p>}
             {/* Variations */}
             {product.variations && product.variations.length > 0 && (
               <div className="mb-6">
-                <label className="font-mono text-xs text-ivory-muted uppercase tracking-widest mb-3 block">Select Size</label>
+                <label className="font-mono text-xs text-ivory-muted uppercase tracking-widest mb-3 block">Select option</label>
                 <div className="flex flex-wrap gap-2">
                   {product.variations.map((v) => (
                     <button
                       key={v._id}
-                      onClick={() => setSelectedVariation(v._id)}
+                      onClick={() => { setSelectedVariation(v._id); setSelectedImage(0); }}
                       disabled={!v.inStock}
                       className={`px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider transition-all duration-300 ${
                         selectedVariation === v._id
@@ -365,6 +385,8 @@ export default function ProductPage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-8">
               <div className="flex items-center border border-white/10 rounded-xl overflow-hidden">
                 <button
+                  aria-label="Decrease product quantity"
+                  disabled={quantity <= 1}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="p-3 text-ivory-muted hover:text-gold hover:bg-white/5 transition-colors"
                 >
@@ -372,7 +394,9 @@ export default function ProductPage() {
                 </button>
                 <span className="px-5 py-3 font-mono text-sm text-ivory min-w-[3rem] text-center">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
+                  aria-label="Increase product quantity"
+                  disabled={quantity >= 99}
+                  onClick={() => setQuantity(Math.min(99, quantity + 1))}
                   className="p-3 text-ivory-muted hover:text-gold hover:bg-white/5 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
@@ -380,7 +404,7 @@ export default function ProductPage() {
               </div>
 
               <button
-                onClick={() => { for (let i = 0; i < quantity; i++) handleAddToCart(); }}
+                onClick={handleAddToCart}
                 disabled={!isInStock}
                 className={`flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-mono text-xs uppercase tracking-widest transition-all duration-300 ${
                   isInStock
@@ -526,17 +550,18 @@ export default function ProductPage() {
           <div className="max-w-2xl">
             <div className="space-y-0">
               {[
-                { label: 'Weight', value: product.weight },
+                { label: 'Size / pack', value: currentVariation?.label || product.weight },
                 { label: 'Category', value: product.category },
                 { label: 'Origin', value: product.origin || 'Sri Lanka' },
                 ...(product.ingredients ? [{ label: 'Ingredients', value: product.ingredients }] : []),
                 ...(product.shelfLife ? [{ label: 'Shelf Life', value: product.shelfLife }] : []),
                 ...(product.intensity ? [{ label: 'Intensity', value: `${product.intensity}%` }] : []),
+                ...(product.specifications || []),
                 { label: 'In Stock', value: isInStock ? 'Yes' : 'No' },
               ].map(({ label, value }, i) => (
-                <div key={label} className={`flex justify-between py-4 ${i > 0 ? 'border-t border-white/5' : ''}`}>
+                <div key={label} className={`flex justify-between gap-6 py-4 ${i > 0 ? 'border-t border-white/5' : ''}`}>
                   <span className="font-mono text-xs text-ivory-muted uppercase tracking-wider">{label}</span>
-                  <span className="text-ivory text-sm capitalize">{value}</span>
+                  <span className="text-ivory text-sm text-right">{value}</span>
                 </div>
               ))}
             </div>

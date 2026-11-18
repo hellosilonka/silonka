@@ -1,3 +1,4 @@
+import { sendContactMessage, errorMessage } from '@/lib/api';
 import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -16,6 +17,8 @@ export default function ContactPage() {
     message: '',
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -47,13 +50,13 @@ export default function ContactPage() {
     return () => ctx.revert();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 3000);
+    if (sending) return;
+    setSending(true); setSubmitError('');
+    try { await sendContactMessage(formData); setIsSubmitted(true); setFormData({ name: '', email: '', subject: '', message: '' }); }
+    catch (error) { setSubmitError(errorMessage(error, 'Message could not be sent. Please email hello@silonka.com.')); }
+    finally { setSending(false); }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -168,11 +171,12 @@ export default function ContactPage() {
 
             {/* Contact Form */}
             <div className="lg:col-span-2">
-              <form
+              <form aria-busy={sending}
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="p-5 sm:p-8 lg:p-12 rounded-card bg-charcoal-card border border-white/5"
               >
+                {submitError && <p role="alert" className="text-red-300 mb-4">{submitError}</p>}
                 {isSubmitted ? (
                   <div className="text-center py-10 sm:py-12">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-4 sm:mb-6">
@@ -190,7 +194,7 @@ export default function ContactPage() {
                         </label>
                         <input
                           type="text"
-                          name="name"
+                          id="contact-name" name="name" aria-label="Name"
                           value={formData.name}
                           onChange={handleChange}
                           required
@@ -204,7 +208,7 @@ export default function ContactPage() {
                         </label>
                         <input
                           type="email"
-                          name="email"
+                          id="contact-email" name="email" aria-label="Email"
                           value={formData.email}
                           onChange={handleChange}
                           required
@@ -219,7 +223,7 @@ export default function ContactPage() {
                         Subject
                       </label>
                       <select
-                        name="subject"
+                        id="contact-subject" name="subject" aria-label="Subject"
                         value={formData.subject}
                         onChange={handleChange}
                         required
@@ -239,7 +243,7 @@ export default function ContactPage() {
                         Message
                       </label>
                       <textarea
-                        name="message"
+                        id="contact-message" name="message" aria-label="Message"
                         value={formData.message}
                         onChange={handleChange}
                         required
@@ -250,10 +254,10 @@ export default function ContactPage() {
                     </div>
 
                     <button
-                      type="submit"
+                      type="submit" disabled={sending}
                       className="btn-gold w-full flex items-center justify-center gap-2 sm:gap-3 text-sm"
                     >
-                      Send Message
+                      {sending ? 'Sending…' : 'Send Message'}
                       <Send className="w-4 h-4" />
                     </button>
                   </>

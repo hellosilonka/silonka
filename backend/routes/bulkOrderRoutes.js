@@ -1,3 +1,4 @@
+import { asyncHandler } from '../utils/http.js';
 import express from 'express';
 import { 
     createBulkOrder, 
@@ -11,11 +12,11 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.route('/')
-    .post(createBulkOrder)
-    .get(protect, admin, getBulkOrders)
-    .delete(protect, admin, deleteBulkOrdersBulk);
+    .post(asyncHandler(createBulkOrder))
+    .get(protect, admin, asyncHandler(getBulkOrders))
+    .delete(protect, admin, asyncHandler(deleteBulkOrdersBulk));
 router.route('/:id')
-    .put(protect, admin, updateBulkOrderStatus)
-    .delete(protect, admin, deleteBulkOrder);
+    .put(protect, admin, asyncHandler(updateBulkOrderStatus))
+    .delete(protect, admin, asyncHandler(deleteBulkOrder));
 
 export default router;

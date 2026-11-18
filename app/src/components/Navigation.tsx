@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type UserInfo } from '@/context/AuthContext';
 import { useCurrency, CURRENCIES } from '@/context/CurrencyContext';
 import AuthModal from './AuthModal';
 
@@ -36,10 +36,6 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-    setIsProfileOpen(false);
-  }, [location.pathname]);
 
   // Lock body scroll when drawer open
   useEffect(() => {
@@ -55,13 +51,12 @@ export default function Navigation() {
     { label: 'Contact', href: '/contact' },
   ];
 
-  const handleAuthSuccess = (userData: any) => setUser(userData);
+  const handleAuthSuccess = (userData: UserInfo) => setUser(userData);
 
   const handleLogout = async () => {
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
-    await logoutUser();
-    navigate('/');
+    try { await logoutUser(); navigate('/'); } catch { window.alert('Sign out failed. Please try again.'); }
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -74,6 +69,7 @@ export default function Navigation() {
 
   return (
     <>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-gold focus:text-charcoal focus:p-3">Skip to main content</a>
       <nav
         aria-label="Main navigation"
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${

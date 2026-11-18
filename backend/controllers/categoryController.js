@@ -1,4 +1,6 @@
 import Category from '../models/Category.js';
+import Product from '../models/Product.js';
+import { textField, httpError } from '../utils/http.js';
 
 // @desc    Get all categories
 // @route   GET /api/categories
@@ -8,7 +10,7 @@ export const getCategories = async (req, res) => {
         const categories = await Category.find({}).sort({ name: 1 });
         res.json(categories);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        throw error;
     }
 };
 
@@ -17,8 +19,8 @@ export const getCategories = async (req, res) => {
 // @access  Private/Admin
 export const createCategory = async (req, res) => {
     try {
-        const { name, description } = req.body;
-        const exists = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+        const name = textField(req.body.name, 'category', 100), description = textField(req.body.description || '', 'description', 1000, false);
+        const exists = await Category.findOne({ name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
         if (exists) {
             return res.status(400).json({ message: 'Category already exists' });
         }
@@ -26,7 +28,7 @@ export const createCategory = async (req, res) => {
         const category = await Category.create({ name, slug, description });
         res.status(201).json(category);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        throw error;
     }
 };
 
@@ -35,10 +37,12 @@ export const createCategory = async (req, res) => {
 // @access  Private/Admin
 export const updateCategory = async (req, res) => {
     try {
-        const { name, description } = req.body;
+        const name = req.body.name === undefined ? undefined : textField(req.body.name, 'category', 100);
+        const description = req.body.description === undefined ? undefined : textField(req.body.description, 'description', 1000, false);
         const category = await Category.findById(req.params.id);
         if (!category) return res.status(404).json({ message: 'Category not found' });
         if (name) {
+            if (name !== category.name && await Product.exists({ category: category.name })) throw httpError(409, 'Move products to another category before renaming this category.');
             category.name = name;
             category.slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         }
@@ -46,7 +50,7 @@ export const updateCategory = async (req, res) => {
         const updated = await category.save();
         res.json(updated);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        throw error;
     }
 };
 
@@ -57,9 +61,10 @@ export const deleteCategory = async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
         if (!category) return res.status(404).json({ message: 'Category not found' });
+        if (await Product.exists({ category: category.name })) throw httpError(409, 'Move products out of this category before deleting it.');
         await Category.deleteOne({ _id: category._id });
         res.json({ message: 'Category removed' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        throw error;
     }
 };

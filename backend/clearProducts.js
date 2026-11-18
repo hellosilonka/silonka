@@ -16,6 +16,9 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const run = async () => {
+    if (process.env.NODE_ENV !== 'development' || !process.argv.includes('--confirm-delete-all-products')) {
+        throw new Error('Product clearing requires NODE_ENV=development and --confirm-delete-all-products. Never run against client data.');
+    }
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI);
         console.log(`MongoDB Connected: ${conn.connection.host}`);

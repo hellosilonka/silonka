@@ -4,22 +4,22 @@ export interface Currency {
   code: string;
   symbol: string;
   name: string;
-  rate: number; // relative to EUR (base price stored as EUR in DB)
+  rate: number; // relative to USD (base price stored as USD in DB)
 }
 
-// Rates relative to EUR (prices in the DB are in EUR)
+// Illustrative display rates, rebased from the existing estimates. Checkout charges USD.
 export const CURRENCIES: Currency[] = [
-  { code: 'USD', symbol: '$',   name: 'US Dollar',        rate: 1.08  },
-  { code: 'EUR', symbol: '€',   name: 'Euro',             rate: 1.00  },
-  { code: 'GBP', symbol: '£',   name: 'British Pound',    rate: 0.86  },
-  { code: 'AUD', symbol: 'A$',  name: 'Australian Dollar', rate: 1.65  },
+  { code: 'USD', symbol: '$',   name: 'US Dollar',        rate: 1 },
+  { code: 'EUR', symbol: '€',   name: 'Euro',             rate: 1 / 1.08 },
+  { code: 'GBP', symbol: '£',   name: 'British Pound',    rate: 0.86 / 1.08 },
+  { code: 'AUD', symbol: 'A$',  name: 'Australian Dollar', rate: 1.65 / 1.08 },
 ];
 
 interface CurrencyContextType {
   currency: Currency;
   setCurrency: (code: string) => void;
-  convert: (eurPrice: number) => number;
-  format: (eurPrice: number) => string;
+  convert: (usdPrice: number) => number;
+  format: (usdPrice: number) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -36,13 +36,13 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const convert = useCallback(
-    (eurPrice: number) => parseFloat((eurPrice * currency.rate).toFixed(2)),
+    (usdPrice: number) => parseFloat((usdPrice * currency.rate).toFixed(2)),
     [currency]
   );
 
   const format = useCallback(
-    (eurPrice: number) => {
-      const converted = eurPrice * currency.rate;
+    (usdPrice: number) => {
+      const converted = usdPrice * currency.rate;
       return `${currency.symbol}${converted.toFixed(2)}`;
     },
     [currency]

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { getCountryFromCoords } from '@/lib/api';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -42,10 +42,10 @@ const GeoContext = createContext<GeoContextValue>({
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function GeoProvider({ children }: { children: React.ReactNode }) {
-    const [status, setStatus] = useState<GeoStatus>('idle');
-    const [countryCode, setCC] = useState<string | null>(null);
-    const [countryName, setCN] = useState<string | null>(null);
-    const requestedRef = useRef(false); // prevent double-call in StrictMode
+    const [cached] = useState(readCache);
+    const [status, setStatus] = useState<GeoStatus>(cached ? 'resolved' : 'idle');
+    const [countryCode, setCC] = useState<string | null>(cached?.countryCode || null);
+    const [countryName, setCN] = useState<string | null>(cached?.countryName || null);
 
     // Reverse-geocode helper
     const resolveCoords = useCallback(async (lat: number, lng: number) => {
@@ -79,36 +79,6 @@ export function GeoProvider({ children }: { children: React.ReactNode }) {
         );
     }, [status, resolveCoords]);
 
-    // On first mount: restore from cache or auto-request permission
-    useEffect(() => {
-        if (requestedRef.current) return;
-        requestedRef.current = true;
-
-        // 1️⃣ Check session cache first — no prompt needed
-        const cached = readCache();
-        if (cached) {
-            setCC(cached.countryCode);
-            setCN(cached.countryName);
-            setStatus('resolved');
-            return;
-        }
-
-        // 2️⃣ Auto-trigger the browser permission dialog
-        if (!navigator.geolocation) {
-            setStatus('unsupported');
-            return;
-        }
-
-        setStatus('asking');
-        navigator.geolocation.getCurrentPosition(
-            (pos) => resolveCoords(pos.coords.latitude, pos.coords.longitude),
-            (err) => {
-                setStatus(err.code === err.PERMISSION_DENIED ? 'denied' : 'error');
-            },
-            { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
-        );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     return (
         <GeoContext.Provider value={{

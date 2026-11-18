@@ -12,28 +12,28 @@ const processSteps = [
     title: 'Harvest',
     description: 'We time harvest to the monsoon season when essential oils are at their peak. Each spice is hand-picked at perfect ripeness.',
     icon: Sun,
-    image: '/whole_spices.jpg',
+    image: '/whole_spices.webp',
   },
   {
     number: '02',
     title: 'Sun Drying',
     description: 'No artificial heat. Our spices dry naturally in the Sri Lankan sun, preserving their volatile oils and complex flavors.',
     icon: Wind,
-    image: '/aroma_steam.jpg',
+    image: '/aroma_steam.webp',
   },
   {
     number: '03',
     title: 'Sorting',
     description: 'Each batch is hand-sorted to remove imperfect specimens. Only the finest make it to our packaging facility.',
     icon: Scale,
-    image: '/pepper_palette.jpg',
+    image: '/pepper_palette.webp',
   },
   {
     number: '04',
     title: 'Packaging',
     description: 'Nitrogen-flushed, triple-layer pouches protect against light, air, and moisture. Freshness guaranteed.',
     icon: Package,
-    image: '/collection_set.jpg',
+    image: '/collection_set.webp',
   },
 ];
 
@@ -108,7 +108,7 @@ export default function CraftPage() {
         description="Learn the 4-step craft behind authentic Ceylon Cinnamon: hand-harvested at peak ripeness, sun-dried naturally, hand-sorted for quality, and nitrogen-sealed for freshness. From Sri Lanka to your kitchen."
         keywords="how Ceylon cinnamon is made, cinnamon harvesting process, hand-peeled cinnamon, sun-dried true cinnamon, Ceylon cinnamon processing, organic spice craft, Silonka process"
         canonicalPath="/craft"
-        ogImage="/craft_mortar.jpg"
+        ogImage="/craft_mortar.webp"
         jsonLd={breadcrumbSchema([
           { name: 'Home', url: '/' },
           { name: 'Our Craft', url: '/craft' },
@@ -225,7 +225,7 @@ export default function CraftPage() {
                 <picture>
                   <source srcSet="/craft_cinnamon.webp" type="image/webp" />
                   <img
-                    src="/craft_cinnamon.png"
+                    src="/craft_cinnamon.webp"
                     alt="Ceylon cinnamon bundle with golden accents"
                     width={864}
                     height={864}

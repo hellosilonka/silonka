@@ -33,7 +33,8 @@ export function useCookieConsent() {
 // ─── Helpers ─────────────────────────────────────
 function getSavedConsent(): 'accepted' | 'declined' | null {
   try {
-    return localStorage.getItem(CONSENT_KEY) as any;
+    const saved = localStorage.getItem(CONSENT_KEY);
+    return saved === 'accepted' || saved === 'declined' ? saved : null;
   } catch {
     return null;
   }
@@ -141,8 +142,7 @@ export default function CookieConsentProvider({ children }: { children: React.Re
   }, []);
 
   const applyPreferences = (newPrefs: CookiePreferences, consentType: 'accepted' | 'declined') => {
-    localStorage.setItem(CONSENT_KEY, consentType);
-    localStorage.setItem(PREFS_KEY, JSON.stringify(newPrefs));
+    try { localStorage.setItem(CONSENT_KEY, consentType); localStorage.setItem(PREFS_KEY, JSON.stringify(newPrefs)); } catch { /* Browser storage may be disabled. */ }
     setCurrentPrefs(newPrefs);
     setHasConsented(true);
 

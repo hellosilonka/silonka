@@ -2,6 +2,7 @@ import { useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight } from 'lucide-react';
+import { useCurrency } from '@/context/CurrencyContext';
 import { useCart } from '@/context/CartContext';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -12,6 +13,7 @@ export default function PepperSection() {
   const textRef = useRef<HTMLDivElement>(null);
   const meterRef = useRef<HTMLDivElement>(null);
   const { addItem } = useCart();
+  const { format } = useCurrency();
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -80,7 +82,7 @@ export default function PepperSection() {
       id: 'black-pepper',
       name: 'Ceylon Black Pepper',
       price: 24,
-      image: '/pepper_palette.jpg',
+      image: '/pepper_palette.webp',
       variant: '100g Whole',
       weightKg: 0.1,
       shippingWeightKg: 0.35,
@@ -126,7 +128,7 @@ export default function PepperSection() {
         </div>
 
         <div className="flex items-center gap-6 mb-8">
-          <span className="font-display text-3xl text-gold">€24.00</span>
+          <span className="font-display text-3xl text-gold">{format(24)}</span>
           <span className="font-mono text-label text-ivory-muted uppercase">100g Whole</span>
         </div>
 
@@ -151,7 +153,7 @@ export default function PepperSection() {
         <picture>
           <source srcSet="/pepper_palette.webp" type="image/webp" />
           <img
-            src="/pepper_palette.jpg"
+            src="/pepper_palette.webp"
             alt="Ceylon Black Pepper"
             className="w-full h-full object-cover"
             loading="lazy"

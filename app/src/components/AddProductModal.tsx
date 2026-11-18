@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 
 interface AddProductModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (productData: any) => void;
+    onSubmit: (productData: { name: string; price: number; description: string; image: string; category: string; weight: string; intensity?: number }) => void;
 }
 
 const CATEGORIES = [
@@ -14,7 +14,7 @@ const CATEGORIES = [
     'Gift Set',
 ];
 
-export default function AddProductModal({ isOpen, onClose, onSubmit }: AddProductModalProps) {
+function ProductForm({ isOpen, onClose, onSubmit }: AddProductModalProps) {
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -25,12 +25,6 @@ export default function AddProductModal({ isOpen, onClose, onSubmit }: AddProduc
         intensity: ''
     });
 
-    // Reset form when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            setFormData({ name: '', price: '', description: '', image: '', category: '', weight: '', intensity: '' });
-        }
-    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -57,7 +51,7 @@ export default function AddProductModal({ isOpen, onClose, onSubmit }: AddProduc
                         <input required className="w-full bg-charcoal border border-white/10 text-ivory p-3 rounded outline-none focus:border-gold" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                     </div>
                     <div>
-                        <label className="block text-ivory-muted font-mono text-xs uppercase mb-1">Price (€)</label>
+                        <label className="block text-ivory-muted font-mono text-xs uppercase mb-1">Price (USD)</label>
                         <input type="number" step="0.01" required className="w-full bg-charcoal border border-white/10 text-ivory p-3 rounded outline-none focus:border-gold" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
                     </div>
                     <div>
@@ -66,7 +60,7 @@ export default function AddProductModal({ isOpen, onClose, onSubmit }: AddProduc
                     </div>
                     <div>
                         <label className="block text-ivory-muted font-mono text-xs uppercase mb-1">Image URL</label>
-                        <input required placeholder="/collection_set.jpg" className="w-full bg-charcoal border border-white/10 text-ivory p-3 rounded outline-none focus:border-gold" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} />
+                        <input required placeholder="/collection_set.webp" className="w-full bg-charcoal border border-white/10 text-ivory p-3 rounded outline-none focus:border-gold" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} />
                     </div>
 
                     {/* Category — fixed dropdown matching shop page filters */}
@@ -99,3 +93,5 @@ export default function AddProductModal({ isOpen, onClose, onSubmit }: AddProduc
         </div>
     );
 }
+
+export default function AddProductModal(props: AddProductModalProps) { return props.isOpen ? <ProductForm {...props} /> : null; }

@@ -1,102 +1,52 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  variant?: string;
-  weightKg?: number;   // net product weight in kg (parsed from product.weight string)
-  shippingWeightKg?: number;  // gross shipping weight in kg (from product.shippingWeightKg — includes packaging)
-}
-
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { cartKey, CART_STORAGE_KEY, readCart, finishOrder, type CartItem, type CartState } from '@/lib/cart';
+export type { CartItem } from '@/lib/cart';
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+  removeItem: (id: string, variationId?: string) => void;
+  updateQuantity: (id: string, quantity: number, variationId?: string) => void;
   clearCart: () => void;
-  totalItems: number;
-  totalPrice: number;
-  totalWeightKg: number;   // sum of (weightKg * quantity) for DHL rate calls
-  isCartOpen: boolean;
-  setIsCartOpen: (open: boolean) => void;
+  completeOrder: (orderId: string, purchased: { product: string; variationId?: string; qty: number }[]) => void;
+  totalItems: number; totalPrice: number; totalWeightKg: number;
+  isCartOpen: boolean; setIsCartOpen: (open: boolean) => void;
 }
-
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<CartState>(() => { try { return readCart(localStorage.getItem(CART_STORAGE_KEY)); } catch { return readCart(null); } });
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'>) => {
-    setItems(prev => {
-      const existing = prev.find(item => item.id === newItem.id);
-      if (existing) {
-        return prev.map(item =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { ...newItem, quantity: 1 }];
+  useEffect(() => { try { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state)); } catch { /* Browser storage may be disabled. */ } }, [state]);
+  useEffect(() => {
+    const sync = (event: StorageEvent) => { if (event.key === CART_STORAGE_KEY) setState(readCart(event.newValue)); };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    if (!/^[a-f\d]{24}$/i.test(newItem.id) || !Number.isFinite(newItem.price) || newItem.price <= 0 || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) return;
+    setState(prev => {
+      const key = cartKey(newItem), existing = prev.items.find(item => cartKey(item) === key);
+      if (!existing && prev.items.length >= 50) return prev;
+      return { ...prev, items: existing ? prev.items.map(item => cartKey(item) === key ? { ...item, quantity: Math.min(99, item.quantity + quantity) } : item) : [...prev.items, { ...newItem, quantity }] };
     });
     setIsCartOpen(true);
   }, []);
-
-  const removeItem = useCallback((id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
-  }, []);
-
-  const updateQuantity = useCallback((id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(id);
-      return;
-    }
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
+  const removeItem = useCallback((id: string, variationId?: string) => setState(prev => ({ ...prev, items: prev.items.filter(item => cartKey(item) !== cartKey({ id, variationId })) })), []);
+  const updateQuantity = useCallback((id: string, quantity: number, variationId?: string) => {
+    if (!Number.isInteger(quantity) || quantity > 99) return;
+    if (quantity <= 0) { removeItem(id, variationId); return; }
+    setState(prev => ({ ...prev, items: prev.items.map(item => cartKey(item) === cartKey({ id, variationId }) ? { ...item, quantity } : item) }));
   }, [removeItem]);
-
-  const clearCart = useCallback(() => {
-    setItems([]);
-  }, []);
-
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  // Use gross shipping weight (shippingWeightKg) for DHL rate calculation;
-  // fall back to net content weight (weightKg) or 0.3 kg/unit when neither is set.
-  const totalWeightKg = parseFloat(
-    items.reduce((sum, item) => sum + (item.shippingWeightKg ?? item.weightKg ?? 0.3) * item.quantity, 0).toFixed(3)
-  );
-
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        totalPrice,
-        totalWeightKg,
-        isCartOpen,
-        setIsCartOpen,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  const clearCart = useCallback(() => setState(prev => ({ ...prev, items: [] })), []);
+  const completeOrder = useCallback((id: string, purchased: { product: string; variationId?: string; qty: number }[]) => setState(prev => finishOrder(prev, id, purchased)), []);
+  const { items } = state;
+  return <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, completeOrder,
+    totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalPrice: items.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0) / 100,
+    totalWeightKg: Number(items.reduce((sum, item) => sum + (item.shippingWeightKg ?? item.weightKg ?? 1.2) * item.quantity, 0).toFixed(3)),
+    isCartOpen, setIsCartOpen }}>{children}</CartContext.Provider>;
 }
-
 export function useCart() {
   const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
+  if (!context) throw new Error('useCart must be used within a CartProvider');
   return context;
 }

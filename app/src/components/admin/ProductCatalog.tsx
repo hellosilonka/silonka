@@ -1,0 +1,29 @@
+import { useDeferredValue, useMemo, useState } from 'react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, Package, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import type { AdminProduct, Category } from '@/lib/types';
+
+type Props = { products: AdminProduct[]; categories: Category[]; onAdd: () => void; onEdit: (product: AdminProduct) => void; onDelete: (id: string) => Promise<void> };
+export default function ProductCatalog({ products, categories, onAdd, onEdit, onDelete }: Props) {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('');
+  const [stock, setStock] = useState('all');
+  const [page, setPage] = useState(1);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const deferredQuery = useDeferredValue(query.trim().toLowerCase());
+  const filtered = useMemo(() => products.filter(product => (!deferredQuery || `${product.name} ${product.category} ${product.weight}`.toLowerCase().includes(deferredQuery)) && (!category || product.category === category) && (stock === 'all' || (stock === 'available') === (product.inStock !== false))), [products, deferredQuery, category, stock]);
+  const pages = Math.max(1, Math.ceil(filtered.length / 12)), currentPage = Math.min(page, pages);
+  const visible = filtered.slice((currentPage - 1) * 12, currentPage * 12);
+  const clearFilters = () => { setQuery(''); setCategory(''); setStock('all'); setPage(1); };
+  const remove = async (id: string) => { if (deleting) return; setDeleting(id); try { await onDelete(id); } finally { setDeleting(null); } };
+  return <section aria-label="Product catalogue">
+    <div className="catalog-toolbar"><div className="catalog-tabs" aria-label="Filter availability">{[['all', 'All products'], ['available', 'In stock'], ['unavailable', 'Out of stock']].map(([value, label]) => <button key={value} type="button" aria-pressed={stock === value} className={stock === value ? 'active' : ''} onClick={() => { setStock(value); setPage(1); }}>{label}<span>{products.filter(product => value === 'all' || (value === 'available') === (product.inStock !== false)).length}</span></button>)}</div><button className="admin-button primary" onClick={onAdd}><Plus size={17} /> Add product</button></div>
+    <div className="admin-panel catalog-panel"><div className="catalog-filters"><div className="catalog-search"><Search size={18} /><input aria-label="Search products" placeholder="Search by name, category or pack size…" value={query} onChange={e => { setQuery(e.target.value); setPage(1); }} />{query && <button aria-label="Clear product search" onClick={() => { setQuery(''); setPage(1); }}><X size={16} /></button>}</div><select aria-label="Filter product category" className="admin-input" value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}><option value="">All categories</option>{categories.map(item => <option key={item._id} value={item.name}>{item.name}</option>)}</select></div>
+      {visible.length ? <div className="catalog-table-wrap"><table className="catalog-table"><thead><tr>{['Product', 'Category', 'Base price', 'Availability', 'Actions'].map(label => <th key={label}>{label}</th>)}</tr></thead><tbody>{visible.map(product => <tr key={product._id}>
+        <td><div className="catalog-product"><div className="catalog-thumbnail">{product.image ? <img src={product.image} alt="" loading="lazy" /> : <Package size={22} />}</div><div><button className="catalog-product-name" onClick={() => onEdit(product)}>{product.name}</button><p>{product.weight}{!!product.variations?.length && ` · ${product.variations.length} ${product.variations.length === 1 ? 'option' : 'options'}`}</p></div></div></td>
+        <td data-label="Category"><span className="catalog-category">{product.category}</span></td><td data-label="Base price"><strong className="catalog-price">USD {product.price.toFixed(2)}</strong>{product.priceIsSample && <small className="block text-amber-700">Sample price</small>}</td><td data-label="Availability"><span className={`admin-status ${product.inStock !== false ? 'positive' : 'neutral'}`}><span />{product.inStock !== false ? 'In stock' : 'Out of stock'}</span></td>
+        <td><div className="catalog-actions"><button className="admin-icon-button" aria-label={`Edit ${product.name}`} title="Edit product" onClick={() => onEdit(product)}><Pencil size={16} /></button><a className="admin-icon-button" aria-label={`View ${product.name} in shop`} title="View in shop" href={`/product/${product._id}`} target="_blank" rel="noreferrer"><ArrowUpRight size={17} /></a><button className="admin-icon-button danger" disabled={!!deleting} aria-label={`Delete ${product.name}`} title="Delete product" onClick={() => remove(product._id)}><Trash2 size={16} /></button></div></td>
+      </tr>)}</tbody></table></div> : <div className="admin-empty"><div><Package size={29} /></div><h3>{products.length ? 'No products match your filters' : 'Your catalogue starts here'}</h3><p>{products.length ? 'Try a different search or clear the filters to see all products.' : 'Add your first product with a photo, price and delivery details.'}</p><button className="admin-button secondary" onClick={products.length ? clearFilters : onAdd}>{products.length ? 'Clear filters' : 'Add your first product'}</button></div>}
+      <footer className="catalog-pagination"><p>{filtered.length ? `${(currentPage - 1) * 12 + 1}–${Math.min(currentPage * 12, filtered.length)} of ${filtered.length} products` : '0 products'}</p><div><button className="admin-icon-button" aria-label="Previous products page" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft size={17} /></button><span>Page {currentPage} of {pages}</span><button className="admin-icon-button" aria-label="Next products page" disabled={currentPage === pages} onClick={() => setPage(currentPage + 1)}><ChevronRight size={17} /></button></div></footer>
+    </div>
+  </section>;
+}

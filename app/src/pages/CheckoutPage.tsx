@@ -1,488 +1,115 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
-import { ShoppingBag, ArrowLeft, MapPin, CreditCard, CheckCircle, Loader2, Truck, Package } from 'lucide-react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, CreditCard, Loader2, MapPin, ShieldCheck, ShoppingBag, Truck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { createOrder, createPayPalOrder, capturePayPalOrder, getDHLRates } from '@/lib/api';
+import { getCheckoutQuote, getPaymentConfig, createOrder, createPayHerePayment, errorMessage, type ShippingAddress, type CheckoutQuote } from '@/lib/api';
+import { COUNTRIES } from '@/lib/countries';
+import { cartKey } from '@/lib/cart';
 import SEOHead from '@/components/SEOHead';
 
-// ISO country list (abbreviated for common destinations)
-const COUNTRIES = [
-  { code: 'AU', name: 'Australia' },
-  { code: 'AT', name: 'Austria' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'CN', name: 'China' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'FR', name: 'France' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'GR', name: 'Greece' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'IN', name: 'India' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'MY', name: 'Malaysia' },
-  { code: 'MV', name: 'Maldives' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'NZ', name: 'New Zealand' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'PK', name: 'Pakistan' },
-  { code: 'PH', name: 'Philippines' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'QA', name: 'Qatar' },
-  { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'AE', name: 'United Arab Emirates' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' },
-].sort((a, b) => a.name.localeCompare(b.name));
-
+const money = (amount: number) => new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(amount);
+const emptyAddress: ShippingAddress = { fullName: '', email: '', phone: '', address: '', city: '', postalCode: '', country: '', countryCode: '' };
+const addressFields = [
+  { key: 'fullName', label: 'Full name', type: 'text', auto: 'name', max: 100 },
+  { key: 'email', label: 'Email address', type: 'email', auto: 'email', max: 254 },
+  { key: 'phone', label: 'Phone with country code', type: 'tel', auto: 'tel', max: 30 },
+  { key: 'address', label: 'Street address', type: 'text', auto: 'street-address', max: 250 },
+  { key: 'city', label: 'City', type: 'text', auto: 'address-level2', max: 100 },
+  { key: 'postalCode', label: 'Postal code', type: 'text', auto: 'postal-code', max: 30 },
+] as const;
 export default function CheckoutPage() {
-    const { items, totalPrice, totalWeightKg, clearCart } = useCart();
-    const { format, convert } = useCurrency();
-    const { user } = useAuth();
-    const navigate = useNavigate();
-
-    const [address, setAddress] = useState({
-        address: '',
-        city: '',
-        postalCode: '',
-        country: '',
-        countryCode: '',
-        fullName: user?.name || '',
-        phone: '',
-        email: user?.email || '',
-    });
-    const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
-    const [dbOrderId, setDbOrderId] = useState<string | null>(null);
-    const [errorMsg, setErrorMsg] = useState('');
-    const [creatingOrder, setCreatingOrder] = useState(false);
-
-    // DHL rate state — always uses the cheapest service
-    const [shippingRate, setShippingRate] = useState<{ amount: number; currency: string; deliveryTime: string | null } | null>(null);
-    const [rateLoading, setRateLoading] = useState(false);
-    const [rateError, setRateError] = useState('');
-
-    const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // Use actual per-product weights carried in CartItem.weightKg; CartContext computes the total.
-
-    // Fetch DHL rates when country + postalCode change (debounced 800ms)
-    useEffect(() => {
-        if (!address.countryCode) {
-            setShippingRate(null);
-            setRateError('');
-            return;
-        }
-
-        if (rateTimerRef.current) clearTimeout(rateTimerRef.current);
-
-        rateTimerRef.current = setTimeout(async () => {
-            setRateLoading(true);
-            setRateError('');
-            try {
-                const result = await getDHLRates({
-                    countryCode: address.countryCode,
-                    city: address.city,
-                    postalCode: address.postalCode,
-                    streetLines: address.address,
-                    weightKg: totalWeightKg,
-                });
-                if (result.error || !result.services || result.services.length === 0) {
-                    setRateError('Could not calculate shipping. Please contact us.');
-                    setShippingRate(null);
-                } else {
-                    // Always pick the cheapest service (services are sorted by price ascending)
-                    const cheapest = result.services[0];
-                    setShippingRate({ amount: cheapest.amount, currency: cheapest.currency, deliveryTime: cheapest.deliveryTime });
-                }
-            } catch {
-                setRateError('Shipping rate unavailable.');
-                setShippingRate(null);
-            } finally {
-                setRateLoading(false);
-            }
-        }, 800);
-
-        return () => { if (rateTimerRef.current) clearTimeout(rateTimerRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [address.countryCode, address.postalCode]);
-
-    const shippingCostUSD = shippingRate?.amount ?? 0;
-    // DHL returns rates in USD; DB prices are in EUR.
-    // Convert shipping USD → EUR (÷1.08) so both values share the same base before summing.
-    const USD_TO_EUR = 1 / 1.08;
-    const shippingCostEUR = shippingCostUSD * USD_TO_EUR;
-    const orderTotalEUR = totalPrice + shippingCostEUR;
-
-    // Create the order in our DB when user proceeds to payment
-    const handleProceedToPayment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (items.length === 0) return;
-        if (!user) {
-            setErrorMsg('Please log in to complete checkout.');
-            return;
-        }
-        setCreatingOrder(true);
-        setErrorMsg('');
-
-        try {
-            const order = await createOrder({
-                orderItems: items.map(item => ({ ...item, product: item.id })),
-                shippingAddress: address,
-                paymentMethod: 'PayPal',
-                itemsPrice: totalPrice,
-                taxPrice: 0,
-                shippingPrice: shippingCostEUR,
-                totalPrice: orderTotalEUR,
-            });
-            setDbOrderId(order._id);
-            setStep('payment');
-        } catch (error: any) {
-            const msg = error.response?.data?.message || '';
-            if (msg.includes('Not authorized') || msg.includes('no token') || error.response?.status === 401) {
-                setErrorMsg('Your session has expired. Please log in again to continue.');
-            } else {
-                setErrorMsg(msg || 'Failed to create order. Please try again.');
-            }
-        } finally {
-            setCreatingOrder(false);
-        }
-    };
-
-    if (items.length === 0 && step !== 'success') {
-        return (
-            <div className="min-h-screen bg-charcoal pt-32 text-center">
-                <ShoppingBag className="w-16 h-16 text-ivory-muted/30 mx-auto mb-4" />
-                <h2 className="font-display text-3xl text-ivory mb-4">Your cart is empty</h2>
-                <button onClick={() => navigate('/shop')} className="text-gold font-mono uppercase text-sm hover:text-gold-light transition-colors">
-                    Return to Shop
-                </button>
-            </div>
-        );
-    }
-
-    if (step === 'success') {
-        return (
-            <div className="min-h-screen bg-charcoal pt-32 text-center px-4">
-                <SEOHead title="Order Confirmed — Silonka" description="Your order has been placed successfully." canonicalPath="/checkout" noIndex />
-                <div className="max-w-md mx-auto">
-                    <div className="w-20 h-20 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10 text-green-400" />
-                    </div>
-                    <h1 className="font-display text-3xl sm:text-4xl text-ivory mb-3">Order Confirmed!</h1>
-                    <p className="text-ivory-muted mb-4">Thank you for your purchase. Your premium Ceylon spices are on their way.</p>
-                    <p className="text-ivory-muted/60 text-sm mb-8 flex items-center justify-center gap-2">
-                        <Truck className="w-4 h-4 text-gold" />
-                        Shipped via DHL Express from Sri Lanka
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link to="/profile" className="px-6 py-3 rounded-xl bg-gold text-charcoal font-mono text-xs uppercase tracking-widest hover:bg-gold-light transition-colors">
-                            View My Orders
-                        </Link>
-                        <Link to="/shop" className="px-6 py-3 rounded-xl border border-white/10 text-ivory-muted font-mono text-xs uppercase tracking-widest hover:border-gold/50 hover:text-ivory transition-colors">
-                            Continue Shopping
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-charcoal pt-24 pb-16 px-4">
-            <SEOHead title="Checkout — Silonka" description="Complete your order for premium Ceylon spices from Silonka." canonicalPath="/checkout" noIndex />
-
-            <div className="max-w-5xl mx-auto">
-                {/* Back Link */}
-                <Link to="/shop" className="inline-flex items-center gap-2 text-ivory-muted hover:text-gold transition-colors font-mono text-xs uppercase tracking-widest mb-8">
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Shop
-                </Link>
-
-                {/* Step Indicator */}
-                <div className="flex items-center gap-3 mb-10">
-                    {[
-                        { label: 'Shipping', icon: MapPin, key: 'shipping' },
-                        { label: 'Payment', icon: CreditCard, key: 'payment' },
-                    ].map(({ label, icon: Icon, key }, i) => (
-                        <div key={key} className="flex items-center gap-3">
-                            {i > 0 && <div className={`w-12 h-px ${step === 'payment' ? 'bg-gold' : 'bg-white/10'}`} />}
-                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${step === key ? 'bg-gold text-charcoal' : step === 'payment' && key === 'shipping' ? 'bg-gold/20 text-gold' : 'bg-charcoal-card text-ivory-muted border border-white/10'
-                                }`}>
-                                <Icon className="w-4 h-4" />
-                                {label}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    {/* Main Content */}
-                    <div className="lg:col-span-3">
-                        {step === 'shipping' && (
-                            <form onSubmit={handleProceedToPayment} className="bg-charcoal-card p-6 sm:p-8 rounded-2xl border border-white/5">
-                                <h2 className="font-display text-xl text-ivory mb-6 flex items-center gap-3">
-                                    <MapPin className="w-5 h-5 text-gold" />
-                                    Shipping Details
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <input
-                                        type="text" placeholder="Full Name" required
-                                        value={address.fullName} onChange={e => setAddress({ ...address, fullName: e.target.value })}
-                                        className="col-span-1 sm:col-span-2 px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
-                                    <input
-                                        type="email" placeholder="Email Address"
-                                        value={address.email} onChange={e => setAddress({ ...address, email: e.target.value })}
-                                        className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
-                                    <input
-                                        type="tel" placeholder="Phone Number"
-                                        value={address.phone} onChange={e => setAddress({ ...address, phone: e.target.value })}
-                                        className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
-                                    <input
-                                        type="text" placeholder="Street Address" required
-                                        value={address.address} onChange={e => setAddress({ ...address, address: e.target.value })}
-                                        className="col-span-1 sm:col-span-2 px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
-                                    <input
-                                        type="text" placeholder="City" required
-                                        value={address.city} onChange={e => setAddress({ ...address, city: e.target.value })}
-                                        className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
-                                    <input
-                                        type="text" placeholder="Postal Code"
-                                        value={address.postalCode} onChange={e => setAddress({ ...address, postalCode: e.target.value })}
-                                        className="px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory placeholder:text-ivory-muted/40 focus:border-gold/50 focus:outline-none transition-colors text-sm"
-                                    />
-                                    {/* Country selector */}
-                                    <div className="col-span-1 sm:col-span-2 relative">
-                                        <select
-                                            required
-                                            value={address.countryCode}
-                                            onChange={e => {
-                                                const selected = COUNTRIES.find(c => c.code === e.target.value);
-                                                setAddress({ ...address, countryCode: e.target.value, country: selected?.name || '' });
-                                            }}
-                                            className="w-full px-4 py-3.5 rounded-xl bg-charcoal border border-white/10 text-ivory focus:border-gold/50 focus:outline-none transition-colors text-sm appearance-none"
-                                        >
-                                            <option value="">Select Destination Country</option>
-                                            {COUNTRIES.map(c => (
-                                                <option key={c.code} value={c.code}>{c.name}</option>
-                                            ))}
-                                        </select>
-                                        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ivory-muted">▾</div>
-                                    </div>
-                                </div>
-
-                                {errorMsg && (
-                                    <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between gap-3">
-                                        <span>{errorMsg}</span>
-                                        {errorMsg.includes('session') && (
-                                            <Link to="/login" className="flex-shrink-0 px-4 py-1.5 rounded-lg bg-gold text-charcoal font-mono text-[10px] uppercase tracking-widest hover:bg-gold-light transition-colors">
-                                                Log In
-                                            </Link>
-                                        )}
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={creatingOrder || rateLoading}
-                                    className="mt-6 w-full flex items-center justify-center gap-3 py-4 bg-gold text-charcoal font-mono text-xs uppercase tracking-widest rounded-xl hover:bg-gold-light disabled:opacity-50 transition-all"
-                                >
-                                    {creatingOrder ? (
-                                        <><Loader2 className="w-4 h-4 animate-spin" />Creating Order...</>
-                                    ) : (
-                                        <>Proceed to Payment <CreditCard className="w-4 h-4" /></>
-                                    )}
-                                </button>
-                            </form>
-                        )}
-
-                        {step === 'payment' && dbOrderId && (
-                            <div className="bg-charcoal-card p-6 sm:p-8 rounded-2xl border border-white/5">
-                                <h2 className="font-display text-xl text-ivory mb-2 flex items-center gap-3">
-                                    <CreditCard className="w-5 h-5 text-gold" />
-                                    Payment
-                                </h2>
-                                <p className="text-ivory-muted text-sm mb-6">Complete your payment securely with PayPal.</p>
-
-                                {errorMsg && (
-                                    <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{errorMsg}</div>
-                                )}
-
-                                <div className="bg-charcoal rounded-xl p-4 sm:p-6 border border-white/5">
-                                    <PayPalButtonWrapper
-                                        orderId={dbOrderId}
-                                        onSuccess={() => {
-                                            clearCart();
-                                            setStep('success');
-                                        }}
-                                        onError={(msg) => setErrorMsg(msg)}
-                                    />
-                                </div>
-
-                                <button
-                                    onClick={() => setStep('shipping')}
-                                    className="mt-4 flex items-center gap-2 text-ivory-muted hover:text-gold transition-colors font-mono text-xs uppercase tracking-widest"
-                                >
-                                    <ArrowLeft className="w-3 h-3" /> Back to Shipping
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Order Summary Sidebar */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-charcoal-card p-6 rounded-2xl border border-white/5 sticky top-28">
-                            <h2 className="font-display text-lg text-ivory mb-5 flex items-center gap-2">
-                                <Package className="w-5 h-5 text-gold" />
-                                Order Summary
-                            </h2>
-
-                            <div className="space-y-3 mb-5">
-                                {items.map(item => (
-                                    <div key={item.id} className="flex items-center gap-3">
-                                        <img
-                                            src={item.image?.startsWith('/uploads') ? `${import.meta.env.PROD ? '' : 'http://localhost:5000'}${item.image}` : item.image}
-                                            alt={item.name}
-                                            className="w-12 h-12 rounded-lg object-cover border border-white/5"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-ivory text-sm font-medium truncate">{item.name}</p>
-                                            <p className="text-ivory-muted/60 text-xs">
-                                                {item.variant && <span>{item.variant} · </span>}
-                                                Qty: {item.quantity}
-                                            </p>
-                                        </div>
-                                        <span className="font-mono text-sm text-ivory flex-shrink-0">{format(item.price * item.quantity)}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="border-t border-white/5 pt-4 space-y-2">
-                                <div className="flex justify-between text-sm text-ivory-muted">
-                                    <span>Subtotal</span>
-                                    <span className="font-mono">{format(totalPrice)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm text-ivory-muted">
-                                    <span className="flex items-center gap-1.5">
-                                        <Truck className="w-3.5 h-3.5" />
-                                        DHL Shipping
-                                    </span>
-                                    {rateLoading ? (
-                                        <span className="font-mono text-ivory-muted/40 flex items-center gap-1">
-                                            <Loader2 className="w-3 h-3 animate-spin" /> Calculating
-                                        </span>
-                                    ) : shippingRate ? (
-                                        <span className="font-mono text-gold">
-                                            {format(shippingCostEUR)}
-                                        </span>
-                                    ) : (
-                                        <span className="font-mono text-ivory-muted/50">
-                                            {rateError
-                                                ? rateError
-                                                : address.countryCode
-                                                    ? 'Unavailable'
-                                                    : 'Select country'
-                                            }
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="border-t border-white/5 mt-4 pt-4 flex justify-between items-baseline">
-                                <span className="font-display text-lg text-ivory">Total</span>
-                                <span className="font-display text-2xl text-gold">
-                                    {shippingRate
-                                        ? format(orderTotalEUR)
-                                        : format(totalPrice)
-                                    }
-                                </span>
-                            </div>
-                            {shippingRate && (
-                                <p className="text-ivory-muted/40 text-[10px] font-mono mt-1 text-right">
-                                    Includes DHL shipping cost
-                                </p>
-                            )}
-
-                            {/* Trust */}
-                            <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-2 text-ivory-muted/50 text-[10px] font-mono uppercase tracking-widest">
-                                <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                Secured by PayPal · Shipped by DHL
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Isolated component for PayPal buttons
-function PayPalButtonWrapper({
-    orderId,
-    onSuccess,
-    onError,
-}: {
-    orderId: string;
-    onSuccess: () => void;
-    onError: (msg: string) => void;
-}) {
-    const [{ isPending }] = usePayPalScriptReducer();
-
-    if (isPending) {
-        return (
-            <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    return (
-        <PayPalButtons
-            style={{
-                layout: 'vertical',
-                color: 'gold',
-                shape: 'rect',
-                label: 'paypal',
-                height: 50,
-            }}
-            createOrder={async () => {
-                try {
-                    const data = await createPayPalOrder(orderId);
-                    return data.id;
-                } catch (err: any) {
-                    onError(err?.response?.data?.message || 'Failed to create PayPal order');
-                    throw err;
-                }
-            }}
-            onApprove={async (data) => {
-                try {
-                    await capturePayPalOrder(data.orderID, orderId);
-                    onSuccess();
-                } catch (err: any) {
-                    onError(err?.response?.data?.message || 'Payment capture failed');
-                }
-            }}
-            onError={(err) => {
-                console.error('PayPal error:', err);
-                onError('Payment failed. Please try again.');
-            }}
-            onCancel={() => {
-                onError('Payment was cancelled.');
-            }}
-        />
-    );
+  const { items, totalPrice } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const [address, setAddress] = useState<ShippingAddress>(() => {
+    try { const saved = JSON.parse(sessionStorage.getItem('silonka_shipping') || '{}'); return Object.fromEntries(Object.keys(emptyAddress).map(key => [key, typeof saved[key] === 'string' ? saved[key] : ''])) as unknown as ShippingAddress; } catch { return emptyAddress; }
+  });
+  const [review, setReview] = useState<{ quote: CheckoutQuote; cart: string; address: string } | null>(null);
+  const [config, setConfig] = useState<{ available: boolean; mode?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const [error, setError] = useState('');
+  const [configError, setConfigError] = useState(false);
+  const [editedContact, setEditedContact] = useState({ fullName: false, email: false });
+  const cart = JSON.stringify(items.map(item => ({ product: item.id, qty: item.quantity, variationId: item.variationId })));
+  const effectiveAddress = { ...address, fullName: editedContact.fullName ? address.fullName : address.fullName || user?.name || '', email: editedContact.email ? address.email : address.email || user?.email || '' };
+  const addressKey = JSON.stringify(effectiveAddress);
+  const validReview = review && review.cart === cart && review.address === addressKey;
+  const summaryItems = validReview && review.quote.orderItems ? review.quote.orderItems.map(item => ({ ...item, id: item.product, quantity: item.qty })) : items;
+  const pricesChanged = validReview && summaryItems.some(item => items.find(original => cartKey(original) === cartKey(item))?.price !== item.price);
+  useEffect(() => {
+    let active = true;
+    getPaymentConfig().then(data => { if (active) setConfig(data); }).catch(() => { if (active) setConfigError(true); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => { try { sessionStorage.setItem('silonka_shipping', JSON.stringify(address)); } catch { /* optional storage */ } }, [address]);
+  const getQuote = async (event: FormEvent) => {
+    event.preventDefault();
+    if (busyRef.current) return;
+    busyRef.current = true; setBusy(true); setError('');
+    try {
+      const quote = await getCheckoutQuote(JSON.parse(cart), effectiveAddress);
+      setReview({ quote, cart, address: addressKey });
+      document.getElementById('checkout-title')?.focus();
+    } catch (err) { setError(errorMessage(err, 'Could not calculate shipping. Please check your address and try again.')); }
+    finally { busyRef.current = false; setBusy(false); }
+  };
+  const pay = async () => {
+    if (!validReview || busyRef.current) return;
+    if (review.quote.expiresAt <= Date.now()) { setReview(null); setError('Your quote has expired. Please review your order again.'); return; }
+    busyRef.current = true; setBusy(true); setError('');
+    try {
+      const order = await createOrder({ orderItems: JSON.parse(cart), shippingAddress: effectiveAddress, paymentMethod: 'PayHere', quoteToken: review.quote.quoteToken });
+      const payment = await createPayHerePayment(order._id);
+      if (!['https://sandbox.payhere.lk/pay/checkout', 'https://www.payhere.lk/pay/checkout'].includes(payment.action)) throw new Error('Invalid payment destination');
+      const form = document.createElement('form');
+      form.method = 'POST'; form.action = payment.action;
+      for (const [name, value] of Object.entries(payment.fields)) { const input = document.createElement('input'); input.type = 'hidden'; input.name = name; input.value = value; form.appendChild(input); }
+      document.body.appendChild(form); form.submit(); form.remove();
+    } catch (err) { setError(errorMessage(err, 'Could not open payment. Your cart has been saved. Please try again.')); }
+    finally { busyRef.current = false; setBusy(false); }
+  };
+  if (authLoading) return <div role="status" className="pt-40 min-h-[60vh] text-center text-ivory">Loading checkout…</div>;
+  if (!items.length) return <div className="pt-40 pb-20 px-6 min-h-[70vh] text-center"><ShoppingBag className="mx-auto mb-4 text-gold" size={48} /><h1 className="font-display text-3xl text-ivory mb-4">Your cart is empty</h1><Link to="/shop" className="btn-gold inline-block">Browse spices</Link></div>;
+  if (!user) return <div className="pt-40 pb-20 px-6 min-h-[70vh] text-center"><h1 className="font-display text-3xl text-ivory mb-4">Sign in to checkout</h1><p className="text-ivory-muted mb-8">Your cart is saved. Sign in to securely place and track your order.</p><Link to="/login?redirect=%2Fcheckout" className="btn-gold inline-block">Sign in</Link><Link to="/signup?redirect=%2Fcheckout" className="block text-gold mt-5">Create an account</Link></div>;
+  return <div className="min-h-screen bg-charcoal pt-28 pb-16 px-4">
+    <SEOHead title="Secure checkout — Silonka" description="Review your shipping and pay securely with PayHere." canonicalPath="/checkout" noIndex />
+    <div className="max-w-5xl mx-auto">
+      <Link to="/shop" className="inline-flex gap-2 text-ivory-muted hover:text-gold mb-8"><ArrowLeft size={18} /> Continue shopping</Link>
+      <h1 id="checkout-title" tabIndex={-1} className="font-display text-4xl text-ivory mb-3">{validReview ? 'Review your order' : 'Delivery details'}</h1>
+      <p className="text-ivory-muted mb-8">1. Delivery <span aria-hidden="true"> → </span> 2. Review <span aria-hidden="true"> → </span> 3. Secure payment</p>
+      {error && <div role="alert" className="p-4 mb-6 rounded-xl bg-red-500/10 text-red-300 border border-red-500/20">{error}</div>}
+      {(configError || config?.available === false) && <div role="alert" className="p-4 mb-6 rounded-xl border border-gold/30 text-ivory-muted">Online payments are currently unavailable. Please <Link to="/contact" className="text-gold underline">contact us</Link> for assistance.</div>}
+      <div className="grid lg:grid-cols-5 gap-8">
+        <section className="lg:col-span-3 bg-charcoal-card rounded-2xl p-5 sm:p-8 border border-white/10">
+          {validReview ? <div>
+            <h2 className="font-display text-xl text-ivory mb-5 flex gap-2"><MapPin className="text-gold" size={22} /> Delivery address</h2>
+            <address className="not-italic text-ivory-muted leading-relaxed mb-6">{effectiveAddress.fullName}<br />{effectiveAddress.address}<br />{effectiveAddress.city}, {effectiveAddress.postalCode}<br />{effectiveAddress.country}<br />{effectiveAddress.email}<br />{effectiveAddress.phone}</address>
+            <button onClick={() => setReview(null)} disabled={busy} className="text-gold underline mb-6">Edit delivery details</button>
+            <div className="p-4 rounded-xl bg-charcoal text-ivory-muted text-sm mb-6"><ShieldCheck className="text-gold mb-2" />You’ll enter payment details on PayHere’s secure page. Your order is confirmed after PayHere verifies payment.</div>
+            {config?.mode === 'sandbox' && <p className="text-amber-300 mb-4" role="status">Test checkout: use PayHere sandbox payment details.</p>}
+            <p className="text-sm text-ivory-muted mb-5">By placing this order, you agree to our <Link to="/terms-and-conditions" className="text-gold underline">terms</Link> and <Link to="/refund-policy" className="text-gold underline">refund policy</Link>.</p>
+            <button onClick={pay} disabled={busy || !config?.available} className="btn-gold w-full flex items-center justify-center gap-2 disabled:opacity-50">{busy ? <Loader2 className="animate-spin" size={18} /> : <CreditCard size={18} />}{busy ? 'Opening secure payment…' : `Pay ${money(review.quote.totalPrice)} with PayHere`}</button>
+          </div> : <form onSubmit={getQuote} className="grid sm:grid-cols-2 gap-5" aria-busy={busy}>
+            {addressFields.map(field => <div key={field.key} className={field.key === 'address' || field.key === 'fullName' ? 'sm:col-span-2' : ''}><label htmlFor={field.key} className="block text-ivory-muted text-sm mb-2">{field.label}</label><input id={field.key} name={field.key} type={field.type} autoComplete={field.auto} maxLength={field.max} required value={effectiveAddress[field.key]} onChange={event => { setAddress(prev => ({ ...prev, [field.key]: event.target.value })); if (field.key === 'fullName' || field.key === 'email') setEditedContact(prev => ({ ...prev, [field.key]: true })); }} className="w-full min-w-0 p-3 rounded-xl bg-charcoal border border-white/15 text-ivory focus:border-gold outline-none" /></div>)}
+            <div className="sm:col-span-2"><label htmlFor="country" className="block text-ivory-muted text-sm mb-2">Country</label><select id="country" autoComplete="country" required value={address.countryCode} onChange={event => { const country = COUNTRIES.find(c => c.code === event.target.value); setAddress(prev => ({ ...prev, countryCode: country?.code || '', country: country?.name || '' })); }} className="w-full p-3 rounded-xl bg-charcoal border border-white/15 text-ivory"><option value="">Select delivery country</option>{COUNTRIES.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select></div>
+            <p className="sm:col-span-2 text-sm text-ivory-muted">DHL shipping is calculated for your complete address and cart. Import duties, if applicable, are payable on delivery.</p>
+            <button type="submit" disabled={busy || !config?.available} className="sm:col-span-2 btn-gold flex items-center justify-center gap-2 disabled:opacity-50">{busy && <Loader2 className="animate-spin" size={18} />}{busy ? 'Calculating shipping…' : 'Review order'}</button>
+          </form>}
+        </section>
+        <aside className="lg:col-span-2 bg-charcoal-card rounded-2xl p-5 sm:p-6 border border-white/10 self-start">
+          <h2 className="font-display text-2xl text-ivory mb-6">Order summary</h2>
+          <ul className="space-y-5">{summaryItems.map(item => <li key={cartKey(item)} className="flex gap-3"><img src={item.image} alt="" className="w-16 h-16 rounded-lg object-cover bg-charcoal" /><div className="min-w-0 flex-1"><p className="text-ivory break-words">{item.name}</p><p className="text-sm text-ivory-muted">{item.variant} · Qty {item.quantity}</p><p className="text-gold text-sm mt-1">{money(item.price * item.quantity)}</p></div></li>)}</ul>
+          {pricesChanged && <p role="status" className="text-sm text-gold mt-5">Product prices have been updated from our catalogue. Please review the current prices before paying.</p>}
+          <dl className="border-t border-white/10 pt-5 mt-6 space-y-3 text-ivory-muted">
+            <div className="flex justify-between"><dt>Products</dt><dd>{money(validReview ? review.quote.itemsPrice : totalPrice)}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="flex gap-2 items-center"><Truck size={16} /> DHL delivery</dt><dd>{validReview ? money(review.quote.shippingPrice) : 'Calculated next'}</dd></div>
+            {validReview && review.quote.taxPrice > 0 && <div className="flex justify-between"><dt>Tax</dt><dd>{money(review.quote.taxPrice)}</dd></div>}
+            <div className="flex justify-between pt-3 border-t border-white/10 text-ivory text-xl"><dt>{validReview ? 'Total' : 'Subtotal'}</dt><dd className="text-gold">{money(validReview ? review.quote.totalPrice : totalPrice)}</dd></div>
+          </dl>
+          <p className="text-xs text-ivory-muted mt-5">All checkout amounts are charged in USD. Other storefront currencies are estimates; your bank may apply conversion fees.</p>
+        </aside>
+      </div>
+    </div>
+  </div>;
 }

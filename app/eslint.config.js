@@ -15,6 +15,9 @@ export default defineConfig([
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
+    rules: {
+      'react-refresh/only-export-components': ['error', { allowConstantExport: true, allowExportNames: ["useCookieConsent", "getCookiePreferences", "ORGANIZATION_SCHEMA", "WEBSITE_SCHEMA", "productSchema", "breadcrumbSchema", "faqSchema", "articleSchema", "collectionSchema", "productListSchema", "badgeVariants", "buttonGroupVariants", "buttonVariants", "useFormField", "navigationMenuTriggerStyle", "useSidebar", "toggleVariants", "useAuth", "useCart", "CURRENCIES", "useCurrency", "useGeo"] }],
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

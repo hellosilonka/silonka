@@ -9,7 +9,9 @@ const reviewSchema = new mongoose.Schema({
 
 const variationSchema = new mongoose.Schema({
     label: { type: String, required: true },      // e.g. "50g", "100g", "250g"
-    price: { type: Number, required: true },
+    price: { type: Number, required: true, min: 0.01, max: 100000 },
+    shippingWeightKg: { type: Number, min: 0.001, max: 70 },
+    image: { type: String, default: '' },
     inStock: { type: Boolean, default: true },
 }, { _id: true });
 
@@ -18,18 +20,22 @@ const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
     longDescription: { type: String, default: '' },
-    price: { type: Number, required: true },
+    price: { type: Number, required: true, min: 0.01, max: 100000 },
+    priceIsSample: { type: Boolean, default: false },
+    imageIsReference: { type: Boolean, default: false },
+    shippingWeightEstimated: { type: Boolean, default: false },
+    specifications: [{ label: String, value: String, _id: false }],
     image: { type: String, required: true },
     images: [{ type: String }],                     // additional gallery images
     category: {
         type: String,
         required: true,
-        enum: ['Ceylon Cinnamon', 'Ceylon Black Pepper', 'Cloves and Cardamom', 'Gift Set'],
+        maxlength: 100,
     },
     weight: { type: String, required: true },
     // Gross shipping weight (product + packaging + box) in kg — used for DHL rate calculation.
     // Different from 'weight' which is the net content weight shown on the label.
-    shippingWeightKg: { type: Number, default: 1.2 },
+    shippingWeightKg: { type: Number, default: 1.2, min: 0.001, max: 70 },
     intensity: { type: Number },
     inStock: { type: Boolean, default: true },
     origin: { type: String, default: 'Sri Lanka' },
@@ -54,5 +60,6 @@ productSchema.methods.calcAverageRating = function () {
     }
 };
 
+productSchema.index({ category: 1, createdAt: -1 });
 const Product = mongoose.model('Product', productSchema);
 export default Product;

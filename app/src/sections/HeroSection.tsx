@@ -111,7 +111,7 @@ export default function HeroSection() {
         <picture>
           <source srcSet="/hero_spice_field.webp" type="image/webp" />
           <img
-            src="/hero_spice_field.jpg"
+            src="/hero_spice_field.webp"
             alt="Ceylon spice garden"
             className="w-full h-full object-cover"
             fetchPriority="high"

@@ -9,6 +9,7 @@ export function useSmoothScroll() {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     // Initialize Lenis smooth scroll
     const lenis = new Lenis({
       duration: 1.2,
@@ -24,15 +25,14 @@ export function useSmoothScroll() {
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
 
     gsap.ticker.lagSmoothing(0);
 
     return () => {
       lenis.destroy();
-      gsap.ticker.remove(lenis.raf);
+      gsap.ticker.remove(tick);
     };
   }, []);
 

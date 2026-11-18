@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Search, Truck, Package, CheckCircle, Clock, MapPin, Loader2, AlertCircle } from 'lucide-react';
@@ -42,7 +43,9 @@ function formatEventDate(date: string, time: string) {
     // DHL date format: YYYY-MM-DD or YYYYMMDD
     const clean = date.replace(/\//g, '-').replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
     try {
-        const d = new Date(`${clean}T${time || '00:00:00'}`);
+        const clock = (time || '00:00:00').replace(/^(\d{2})(\d{2})(\d{2})$/, '$1:$2:$3');
+        const d = new Date(`${clean}T${clock}`);
+        if (!Number.isFinite(d.getTime())) return `${date} ${time}`;
         return d.toLocaleString('en-US', {
             weekday: 'short',
             month: 'short',
@@ -56,56 +59,38 @@ function formatEventDate(date: string, time: string) {
 }
 
 export default function TrackOrderPage() {
+    const [params] = useSearchParams();
+    return <TrackingDetails key={params.get('awb') || ''} />;
+}
+
+function TrackingDetails() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [awbInput, setAwbInput] = useState(searchParams.get('awb') || '');
-    const [loading, setLoading] = useState(false);
+    const initialAwb = searchParams.get('awb') || '';
+    const validAwb = /^\d{10}$/.test(initialAwb);
+    const [loading, setLoading] = useState(validAwb);
     const [result, setResult] = useState<TrackingResult | null>(null);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(initialAwb && !validAwb ? 'Please enter a valid 10-digit DHL tracking number.' : '');
 
+    const requestedAwb = searchParams.get('awb') || '';
+    const [retry, setRetry] = useState(0);
     useEffect(() => {
-        window.scrollTo(0, 0);
-        const awb = searchParams.get('awb');
-        if (awb) {
-            setAwbInput(awb);
-            handleTrack(awb);
+        let active = true;
+        if (!/^\d{10}$/.test(requestedAwb)) return;
+        trackDHLShipment(requestedAwb).then(data => { if (active) setResult(data); })
+            .catch(err => { if (active) setError(errorMessage(err, 'Tracking is temporarily unavailable. Please try again.')); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, [requestedAwb, retry]);
+
+    const handleTrack = () => {
+        if (loading) return;
+        const trackingNumber = awbInput.trim().replace(/\s+/g, '');
+        if (!/^\d{10}$/.test(trackingNumber)) {
+            setResult(null); setError('Please enter a valid 10-digit DHL tracking number.'); return;
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleTrack = async (awb?: string) => {
-        const trackingNumber = (awb || awbInput).trim().replace(/\s+/g, '');
-        if (!trackingNumber) return;
-
-        // DHL AWB numbers are 10 digits minimum — validate before hitting API
-        if (trackingNumber.length < 10) {
-            setError('Please enter a valid AWB number (at least 10 digits).');
-            return;
-        }
-
-        setLoading(true);
-        setError('');
-        setResult(null);
-
-        try {
-            const data = await trackDHLShipment(trackingNumber);
-            setResult(data);
-            setSearchParams({ awb: trackingNumber });
-        } catch (err: any) {
-            const raw: string = err?.response?.data?.message || err?.message || '';
-
-            // Always show a clean, user-friendly message — never expose raw DHL SOAP XML
-            let friendlyMsg = 'Shipment not found. Please check your AWB number and try again.';
-
-            if (raw.toLowerCase().includes('econnreset') || raw.toLowerCase().includes('network')) {
-                friendlyMsg = 'Could not reach DHL servers. Please try again in a moment.';
-            } else if (raw.toLowerCase().includes('not found') || raw.toLowerCase().includes('no shipment')) {
-                friendlyMsg = 'No shipment found for this AWB number.';
-            }
-
-            setError(friendlyMsg);
-        } finally {
-            setLoading(false);
-        }
+        if (trackingNumber === requestedAwb) { setLoading(true); setResult(null); setError(''); setRetry(value => value + 1); }
+        else setSearchParams({ awb: trackingNumber });
     };
 
     const hasEvents = result && result.events && result.events.length > 0;
@@ -152,7 +137,7 @@ export default function TrackOrderPage() {
                         <div className="flex-1 relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ivory-muted/40 pointer-events-none" />
                             <input
-                                type="text"
+                                type="text" aria-label="DHL tracking number" inputMode="numeric" maxLength={30}
                                 placeholder="Enter AWB / Tracking Number (e.g. 1234567890)"
                                 value={awbInput}
                                 onChange={e => setAwbInput(e.target.value)}
@@ -192,7 +177,7 @@ export default function TrackOrderPage() {
 
                     {/* Error */}
                     {error && !loading && (
-                        <div className="p-5 rounded-2xl bg-red-500/8 border border-red-500/20 flex items-start gap-4">
+                        <div role="alert" className="p-5 rounded-2xl bg-red-500/8 border border-red-500/20 flex items-start gap-4">
                             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                             <div>
                                 <p className="text-red-400 font-medium mb-1">Tracking failed</p>

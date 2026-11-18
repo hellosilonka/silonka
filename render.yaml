@@ -3,8 +3,9 @@ services:
     name: silonka
     runtime: node
     plan: free
-    buildCommand: npm install --prefix backend && npm install --include=dev --prefix app && npm run build --prefix app
+    buildCommand: npm run build
     startCommand: node backend/server.js
+    healthCheckPath: /api/ping
     envVars:
       - key: NODE_ENV
         value: production
@@ -12,6 +13,14 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: APP_URL
+        sync: false
+      - key: PUBLIC_API_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: TRUST_PROXY_HOPS
+        value: "1"
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS
@@ -20,15 +29,55 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
-      - key: PAYPAL_CLIENT_ID
+      - key: VITE_GOOGLE_CLIENT_ID
         sync: false
-      - key: PAYPAL_CLIENT_SECRET
+      - key: PAYHERE_MERCHANT_ID
         sync: false
-      - key: PAYPAL_MODE
+      - key: PAYHERE_MERCHANT_SECRET
         sync: false
+      - key: PAYHERE_MODE
+        value: sandbox
+      - key: FX_EUR_TO_USD
+        sync: false
+      - key: FX_LKR_TO_USD
+        sync: false
+      - key: CHECKOUT_TAX_RATE
+        value: "0"
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: DHL_MODE
+        value: sandbox
+      - key: DHL_USERNAME
+        sync: false
+      - key: DHL_PASSWORD
+        sync: false
+      - key: DHL_ACCOUNT_NUMBER
+        sync: false
+      - key: DHL_SHIPPER_NAME
+        sync: false
+      - key: DHL_SHIPPER_COMPANY
+        sync: false
+      - key: DHL_SHIPPER_PHONE
+        sync: false
+      - key: DHL_SHIPPER_EMAIL
+        sync: false
+      - key: DHL_SHIPPER_STREET
+        sync: false
+      - key: DHL_SHIPPER_CITY
+        sync: false
+      - key: DHL_SHIPPER_POSTAL
+        sync: false
+      - key: DHL_SHIPPER_COUNTRY
+        value: LK
+      - key: DHL_RATE_ENDPOINT
+        sync: false
+      - key: DHL_SHIPMENT_ENDPOINT
+        sync: false
+      - key: DHL_PICKUP_ENDPOINT
+        sync: false
+      - key: DHL_TRACK_ENDPOINT
         sync: false
